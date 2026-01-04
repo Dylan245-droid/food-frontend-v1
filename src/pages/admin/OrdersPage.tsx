@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, AlertCircle, Printer, Search, Banknote } from 'lucide-react';
+import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, AlertCircle, Printer, Search, Banknote, Flame, BellRing } from 'lucide-react';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder } from '../../components/Receipt';
 
@@ -79,9 +79,9 @@ export default function OrdersPage() {
 
   const handlePickupSearch = async (e: React.FormEvent) => {
       e.preventDefault();
-//...
       setError('');
       setPickupOrder(null);
+      setPickupLoading(true);
 
       try {
           const res = await api.get<{ data: Order[] }>(`/staff/orders?pickup_code=${pickupCode}`);
@@ -98,7 +98,6 @@ export default function OrdersPage() {
   };
 
   const handlePayAndPrint = async (order: Order, skipConfirm = false) => {
-      // If already paid, just print directly
       if (order.status === 'paid') {
           const receipt: ReceiptOrder = {
              id: order.id,
@@ -117,7 +116,6 @@ export default function OrdersPage() {
           return;
       }
 
-      // If takeout and not verified, force verification
       if (order.type === 'takeout' && !skipConfirm) {
           setVerifyingOrder(order);
           setVerifyCode('');
@@ -132,7 +130,6 @@ export default function OrdersPage() {
       try {
         await api.patch(`/staff/orders/${order.id}/status`, { status: 'paid' });
         
-        // Prepare Receipt
         const receipt: ReceiptOrder = {
              id: order.id,
              dailyNumber: order.dailyNumber,
@@ -143,12 +140,10 @@ export default function OrdersPage() {
              createdAt: order.createdAt,
              type: order.type,
              clientName: order.clientName,
-             // Ensure table is properly mapped if it exists, though this often runs for takeout
              table: order.table ? { name: order.table.name } : undefined
         };
 
         setReceiptOrder(receipt);
-        // Trigger Print
         setTimeout(() => window.print(), 500);
         
         setIsPickupModalOpen(false);
@@ -160,7 +155,6 @@ export default function OrdersPage() {
       }
   };
   
-  // Print table bill (consolidated) WITHOUT changing status
   const handlePrintTableBill = async (tableId: number, tableName: string) => {
       try {
           const res = await api.get(`/staff/orders?table_id=${tableId}&status=pending,in_progress,delivered`);
@@ -171,7 +165,6 @@ export default function OrdersPage() {
               return;
           }
 
-          // Just print without changing status
           let totalAmount = 0;
           const allItems: OrderItem[] = orders.flatMap(o => {
               if (o.status === 'cancelled') return [];
@@ -188,7 +181,7 @@ export default function OrdersPage() {
               id: 0, 
               dailyNumber: null,
               pickupCode: null,
-              status: 'delivered', // Not paid yet - just showing the bill
+              status: 'delivered',
               totalAmount: totalAmount,
               items: allItems,
               createdAt: new Date().toISOString(),
@@ -204,12 +197,18 @@ export default function OrdersPage() {
   }
 
 
-  if (loading && !data) return <div className="flex h-96 items-center justify-center text-gray-400">Chargement du KDS...</div>;
+  if (loading && !data) return (
+      <div className="flex h-96 items-center justify-center">
+          <div className="animate-bounce flex flex-col items-center text-stone-400">
+              <ChefHat className="w-12 h-12 mb-2" />
+              <span className="font-bold">Ouverture de la cuisine...</span>
+          </div>
+      </div>
+  );
 
   const pendingOrders = data?.data.filter(o => o.status === 'pending') || [];
   const inProgressOrders = data?.data.filter(o => o.status === 'in_progress') || [];
   const deliveredOrders = data?.data.filter(o => o.status === 'delivered') || [];
-  // Sort paid orders by updatedAt desc (most recent payment/update first)
   const paidOrders = (data?.data.filter(o => o.status === 'paid') || []).sort((a, b) => 
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
@@ -217,51 +216,59 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 h-full flex flex-col">
-      <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <h1 className="text-2xl font-black text-gray-900 flex items-center gap-3 uppercase tracking-tight">
-            <UtensilsCrossed className="text-red-600 w-8 h-8" />
-            Cuisine & Commandes
-        </h1>
+      <div className="flex justify-between items-center bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
+        <div>
+            <h1 className="text-2xl font-black text-stone-900 flex items-center gap-3 uppercase tracking-tight font-display">
+                <div className="bg-orange-100 p-2 rounded-xl text-orange-600">
+                     <UtensilsCrossed className="w-6 h-6" />
+                </div>
+                Cuisine & Envois
+            </h1>
+            <p className="text-stone-400 text-sm font-medium ml-14">Gérez le flux de production</p>
+        </div>
         <div className="flex gap-3 items-center">
-            <Button onClick={() => setIsPickupModalOpen(true)} className="bg-black text-white hover:bg-gray-800 gap-2">
+            <Button onClick={() => setIsPickupModalOpen(true)} className="bg-stone-900 text-white hover:bg-stone-800 gap-2 h-12 px-6 rounded-xl font-bold shadow-lg shadow-stone-900/10">
                 <ShoppingBag className="w-4 h-4" />
-                Retrait Commande
+                Retrait Client
             </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 flex-1 min-h-0 overflow-x-auto pb-4">
         {/* Colonne EN ATTENTE */}
         <Column 
             title="En attente" 
             count={pendingOrders.length}
-            icon={Clock} 
+            icon={BellRing} 
             color="text-yellow-700" 
             bgColor="bg-yellow-50/50"
             borderColor="border-yellow-200"
             headerColor="bg-yellow-100"
+            accentColor="bg-yellow-500"
         >
             {pendingOrders.map(order => (
                 <OrderCard 
                     key={order.id} 
                     order={order} 
                     onAction={() => handleStatusChange(order.id, 'in_progress')} 
-                    actionLabel="DÉMARRER" 
+                    actionLabel="LANCER" 
                     variant="pending" 
+                    icon={Flame}
                 />
             ))}
-            {pendingOrders.length === 0 && <EmptyState message="Aucune commande en attente" />}
+            {pendingOrders.length === 0 && <EmptyState message="Cuisine calme" icon={Clock} />}
         </Column>
 
         {/* Colonne EN COURS */}
         <Column 
-            title="En préparation" 
+            title="Au Feu" 
             count={inProgressOrders.length}
-            icon={ChefHat} 
-            color="text-blue-700" 
-            bgColor="bg-blue-50/50"
-            borderColor="border-blue-200"
-            headerColor="bg-blue-100"
+            icon={Flame} 
+            color="text-orange-700" 
+            bgColor="bg-orange-50/50"
+            borderColor="border-orange-200"
+            headerColor="bg-orange-100"
+            accentColor="bg-orange-500"
         >
             {inProgressOrders.map(order => (
                 <OrderCard 
@@ -272,18 +279,19 @@ export default function OrdersPage() {
                     variant="progress" 
                 />
             ))}
-            {inProgressOrders.length === 0 && <EmptyState message="Rien en préparation" />}
+            {inProgressOrders.length === 0 && <EmptyState message="Rien sur le feu" icon={ChefHat} />}
         </Column>
 
         {/* Colonne SERVIS */}
         <Column 
-            title="Déjà servis"
+            title="À Servir / Servis"
             count={deliveredOrders.length} 
-            icon={Check} 
+            icon={UtensilsCrossed} 
             color="text-green-700" 
             bgColor="bg-green-50/50"
             borderColor="border-green-200"
             headerColor="bg-green-100"
+            accentColor="bg-green-500"
         >
             {deliveredOrders.map(order => (
                 <OrderCard 
@@ -291,105 +299,110 @@ export default function OrdersPage() {
                     order={order} 
                     onAction={() => {
                         if (order.type === 'takeout') {
-                            // Takeout: single action = hand over and mark paid
                             handlePayAndPrint(order);
                         } else if (order.type === 'dine_in' && order.table) {
-                            // Dine-in: primary = print bill only
                             handlePrintTableBill(order.table.id, order.table.name);
                         }
                     }} 
-                    actionLabel={order.type === 'takeout' ? 'Remettre au client' : 'Imprimer'}
-                    // Only show secondary action for dine-in orders
+                    actionLabel={order.type === 'takeout' ? 'REMETTRE' : 'IMPRIMER'}
                     onSecondaryAction={order.type === 'dine_in' ? () => handlePayAndPrint(order) : undefined}
-                    secondaryActionLabel="Encaisser"
+                    secondaryActionLabel="ENCAISSER"
                     variant="delivered" 
                 />
             ))}
-            {deliveredOrders.length === 0 && <EmptyState message="Service calme pour l'instant" />}
+            {deliveredOrders.length === 0 && <EmptyState message="Passe vide" icon={ShoppingBag} />}
         </Column>
 
-        {/* Colonne PAYÉES / TERMINÉES */}
+        {/* Colonne TERMINÉES */}
         <Column 
-            title="Terminées"
+            title="Historique"
             count={paidOrders.length} 
             icon={Check} 
-            color="text-gray-500" 
-            bgColor="bg-gray-50"
-            borderColor="border-gray-200"
-            headerColor="bg-gray-100"
+            color="text-stone-500" 
+            bgColor="bg-stone-100/50"
+            borderColor="border-stone-200"
+            headerColor="bg-stone-200"
+            accentColor="bg-stone-400"
         >
             {paidOrders.map(order => (
                 <OrderCard 
                     key={order.id} 
                     order={order} 
                     onAction={() => handlePayAndPrint(order)} 
-                    actionLabel="Réimprimer"
+                    actionLabel="TICKET"
                     variant="paid" 
-                    // readonly
                 />
             ))}
-            {paidOrders.length === 0 && <EmptyState message="Aucune commande terminée" />}
+            {paidOrders.length === 0 && <EmptyState message="Historique vide" icon={Check} />}
         </Column>
       </div>
 
       {/* Pickup Modal */}
-      <Modal isOpen={isPickupModalOpen} onClose={() => setIsPickupModalOpen(false)} title="Retrait Commande à Emporter">
-          <div className="space-y-4">
+      <Modal isOpen={isPickupModalOpen} onClose={() => setIsPickupModalOpen(false)} title="Retrait Commande">
+          <div className="space-y-6">
               {!pickupOrder ? (
-                  <form onSubmit={handlePickupSearch} className="space-y-4">
-                      <Input 
-                        label="Code de Retrait" 
-                        placeholder="Entrez le code..." 
-                        value={pickupCode} 
-                        onChange={e => setPickupCode(e.target.value.toUpperCase())}
-                        autoFocus
-                      />
-                      {error && <div className="text-red-500 text-sm font-medium">{error}</div>}
-                      <Button type="submit" isLoading={pickupLoading} className="w-full">
-                          <Search className="w-4 h-4 mr-2" />
-                          Rechercher
+                  <form onSubmit={handlePickupSearch} className="space-y-6">
+                      <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100 text-center">
+                          <p className="text-stone-500 mb-4 font-medium">Demandez le code au client</p>
+                          <Input 
+                            value={pickupCode} 
+                            onChange={e => setPickupCode(e.target.value.toUpperCase())}
+                            autoFocus
+                            className="text-center text-3xl font-black uppercase tracking-[0.5em] h-20 bg-white border-2 border-stone-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-100 rounded-xl"
+                            placeholder="CODE"
+                            maxLength={6}
+                          />
+                      </div>
+                      <Button type="submit" isLoading={pickupLoading} className="w-full h-14 text-lg font-bold bg-stone-900 rounded-xl shadow-lg">
+                          <Search className="w-5 h-5 mr-2" />
+                          Rechercher la commande
                       </Button>
                   </form>
               ) : (
-                  <div className="space-y-4">
-                      <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                          <div className="flex justify-between font-bold text-lg mb-2">
-                              <span>Commande #{pickupOrder.dailyNumber}</span>
-                              <span className="text-green-600">{pickupOrder.formattedTotal}</span>
-                          </div>
-                          <div className="text-sm text-gray-500 mb-4">
-                              Client: {pickupOrder.clientName || 'Anonyme'}
-                          </div>
-                          
-                          {/* Alert if not delivered */}
-                          {pickupOrder.status !== 'delivered' && (
-                              <div className="bg-red-50 text-red-600 border border-red-200 p-3 rounded-md text-sm font-bold flex items-center mb-4">
-                                  <Clock className="w-4 h-4 mr-2" />
-                                  Commande non prête (Statut: {pickupOrder.status === 'pending' ? 'En attente' : 'En préparation'})
-                              </div>
-                          )}
+                  <div className="space-y-6">
+                      <div className="bg-white p-6 rounded-2xl border-2 border-stone-100 shadow-sm relative overflow-hidden">
+                          {/* Ticket edge effect top */}
+                          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-stone-200 to-stone-100"></div>
 
-                          <div className="space-y-2 border-t border-dashed border-gray-200 pt-2">
+                          <div className="flex justify-between items-start mb-6">
+                              <div>
+                                   <div className="flex items-center gap-2 mb-1">
+                                      <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-bold uppercase">Pickup</span>
+                                      <span className="text-stone-400 text-xs">{new Date(pickupOrder.createdAt).toLocaleTimeString()}</span>
+                                   </div>
+                                   <h2 className="text-2xl font-black text-stone-900">#{pickupOrder.dailyNumber}</h2>
+                                   <p className="font-medium text-stone-600">{pickupOrder.clientName || 'Client Anonyme'}</p>
+                              </div>
+                              <div className="text-right">
+                                  <div className="text-2xl font-black text-orange-600">{pickupOrder.formattedTotal}</div>
+                                  <div className={`text-xs font-bold uppercase px-2 py-1 rounded-full inline-block mt-1 ${
+                                      pickupOrder.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                                  }`}>
+                                      {pickupOrder.status === 'delivered' ? 'PRÊTE' : 'EN COURS'}
+                                  </div>
+                              </div>
+                          </div>
+                      
+                          <div className="space-y-3 py-4 border-t border-dashed border-stone-200">
                               {pickupOrder.items.map(item => (
-                                  <div key={item.id} className="flex justify-between text-sm">
-                                      <span>{item.quantity}x {item.menuItem.name}</span>
-                                      <span>{item.unitPrice * item.quantity} F</span>
+                                  <div key={item.id} className="flex justify-between text-base">
+                                      <span className="text-stone-800"><span className="font-bold mr-2">{item.quantity}x</span> {item.menuItem.name}</span>
                                   </div>
                               ))}
                           </div>
                       </div>
 
-                      <div className="flex gap-3">
-                          <Button variant="secondary" onClick={() => setPickupOrder(null)} className="flex-1">
+                      <div className="flex gap-4">
+                          <Button variant="secondary" onClick={() => setPickupOrder(null)} className="flex-1 h-14 rounded-xl border-stone-200 hover:bg-stone-100">
                               Retour
                           </Button>
                           <Button 
                                 onClick={() => handlePayAndPrint(pickupOrder)} 
-                                className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 h-14 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-200 disabled:opacity-50 disabled:shadow-none"
                                 disabled={pickupOrder.status !== 'delivered'}
                           >
-                              <Printer className="w-4 h-4 mr-2" />
-                              Payer & Imprimer
+                              <Check className="w-5 h-5 mr-2" />
+                              Valider le Retrait
                           </Button>
                       </div>
                   </div>
@@ -397,7 +410,7 @@ export default function OrdersPage() {
           </div>
       </Modal>
 
-      {/* Hidden Receipt for Printing (Portal to body) */}
+      {/* Hidden Receipt for Printing */}
       {createPortal(
         <div id="printable-receipt">
             <Receipt order={receiptOrder} />
@@ -407,7 +420,6 @@ export default function OrdersPage() {
 
       <VerificationModal 
         isOpen={!!verifyingOrder}
-
         onClose={() => {
             setVerifyingOrder(null);
             setVerifyCode('');
@@ -417,7 +429,7 @@ export default function OrdersPage() {
         setVerifyCode={setVerifyCode}
         onConfirm={() => {
             if (verifyingOrder) {
-                handlePayAndPrint(verifyingOrder, true); // true = skip confirmation since we verified
+                handlePayAndPrint(verifyingOrder, true);
                 setVerifyingOrder(null);
                 setVerifyCode('');
             }
@@ -431,32 +443,33 @@ function VerificationModal({ isOpen, onClose, order, verifyCode, setVerifyCode, 
     const isMatch = order && order.pickupCode === verifyCode.toUpperCase();
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Vérification Client">
-            <div className="space-y-4">
-                <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm">
-                    🔒 Pour des raisons de sécurité, veuillez saisir le code de retrait fourni par le client pour valider la commande <strong>#{order?.dailyNumber}</strong>.
+        <Modal isOpen={isOpen} onClose={onClose} title="Sécurité Client">
+            <div className="space-y-6 text-center">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto">
+                    <Check className="w-8 h-8" />
+                </div>
+                <div>
+                     <p className="text-lg font-bold text-stone-900 mb-1">Code de vérification</p>
+                     <p className="text-stone-500">Demandez le code au client pour valider la commande #{order?.dailyNumber}.</p>
                 </div>
                 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Code de retrait</label>
-                    <Input 
-                        value={verifyCode}
-                        onChange={(e: any) => setVerifyCode(e.target.value.toUpperCase())}
-                        placeholder="Ex: AB12CD"
-                        autoFocus
-                        className="text-center text-2xl tracking-widest font-black uppercase"
-                    />
-                </div>
+                <Input 
+                    value={verifyCode}
+                    onChange={(e: any) => setVerifyCode(e.target.value.toUpperCase())}
+                    placeholder="CODE"
+                    autoFocus
+                    className="text-center text-4xl font-black uppercase tracking-[0.3em] h-20 border-2 border-stone-200 focus:border-blue-500 rounded-xl"
+                    maxLength={6}
+                />
 
-                <div className="flex justify-end gap-3 pt-2">
-                    <Button variant="secondary" onClick={onClose}>Annuler</Button>
+                <div className="flex gap-3 pt-2">
+                    <Button variant="secondary" onClick={onClose} className="flex-1 h-12 rounded-xl">Annuler</Button>
                     <Button 
                         onClick={onConfirm}
                         disabled={!isMatch}
-                        className={`font-bold ${isMatch ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400'}`}
+                        className={`flex-1 h-12 rounded-xl font-bold shadow-lg transition-all ${isMatch ? 'bg-green-600 hover:bg-green-700 text-white shadow-green-200' : 'bg-stone-200 text-stone-400 shadow-none'}`}
                     >
-                        <Check className="w-4 h-4 mr-2" />
-                        Valider & Payer
+                        Valider
                     </Button>
                 </div>
             </div>
@@ -464,127 +477,114 @@ function VerificationModal({ isOpen, onClose, order, verifyCode, setVerifyCode, 
     );
 }
 
-function Column({ title, count, icon: Icon, children, color, bgColor, borderColor, headerColor }: any) {
+function Column({ title, count, icon: Icon, children, color, bgColor, borderColor, headerColor, accentColor }: any) {
     return (
-        <div className={`rounded-xl border ${borderColor} ${bgColor} flex flex-col h-[calc(100vh-12rem)] shadow-sm`}>
-            <div className={`p-4 border-b ${borderColor} flex items-center justify-between font-bold ${color} ${headerColor} flex-shrink-0`}>
-                <div className="flex items-center gap-2">
+        <div className={`rounded-3xl border ${borderColor} ${bgColor} flex flex-col h-[calc(100vh-12rem)] shadow-sm overflow-hidden group`}>
+            <div className={`p-4 border-b ${borderColor} flex items-center justify-between font-bold ${color} ${headerColor} flex-shrink-0 relative`}>
+                <div className={`absolute top-0 left-0 w-1 h-full ${accentColor}`}></div>
+                <div className="flex items-center gap-3 pl-2">
                     <Icon className="w-5 h-5" />
-                    <span className="uppercase tracking-wide text-sm">{title}</span>
+                    <span className="uppercase tracking-wider text-sm font-black">{title}</span>
                 </div>
-                <div className="text-xs bg-white/50 px-2 py-1 rounded-md min-w-[1.5rem] text-center">
+                <div className="text-xs bg-white/80 backdrop-blur px-3 py-1 rounded-full font-bold shadow-sm min-w-[2rem] text-center border border-white/50">
                     {count}
                 </div>
             </div>
-            <div className="p-4 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+            <div className="p-3 space-y-3 overflow-y-auto flex-1 custom-scrollbar">
                 {children}
             </div>
         </div>
     )
 }
 
-
-
-function EmptyState({ message }: { message: string }) {
+function EmptyState({ message, icon: Icon }: { message: string, icon: any }) {
     return (
-        <div className="h-full flex flex-col items-center justify-center text-gray-400 py-12 opacity-50">
-            <AlertCircle className="w-12 h-12 mb-2" />
-            <p className="text-sm font-medium italic">{message}</p>
+        <div className="h-full flex flex-col items-center justify-center text-stone-400 py-12 opacity-60">
+            <div className="bg-white/50 p-4 rounded-full mb-3">
+                <Icon className="w-8 h-8" />
+            </div>
+            <p className="text-sm font-bold uppercase tracking-wide">{message}</p>
         </div>
     )
 }
 
-function OrderCard({ order, onAction, actionLabel, variant, readonly = false, onSecondaryAction, secondaryActionLabel }: { order: Order, onAction: () => void, actionLabel: string, variant: 'pending' | 'progress' | 'delivered' | 'paid', readonly?: boolean, onSecondaryAction?: () => void, secondaryActionLabel?: string }) {
+function OrderCard({ order, onAction, actionLabel, variant, readonly = false, onSecondaryAction, secondaryActionLabel, icon: ActionIcon }: any) {
     const theme = {
-        pending: { border: 'border-yellow-400', header: 'bg-yellow-50', text: 'text-yellow-900', btn: 'bg-black text-white hover:bg-gray-800' },
-        progress: { border: 'border-blue-500', header: 'bg-blue-50', text: 'text-blue-900', btn: 'bg-blue-600 text-white hover:bg-blue-700' },
-        delivered: { border: 'border-green-500', header: 'bg-green-50', text: 'text-green-900', btn: 'bg-gray-800 text-white hover:bg-black' },
-        paid: { border: 'border-gray-300', header: 'bg-gray-50', text: 'text-gray-500', btn: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50' }
+        pending: { border: 'border-yellow-400', bg: 'bg-white', text: 'text-stone-900', btn: 'bg-stone-900 text-white hover:bg-stone-800' },
+        progress: { border: 'border-orange-500', bg: 'bg-white', text: 'text-stone-900', btn: 'bg-orange-600 text-white hover:bg-orange-700' },
+        delivered: { border: 'border-green-500', bg: 'bg-green-50/30', text: 'text-stone-900', btn: 'bg-white text-stone-900 border border-stone-200 hover:bg-stone-50' },
+        paid: { border: 'border-stone-200', bg: 'bg-stone-50', text: 'text-stone-400', btn: 'bg-white text-stone-500 border border-stone-200 hover:bg-stone-50' }
     }[variant];
 
     return (
-        <div className={`bg-white rounded-lg shadow-sm border border-gray-200 border-l-[6px] ${theme.border} flex flex-col overflow-hidden group hover:shadow-md transition-shadow`}>
-            {/* Header */}
-            <div className="p-3 border-b border-gray-100 flex justify-between items-start">
+        <div className={`rounded-xl shadow-sm border border-stone-200 ${theme.bg} flex flex-col overflow-hidden relative group hover:shadow-md transition-all`}>
+           {/* Left Colored Stripe */}
+           <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${theme.border.replace('border-', 'bg-')}`}></div>
+
+            <div className="p-3 pl-5 border-b border-stone-100 flex justify-between items-start">
                 <div>
                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-black text-gray-900 bg-gray-100 px-2 py-0.5 rounded">#{order.dailyNumber}</span>
+                        <span className="text-sm font-black text-stone-900 bg-stone-100 px-2 py-0.5 rounded-md">#{order.dailyNumber}</span>
                         {order.type === 'takeout' ? (
-                             <span className="text-purple-700 text-[10px] font-black uppercase bg-purple-50 px-2 py-0.5 rounded flex items-center gap-1">
-                                <ShoppingBag className="w-3 h-3" /> Emporter
+                             <span className="text-purple-700 text-[10px] font-black uppercase bg-purple-100 px-2 py-0.5 rounded flex items-center gap-1">
+                                👜 EMPORTER
                              </span>
                         ) : (
-                            <span className="text-base font-bold text-gray-900">{order.table?.name || 'Table ?'}</span>
+                            <span className="text-sm font-bold text-stone-700 bg-stone-100 px-2 rounded">{order.table?.name || '?'}</span>
                         )}
                      </div>
-                     <div className="text-xs text-gray-500 flex items-center gap-1">
+                     <div className="text-xs text-stone-400 font-medium flex items-center gap-1.5">
                         <Clock className="w-3 h-3" />
                          {new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                         {order.type === 'takeout' && order.clientName && (
-                            <span className="font-bold text-gray-900 ml-1">• {order.clientName} {order.clientPhone && `(${order.clientPhone})`}</span>
-                         )}
-                         {order.type === 'dine_in' && order.table?.zone && (
-                            <span className="text-gray-400 ml-1">• {order.table.zone}</span>
-                         )}
+                         {order.clientName && <span className="text-stone-600 font-bold">• {order.clientName}</span>}
                      </div>
-                </div>
-                <div className="text-right">
-                    <div className="text-lg font-black text-gray-900 tracking-tight">{order.formattedTotal || `${order.totalAmount} FCFA`}</div>
                 </div>
             </div>
 
-            {/* Items - Always Visible now */}
-            <div className="p-4 space-y-3 bg-white flex-1">
+            <div className="p-3 pl-5 space-y-2 flex-1">
                 {order.items.map((item, i) => (
-                    <div key={i} className="flex justify-between items-start text-sm border-b border-gray-50 last:border-0 pb-2 last:pb-0">
-                        <div className="text-gray-900 leading-snug">
-                            <span className="font-black text-gray-900 mr-2 bg-gray-100 px-1.5 rounded">{item.quantity}x</span> 
-                            <span className="font-semibold">{item.menuItem?.name || 'Nom introuvable'}</span>
+                    <div key={i} className="flex justify-between items-start text-sm leading-tight">
+                        <div className="text-stone-900">
+                            <span className="font-black mr-2 bg-stone-100 px-1.5 rounded-md text-stone-600">{item.quantity}</span> 
+                            <span className="font-bold">{item.menuItem?.name}</span>
                             {item.specialInstructions && (
-                                <div className="text-xs text-red-500 font-medium mt-1 bg-red-50 px-2 py-1 rounded inline-block">
+                                <div className="text-[10px] text-red-600 font-bold mt-1 bg-red-50 px-2 py-1 rounded border border-red-100 uppercase tracking-wide">
                                     ⚠️ {item.specialInstructions}
                                 </div>
                             )}
-                        </div>
-                        <div className="text-gray-500 text-xs tabular-nums font-medium whitespace-nowrap ml-2">
-                            {item.quantity * item.unitPrice} FCFA
                         </div>
                     </div>
                 ))}
             </div>
             
-            {/* Notes Globales */}
             {order.notes && (
-                <div className="px-4 pb-3">
-                     <div className="bg-orange-50 text-orange-800 text-xs p-3 rounded border border-orange-100 font-medium">
-                        📝 Note: {order.notes}
+                <div className="px-3 pl-5 pb-3">
+                     <div className="bg-yellow-50 text-yellow-800 text-xs p-2 rounded-lg border border-yellow-100 font-medium italic">
+                        "{order.notes}"
                      </div>
                 </div>
             )}
 
-            {/* Actions */}
-            <div className="p-2 bg-gray-50 border-t border-gray-100 mt-auto">
-                {!readonly && (
-                    <div className={onSecondaryAction ? 'flex gap-2' : ''}>
+            {!readonly && (
+                <div className="p-2 pl-4 bg-stone-50 border-t border-stone-100 mt-auto flex gap-2">
+                    <Button
+                        onClick={onAction} 
+                        className={`font-black uppercase tracking-wide text-xs py-2 h-10 ${onSecondaryAction ? 'flex-1' : 'w-full'} ${theme.btn} rounded-lg shadow-sm`}
+                    >
+                        {variant === 'pending' && <Flame className="w-3 h-3 mr-1" />}
+                        {actionLabel}
+                    </Button>
+                    {onSecondaryAction && (
                         <Button
-                            onClick={onAction} 
-                            className={`${onSecondaryAction ? 'flex-1' : 'w-full'} font-bold uppercase tracking-wide py-3 ${theme.btn}`}
+                            onClick={onSecondaryAction} 
+                            className="flex-1 font-black uppercase tracking-wide text-xs py-2 h-10 bg-green-600 text-white hover:bg-green-700 rounded-lg shadow-sm"
                         >
-                            <Printer className="w-4 h-4 mr-1" />
-                            {variant === 'pending' ? 'Démarrer la préparation' : actionLabel}
+                            <Banknote className="w-3 h-3 mr-1" />
+                            {secondaryActionLabel}
                         </Button>
-                        {onSecondaryAction && (
-                            <Button
-                                onClick={onSecondaryAction} 
-                                className="flex-1 font-bold uppercase tracking-wide py-3 bg-green-600 text-white hover:bg-green-700"
-                            >
-                                <Banknote className="w-4 h-4 mr-1" />
-                                {secondaryActionLabel || 'Encaisser'}
-                            </Button>
-                        )}
-                    </div>
-                )}
-            </div>
+                    )}
+                </div>
+            )}
         </div>
     )
 }

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFetch } from '../lib/useFetch';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { UtensilsCrossed, ShoppingBag, Download } from 'lucide-react';
+import { UtensilsCrossed, ShoppingBag, Download, ArrowRight, MapPin, ChefHat } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Modal } from '../components/ui/Modal';
 
@@ -54,106 +54,173 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-       {/* Hero */}
-       <div className="text-center py-8">
-         <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Bienvenue à la Sauce Créole</h1>
-         <p className="text-gray-600 text-lg">Choisissez votre mode de commande</p>
-       </div>
+    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 font-sans overflow-x-hidden">
+      {/* Decorative Background Blobs - Warm & Organic */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-[10%] -right-[10%] w-[70vw] h-[70vw] bg-orange-200/20 rounded-full blur-[100px] mix-blend-multiply"></div>
+        <div className="absolute top-[40%] -left-[20%] w-[60vw] h-[60vw] bg-red-200/20 rounded-full blur-[100px] mix-blend-multiply"></div>
+        <div className="absolute bottom-0 right-0 w-[50vw] h-[50vw] bg-yellow-200/20 rounded-full blur-[80px] mix-blend-multiply"></div>
+      </div>
 
-       <div className="grid md:grid-cols-2 gap-6">
-         {/* Takeout Card - Now with QR Code */}
-         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-            <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <ShoppingBag className="w-8 h-8 text-red-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">À Emporter</h2>
-            <p className="text-gray-500 mb-4">Commandez maintenant et récupérez au comptoir.</p>
-            
-            {/* Mini QR Code */}
-            <div 
-                className="bg-gray-50 p-4 rounded-xl border border-gray-100 inline-block cursor-pointer hover:bg-gray-100 transition-colors mb-4"
-                onClick={() => setIsQrModalOpen(true)}
-            >
-                <QRCodeSVG 
-                    value={takeoutUrl}
-                    size={100}
-                    level="M"
-                />
-                <p className="text-xs text-gray-400 mt-2">Cliquer pour agrandir</p>
-            </div>
-            
-            <Link to="/takeout">
-                <Button className="w-full">
-                    Commander à emporter
-                </Button>
-            </Link>
-         </div>
+      <div className="relative z-10 w-full max-w-5xl mx-auto min-h-screen flex flex-col p-6 md:p-12">
+        
+        {/* Header / Hero Section - Asymmetric & Bold */}
+        <header className="pt-8 pb-12 md:text-center md:pt-16">
+          <div className="flex items-center gap-2 mb-4 md:justify-center">
+            <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-red-200 shadow-sm">
+              Ouvert
+            </span>
+            <span className="text-stone-400 text-sm italic">Le plaisir de manger</span>
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black text-stone-900 leading-[0.95] tracking-tight mb-4">
+            Sauce <br className="md:hidden" />
+            <span className="text-red-600 italic font-serif pr-2">Créole.</span>
+          </h1>
+          <p className="text-lg text-stone-600 font-medium max-w-[80%] md:max-w-xl md:mx-auto leading-relaxed border-l-4 md:border-l-0 md:border-t-4 border-orange-300 pl-4 md:pl-0 md:pt-4 mt-6">
+            L'authenticité dans chaque assiette. Pas de chichis, juste du goût.
+          </p>
+        </header>
 
-         {/* Dine In Card (Active Interaction) */}
-         <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
-             <div className="bg-orange-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <UtensilsCrossed className="w-8 h-8 text-orange-600" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Sur Place</h2>
-            
-            <div className="space-y-3">
-                <label className="block text-sm text-gray-500">Entrez votre code table</label>
-                <div className="flex gap-2 justify-center max-w-xs mx-auto">
-                    <Input 
-                        placeholder="CODE" 
-                        value={tableCode} 
-                        onChange={e => setTableCode(e.target.value)} 
-                        className="text-center font-mono uppercase"
-                    />
-                    <Button onClick={handleGo} disabled={!tableCode}>
-                         GO
-                    </Button>
+        {/* Main Actions - Distinct Visual Hierarchy */}
+        <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          
+          {/* Card 1: Takeout - The "Hot" Option */}
+          <section className="relative group h-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-600 to-orange-600 rounded-3xl transform rotate-1 group-hover:rotate-2 transition-transform duration-300 shadow-xl shadow-orange-900/20"></div>
+            <div className="relative bg-[#1A1A1A] rounded-2xl p-8 text-white overflow-hidden shadow-inner border border-white/5 h-full flex flex-col justify-between">
+              
+              {/* Abstract pattern overlay */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+              
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                   <h2 className="text-3xl font-bold mb-2 flex items-center gap-2">
+                    <ShoppingBag className="w-8 h-8 text-orange-400" />
+                    À Emporter
+                   </h2>
+                   <p className="text-stone-400">Pas le temps ? On prépare tout.</p>
                 </div>
-                
-                {/* Available Tables List */}
-                <div className="text-center mt-6 pt-6 border-t border-gray-100">
-                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Tables Disponibles</h3>
-                    {loading ? (
-                        <div className="text-sm text-gray-400">Chargement...</div>
-                    ) : (
-                        <div className="flex flex-wrap gap-2 justify-center">
-                            {tablesData?.data.map(table => (
-                                <button 
-                                    key={table.id}
-                                    onClick={() => setTableCode(table.code)}
-                                    className="px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 border border-green-100 transition-colors"
-                                >
-                                    {table.name} ({table.capacity}p)
-                                </button>
-                            ))}
-                            {tablesData?.data?.length === 0 && (
-                                <span className="text-sm text-gray-400 italic">Aucune table disponible pour le moment.</span>
-                            )}
-                        </div>
-                    )}
+                <div 
+                  className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/10 cursor-pointer hover:bg-white/20 transition-colors"
+                  onClick={() => setIsQrModalOpen(true)}
+                >
+                  <QRCodeSVG value={takeoutUrl} size={56} fgColor="#FFFFFF" bgColor="transparent" />
                 </div>
-            </div>
-         </div>
-       </div>
+              </div>
 
-       {/* Takeout QR Code Modal */}
-       <Modal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="QR Code - Commande à emporter">
-         <div className="text-center space-y-4">
-           <p className="text-gray-500 text-sm">Scannez ce QR code pour accéder à la commande à emporter</p>
-           <div className="bg-white p-6 rounded-xl inline-block border border-gray-200">
+              <Link to="/takeout" className="mt-auto">
+                <button className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl flex items-center justify-between px-6 transition-all shadow-lg shadow-orange-900/30 group-hover:translate-x-1">
+                  <span>Commander maintenant</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </Link>
+            </div>
+          </section>
+
+          {/* Card 2: Dine-in - The "Cozy" Option */}
+          <section className="relative h-full">
+            {/* Ticket/Paper texture effect */}
+            <div className="bg-white rounded-t-2xl rounded-b-lg p-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-stone-100 h-full flex flex-col">
+               <div className="border-2 border-dashed border-stone-200 rounded-xl p-8 bg-stone-50/50 flex-1 flex flex-col">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-600">
+                    <UtensilsCrossed className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-stone-800">Sur Place</h2>
+                    <p className="text-sm text-stone-500 font-medium uppercase tracking-wide">Service en salle</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6 flex-1">
+                  <div className="relative">
+                     <label className="absolute -top-2.5 left-3 bg-stone-50 px-2 text-xs font-bold text-stone-400 uppercase tracking-wider">
+                       Votre Table
+                     </label>
+                     <div className="flex gap-2">
+                       <Input 
+                          placeholder="A1..." 
+                          value={tableCode} 
+                          onChange={e => setTableCode(e.target.value.toUpperCase())} 
+                          className="h-16 text-xl font-mono tracking-widest bg-white border-stone-200 shadow-sm focus:border-red-400 focus:ring-red-100"
+                        />
+                        <Button 
+                          onClick={handleGo} 
+                          disabled={!tableCode}
+                          variant="ghost"
+                          className="h-16 px-8 bg-stone-800 text-white hover:bg-stone-700 font-bold rounded-lg shadow-md disabled:bg-stone-200 disabled:text-stone-400 text-lg"
+                        >
+                          GO
+                        </Button>
+                     </div>
+                  </div>
+
+                  {/* Available Tables - Organic Tags */}
+                  {loading ? (
+                       <div className="h-8 w-1/2 bg-stone-200/50 rounded animate-pulse"></div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 mt-4">
+                        {tablesData?.data.map((table, idx) => (
+                          <button 
+                              key={table.id}
+                              onClick={() => setTableCode(table.code)}
+                              className={`
+                                text-sm font-bold px-4 py-2 rounded-md border transition-all duration-200
+                                ${idx % 2 === 0 ? 'bg-green-50 text-green-700 border-green-100 rotate-1' : 'bg-blue-50 text-blue-700 border-blue-100 -rotate-1'}
+                                hover:scale-105 hover:shadow-sm hover:z-10
+                              `}
+                          >
+                              {table.name}
+                          </button>
+                        ))}
+                         {tablesData?.data?.length === 0 && (
+                            <span className="text-xs text-stone-400 italic">Tout est complet...</span>
+                        )}
+                    </div>
+                  )}
+                </div>
+               </div>
+            </div>
+            {/* Ragged edge effect at bottom (simulated) */}
+             <div className="h-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-stone-100/0 via-stone-200/20 to-stone-100/0 mx-2 -mt-1 rounded-full blur-[2px]"></div>
+          </section>
+
+        </main>
+
+        <footer className="py-8 text-center opacity-60">
+           <div className="flex justify-center gap-6 mb-4">
+              <div className="flex flex-col items-center gap-1">
+                 <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+                    <ChefHat className="w-4 h-4" />
+                 </div>
+                 <span className="text-[10px] font-bold tracking-wider uppercase">Frais</span>
+              </div>
+               <div className="flex flex-col items-center gap-1">
+                 <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                    <MapPin className="w-4 h-4" />
+                 </div>
+                 <span className="text-[10px] font-bold tracking-wider uppercase">Local</span>
+              </div>
+           </div>
+           <p className="text-xs font-medium text-stone-400">© 2026 Sauce Créole.</p>
+        </footer>
+      </div>
+
+       {/* QR Modal - Clean & Functional */}
+       <Modal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="Scanner pour Emporter">
+         <div className="text-center space-y-6 py-2">
+           <div className="bg-white p-4 rounded-xl inline-block border-2 border-dashed border-stone-200">
              <QRCodeSVG 
                id="takeout-qr-code"
                value={takeoutUrl}
-               size={200}
+               size={180}
                level="H"
                includeMargin={true}
              />
            </div>
-           <p className="text-xs text-gray-400 font-mono break-all">{takeoutUrl}</p>
-           <Button onClick={downloadQrCode} className="w-full">
+           <Button onClick={downloadQrCode} variant="outline" className="w-full border-stone-200 hover:bg-stone-50 text-stone-600">
              <Download className="w-4 h-4 mr-2" />
-             Télécharger en PNG
+             Sauvegarder
            </Button>
          </div>
        </Modal>

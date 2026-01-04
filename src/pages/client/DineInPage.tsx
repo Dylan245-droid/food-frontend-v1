@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Users, UtensilsCrossed } from 'lucide-react';
+import { Minus, Plus, UtensilsCrossed, Bell, Receipt, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface MenuItem {
   id: number;
@@ -32,7 +32,6 @@ interface CartItem {
 export default function DineInPage() {
   const { code } = useParams();
   const { data: tableData, loading, error } = useFetch<any>(`/tables/${code}`);
-  
   const { data: tableOrders, refetch: refreshOrders } = useFetch<any>(`/tables/${code}/orders`);
   
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -76,14 +75,9 @@ export default function DineInPage() {
   const thankYouMessages = [
       "Revenez vite, ce fût un plaisir de vous avoir !",
       "Merci de votre visite ! À très bientôt chez Sauce Créole.",
-      "Nous espérons que vous avez passé un excellent moment. À la prochaine !",
+      "Nous espérons que vous avez passé un excellent moment.",
       "Toute l'équipe vous remercie. Revenez nous voir vite !",
-      "Un grand merci ! Nous avons hâte de vous régaler à nouveau.",
-      "Votre satisfaction est notre bonheur. À très bientôt !",
-      "Merci d'être passé ! Bon retour et à bientôt.",
-      "Au plaisir de vous revoir très prochainement autour d'un bon repas.",
-      "Merci pour ce moment partagé. Prenez soin de vous et à bientôt !",
-      "Ce fut un plaisir de vous servir. À très vite chez nous !"
+      "Un grand merci ! Nous avons hâte de vous régaler à nouveau."
   ];
 
   // Track if we ever had orders
@@ -96,30 +90,26 @@ export default function DineInPage() {
   // Trigger end session if we had orders and now they are gone (paid/cleared)
   useEffect(() => {
       if (hasPlacedOrders && ongoingOrders.length === 0 && !loading) {
-          // Pick random message
           const msg = thankYouMessages[Math.floor(Math.random() * thankYouMessages.length)];
           setThankYouMessage(msg);
           setShowThankYou(true);
-          
-          // Clear local storage / session
           localStorage.removeItem('activeTableCode');
-
-          // Redirect after 8 seconds
           const timer = setTimeout(() => {
               navigate('/');
           }, 8000);
           return () => clearTimeout(timer);
       }
   }, [ongoingOrders, hasPlacedOrders, loading]);
+
   const handleLeaveTable = async () => {
      const hasUnpaidServedOrders = ongoingOrders.some((o: any) => o.status === 'delivered');
      
      if (hasUnpaidServedOrders) {
-         alert(`Impossible de quitter la table ${tableInfo?.name || ''} !\n\nVous avez des commandes servies non réglées. Veuillez demander l'addition ou appeler le serveur.`);
+         alert(`Impossible de quitter la table ${tableInfo?.name || ''} !\n\nVous avez des commandes servies non réglées. Veuillez demander l'addition.`);
          return;
      }
 
-     if (window.confirm('Voulez-vous libérer la table ?\n\n⚠️ Si vous avez des commandes en attente ou en préparation, elles seront annulées.')) {
+     if (window.confirm('Voulez-vous libérer la table ?\n\n⚠️ Si vous avez des commandes en attente, elles seront annulées.')) {
          try {
              await api.post(`/tables/${code}/leave`);
          } catch(e) {
@@ -131,7 +121,6 @@ export default function DineInPage() {
      }
   };
 
-  // Handle cancelling a single order
   const handleCancelOrder = async (orderId: number) => {
      if (window.confirm('Annuler cette commande ?\n\nCette action est irréversible.')) {
          try {
@@ -139,14 +128,12 @@ export default function DineInPage() {
              refreshOrders();
          } catch(e) {
              alert('Erreur lors de l\'annulation');
-             console.error("Erreur cancellation", e);
          }
      }
   };
 
   const handleServerCall = async (type: 'general' | 'bill') => {
       if (!tableInfo?.id) return;
-      
       const label = type === 'bill' ? "Demander l'addition" : "Appeler le serveur";
       if (!confirm(`Confirmer : ${label} ?`)) return;
 
@@ -193,310 +180,332 @@ export default function DineInPage() {
         await api.post(`/tables/${code}/orders`, {
             items: cart.map(i => ({ menuItemId: i.menuItemId, quantity: i.quantity })),
         });
-        
-        // Success
         alert('Commande envoyée en cuisine !');
         setCart([]);
         setIsCartOpen(false);
-        refreshOrders(); // Refresh tracking list immediately
+        refreshOrders();
     } catch (error) {
-        alert('Erreur lors de la commande. Veuillez réessayer.');
+        alert('Erreur lors de la commande.');
     } finally {
         setSubmitting(false);
     }
   };
 
+  if (loading) return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FFF8F3]">
+          <div className="animate-pulse flex flex-col items-center text-stone-400">
+              <UtensilsCrossed className="w-12 h-12 mb-4" />
+              <span className="font-medium">Dressage de la table...</span>
+          </div>
+      </div>
+  );
 
-
-  if (loading) return <div className="p-8 text-center text-gray-500">Chargement de la table...</div>;
   if (error) return (
-      <div className="p-8 text-center flex flex-col items-center justify-center h-full">
-          <div className="text-red-500 mb-4 font-bold">Table introuvable ou inactive.</div>
-          <Button 
-            variant="secondary"
-            onClick={() => {
-                localStorage.removeItem('activeTableCode');
-                navigate('/');
-            }}
-          >
-              Retour à l'accueil
-          </Button>
+      <div className="min-h-screen bg-[#FFF8F3] flex flex-col items-center justify-center p-8 text-center">
+          <div className="bg-white p-8 rounded-3xl shadow-xl border border-stone-100 max-w-sm">
+             <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                 <XCircle className="w-8 h-8" />
+             </div>
+             <h2 className="text-xl font-bold text-stone-900 mb-2">Table introuvable</h2>
+             <p className="text-stone-500 mb-6">Le code table semble incorrect ou la session est expirée.</p>
+             <Button onClick={() => { localStorage.removeItem('activeTableCode'); navigate('/'); }} className="w-full">
+                 Retour à l'accueil
+             </Button>
+          </div>
       </div>
   );
 
   const activeCategory = menuCategories.find(c => c.id === activeCategoryId);
 
-
-
-
   return (
-    <div className="space-y-6 pb-24">
-      {/* Header Table Info */}
-      <div className="bg-red-600 text-white p-6 rounded-xl shadow-lg flex justify-between items-center">
-        <div>
-            <h1 className="text-2xl font-bold mb-1">{tableInfo?.name}</h1>
-            <p className="opacity-90 text-sm flex items-center gap-1">
-                <UtensilsCrossed className="w-4 h-4" /> 
-                Zone: {tableInfo?.zone || 'Principale'}
-            </p>
-        </div>
-        <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-lg">
-                <Users className="w-6 h-6" />
-            </div>
-            <button onClick={handleLeaveTable} className="text-xs text-red-200 underline hover:text-white">
-                Quitter
-            </button>
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 pb-32 overflow-x-hidden relative">
+      
+       {/* Background Decoration */}
+       <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-yellow-100/30 rounded-full blur-[100px] mix-blend-multiply"></div>
+          <div className="absolute bottom-0 left-0 w-[60vw] h-[60vw] bg-orange-100/30 rounded-full blur-[100px] mix-blend-multiply"></div>
+       </div>
 
-      {/* Quick Actions (Server Calls) */}
-      <div className="grid grid-cols-2 gap-3">
-          <Button 
-            variant="secondary" 
-            className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 h-12 shadow-sm"
-            onClick={() => handleServerCall('general')}
-          >
-              <Users className="w-4 h-4 mr-2" />
-              Appeler Serveur
-          </Button>
-          
-          {(() => {
-              const hasOrders = ongoingOrders.length > 0;
-              const allDelivered = ongoingOrders.every((o: any) => o.status === 'delivered');
-              const canAskBill = hasOrders && allDelivered;
-
-              return (
-                <Button 
-                    variant="secondary" 
-                    className={`h-12 shadow-sm transition-all ${
-                        canAskBill 
-                        ? 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50' 
-                        : 'bg-gray-100 text-gray-400 border-transparent cursor-not-allowed opacity-70'
-                    }`}
-                    onClick={() => handleServerCall('bill')}
-                    disabled={!canAskBill}
-                    title={!hasOrders ? "Aucune commande à payer" : !allDelivered ? "Attendez que tout soit servi" : ""}
-                >
-                    <div className="mr-2 border-2 border-current rounded-sm w-4 h-[10px] relative">
-                        <div className="absolute top-[2px] left-0 right-0 h-[1px] bg-current"></div>
+       <div className="relative z-10 w-full max-w-6xl mx-auto p-4 md:p-8">
+           
+           {/* Header Card - Ticket Style */}
+           <header className="bg-white p-5 rounded-2xl shadow-[0_2px_15px_rgb(0,0,0,0.03)] border border-stone-100 mb-6 relative overflow-hidden md:flex md:justify-between md:items-center">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                
+                <div className="flex justify-between items-start w-full">
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-stone-100 text-stone-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-stone-200">
+                                Zone {tableInfo?.zone || 'Principale'}
+                            </span>
+                        </div>
+                        <h1 className="text-3xl font-black text-stone-900">{tableInfo?.name}</h1>
                     </div>
-                    L'Addition
-                </Button>
-              );
-          })()}
-      </div>
+                    
+                    <button onClick={handleLeaveTable} className="text-xs text-stone-400 font-medium hover:text-red-500 transition-colors border border-dashed border-stone-200 px-3 py-1.5 rounded-lg md:ml-auto">
+                        Libérer la table
+                    </button>
+                </div>
 
-       {/* Order Tracking Section (Detailed) */}
-       {ongoingOrders.length > 0 && (
-           <div className="space-y-4 animate-in slide-in-from-top-2">
-               <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                   🧾 Commandes de la table
-               </h3>
-               
-               {ongoingOrders.map((order: any) => {
-                   // Ensure we handle both structure from API (unitPrice) and potential leftovers
-                   const orderItems = order.items.map((item: any) => ({
-                       ...item,
-                       // API returns unitPrice in OrderItem, mapped as price in CartItem, ensure fallbacks
-                       finalPrice: item.unitPrice !== undefined ? item.unitPrice : item.price || 0
-                   }));
+                {/* Quick Actions Grid */}
+                <div className="grid grid-cols-2 gap-3 mt-6 md:mt-0 md:ml-6 md:w-auto md:flex">
+                    <button 
+                        onClick={() => handleServerCall('general')}
+                        className="flex items-center justify-center gap-2 py-3 px-6 bg-stone-50 hover:bg-orange-50 text-stone-600 hover:text-orange-600 rounded-xl transition-colors text-sm font-bold border border-stone-100 md:w-auto"
+                    >
+                        <Bell className="w-4 h-4" />
+                        Appeler
+                    </button>
+                    
+                    {(() => {
+                        const hasOrders = ongoingOrders.length > 0;
+                        const allDelivered = ongoingOrders.every((o: any) => o.status === 'delivered');
+                        const canAskBill = hasOrders && allDelivered;
 
-                   const orderTotal = orderItems.reduce((acc: number, item: any) => acc + (item.finalPrice * item.quantity), 0);
-                   
-                   return (
-                       <div key={order.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                           {/* Order Header */}
-                           <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-b border-gray-100">
-                                <div className="flex flex-col">
-                                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">
-                                        Commande #{order.dailyNumber || order.id}
-                                    </span>
-                                    <span className="text-xs text-gray-500 font-medium">
-                                        {new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                    </span>
-                                </div>
-                                <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide border ${
-                                    order.status === 'pending' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
-                                    order.status === 'in_progress' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                                    'bg-green-50 text-green-700 border-green-200'
-                                }`}>
-                                    {order.status === 'pending' ? 'En attente' :
-                                     order.status === 'in_progress' ? 'En préparation' : 'Servi'}
-                                </span>
+                        return (
+                            <button 
+                                onClick={() => handleServerCall('bill')}
+                                disabled={!canAskBill}
+                                className={`flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-sm font-bold border transition-colors md:w-auto ${
+                                    canAskBill 
+                                    ? 'bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 border-stone-100' 
+                                    : 'bg-stone-50/50 text-stone-300 border-transparent cursor-not-allowed'
+                                }`}
+                            >
+                                <Receipt className="w-4 h-4" />
+                                L'Addition
+                            </button>
+                        );
+                    })()}
+                </div>
+           </header>
+
+           <div className="flex flex-col lg:flex-row gap-8 items-start">
+               {/* Menu Section */}
+               <div className="flex-1 w-full">
+                   {/* Menu Categories */}
+                   <div className="sticky top-0 bg-[#FFF8F3]/95 backdrop-blur-sm pt-2 pb-6 z-20 overflow-x-auto no-scrollbar flex gap-2 -mx-4 px-4 mask-linear-fade md:mx-0 md:px-0">
+                        {menuCategories.map(cat => (
+                            <button
+                                key={cat.id}
+                                onClick={() => setActiveCategoryId(cat.id)}
+                                className={`
+                                    px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 border
+                                    ${activeCategoryId === cat.id 
+                                        ? 'bg-stone-800 text-white border-stone-900 shadow-md transform -translate-y-0.5' 
+                                        : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300 hover:text-stone-700'
+                                    }
+                                `}
+                            >
+                                {cat.name}
+                            </button>
+                        ))}
+                   </div>
+
+                   {/* Menu Grid */}
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24">
+                        {activeCategory ? (
+                            activeCategory.items.map(item => {
+                                const cartItem = cart.find(i => i.menuItemId === item.id);
+                                const quantity = cartItem?.quantity || 0;
+                                
+                                return (
+                                    <div 
+                                        key={item.id} 
+                                        onClick={() => addToCart(item)}
+                                        className="group bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 hover:border-orange-200 flex flex-col"
+                                    >
+                                        {/* Image Area */}
+                                        <div className="h-40 bg-stone-100 relative overflow-hidden">
+                                             {item.imageUrl ? (
+                                                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                             ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center text-stone-200">
+                                                    <UtensilsCrossed className="w-12 h-12 opacity-50" />
+                                                </div>
+                                             )}
+                                             {/* Dark Gradient for Text Readability if we wanted overlay, but here we keep text below */}
+                                             {quantity > 0 && (
+                                                 <div className="absolute top-3 right-3 bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg shadow-orange-900/20 animate-in zoom-in">
+                                                     {quantity} commandé(s)
+                                                 </div>
+                                             )}
+                                        </div>
+
+                                        <div className="p-5 flex flex-col flex-1">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h3 className="font-bold text-stone-900 text-lg leading-tight flex-1">{item.name}</h3>
+                                                <span className="font-black text-orange-600 text-lg whitespace-nowrap ml-3">
+                                                    {item.price} <span className="text-xs font-bold text-stone-400">FCFA</span>
+                                                </span>
+                                            </div>
+                                            
+                                            <p className="text-sm text-stone-500 line-clamp-2 mb-4 leading-relaxed flex-1">
+                                                {item.description || "Délicieuse préparation maison."}
+                                            </p>
+                                            
+                                            <div className="mt-auto pt-4 border-t border-dashed border-stone-100 flex items-center justify-between">
+                                                {quantity === 0 ? (
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                                                        className="w-full py-3 rounded-xl bg-stone-50 hover:bg-stone-900 hover:text-white text-stone-600 font-bold transition-all flex items-center justify-center gap-2"
+                                                    >
+                                                        <Plus className="w-4 h-4" /> Ajouter
+                                                    </button>
+                                                ) : (
+                                                    <div className="flex items-center gap-2 bg-stone-900 p-1.5 rounded-xl text-white w-full justify-between shadow-lg shadow-stone-900/10">
+                                                         <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} className="w-10 h-9 flex items-center justify-center bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors"><Minus className="w-4 h-4" /></button>
+                                                         <span className="font-bold text-lg">{quantity}</span>
+                                                         <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} className="w-10 h-9 flex items-center justify-center bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors"><Plus className="w-4 h-4" /></button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="col-span-full py-24 text-center text-stone-400">
+                                 <UtensilsCrossed className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                                 <p className="text-xl font-bold opacity-50">La carte est vide.</p>
+                            </div>
+                        )}
+                   </div>
+               </div>
+
+               {/* Ongoing Orders Sidebar (Desktop) / Top block (Mobile) */}
+               {ongoingOrders.length > 0 && (
+                   <div className="lg:w-80 lg:sticky lg:top-6 order-first lg:order-last mb-8 lg:mb-0 animate-in slide-in-from-top-4 duration-700">
+                       <div className="bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
+                           <div className="flex items-center gap-2 mb-4 px-1">
+                               <Clock className="w-4 h-4 text-stone-400" />
+                               <h3 className="font-bold text-stone-500 text-sm uppercase tracking-wide">Commandes suivies</h3>
                            </div>
+                           
+                           <div className="space-y-3">
+                               {ongoingOrders.map((order: any) => {
+                                   const orderItems = order.items.map((item: any) => ({
+                                       ...item,
+                                       finalPrice: item.unitPrice !== undefined ? item.unitPrice : item.price || 0
+                                   }));
+                                   const isPending = order.status === 'pending';
+                                   const isInProgress = order.status === 'in_progress';
 
-                           {/* Order Items */}
-                           <div className="p-4 space-y-2">
-                               {orderItems.map((item: any) => (
-                                   <div key={item.id} className="flex justify-between text-sm">
-                                       <div className="text-gray-800">
-                                           <span className="font-bold mr-2">{item.quantity}x</span>
-                                           {item.menuItem?.name || 'Article'}
+                                   return (
+                                       <div key={order.id} className="bg-stone-50/50 border border-stone-100 rounded-xl p-3 relative">
+                                           <div className={`absolute left-0 top-3 bottom-3 w-1 ${
+                                               isPending ? 'bg-yellow-400' : isInProgress ? 'bg-blue-400' : 'bg-green-400'
+                                           } rounded-r-full`}></div>
+
+                                           <div className="flex justify-between items-start mb-2 pl-3">
+                                               <span className="text-xs font-mono text-stone-400">#{order.dailyNumber || order.id}</span>
+                                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                                    isPending ? 'bg-yellow-100 text-yellow-700' : 
+                                                    isInProgress ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                                               }`}>
+                                                   {isPending ? 'Reçu' : isInProgress ? 'Prépa' : 'Servi'}
+                                               </span>
+                                           </div>
+
+                                           <div className="space-y-1 mb-2 pl-3">
+                                               {orderItems.map((item: any) => (
+                                                   <div key={item.id} className="flex justify-between text-xs">
+                                                       <span className="text-stone-700">
+                                                           <span className="font-bold mr-1">{item.quantity}x</span> 
+                                                           {item.menuItem?.name}
+                                                       </span>
+                                                   </div>
+                                               ))}
+                                           </div>
+
+                                           {isPending && (
+                                               <button 
+                                                   onClick={() => handleCancelOrder(order.id)}
+                                                   className="text-[10px] text-red-400 hover:text-red-600 font-medium underline decoration-red-200 underline-offset-2 pl-3"
+                                               >
+                                                   Annuler
+                                               </button>
+                                           )}
                                        </div>
-                                       <div className="text-gray-500 font-medium whitespace-nowrap">
-                                           {item.finalPrice * item.quantity} FCFA
-                                       </div>
-                                   </div>
-                               ))}
+                                   );
+                               })}
                                
-                               <div className="pt-3 mt-3 border-t border-dashed border-gray-200 flex justify-between items-center">
-                                   <span className="text-xs text-gray-400">Total commande</span>
-                                   <span className="font-bold text-gray-900">{orderTotal} FCFA</span>
+                               <div className="bg-stone-900 text-white p-4 rounded-xl flex justify-between items-center shadow-lg mt-4">
+                                    <span className="text-stone-400 text-xs font-medium">Total table</span>
+                                    <span className="font-mono text-lg font-bold">{tableGrandTotal} <span className="text-xs opacity-50">FCFA</span></span>
                                </div>
-                               
-                               {/* Cancel Button - Only for Pending Orders */}
-                               {order.status === 'pending' && (
-                                   <button
-                                       onClick={() => handleCancelOrder(order.id)}
-                                       className="w-full mt-3 py-2 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg border border-red-200 font-medium transition-colors"
-                                   >
-                                       ✕ Annuler cette commande
-                                   </button>
-                               )}
                            </div>
                        </div>
-                   );
-               })}
-               
-               {/* Grand Total Badge */}
-               <div className="bg-gray-900 text-white p-4 rounded-xl flex justify-between items-center shadow-lg">
-                   <div className="flex flex-col">
-                        <span className="text-xs text-gray-400 uppercase tracking-wider">Total à payer</span>
-                        <span className="font-bold text-lg">Table {tableInfo?.name}</span>
                    </div>
-                   <div className="text-xl font-bold text-green-400">{tableGrandTotal} FCFA</div>
-               </div>
+               )}
            </div>
-       )}
 
-      {/* Category Filters (Sticky) */}
-      <div className="sticky top-0 bg-gray-50 pt-2 pb-4 z-20 overflow-x-auto no-scrollbar flex gap-2">
-         {menuCategories.map(cat => (
-             <button
-                key={cat.id}
-                onClick={() => setActiveCategoryId(cat.id)}
-                className={`px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all ${
-                    activeCategoryId === cat.id 
-                    ? 'bg-red-600 text-white shadow-md' 
-                    : 'bg-white text-gray-600 border border-gray-200'
-                }`}
-             >
-                 {cat.name}
-             </button>
-         ))}
-      </div>
-
-      {/* Menu Items Grid */}
-      <div className="grid grid-cols-1 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {activeCategory ? (
-            activeCategory.items.map(item => {
-              const cartItem = cart.find(i => i.menuItemId === item.id);
-              const quantity = cartItem?.quantity || 0;
-              
-              return (
-              <div key={item.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
-                <div className="flex-1 pr-4">
-                  <h3 className="font-bold text-gray-900">{item.name}</h3>
-                  <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
-                  <p className="text-red-600 font-bold mt-1 text-lg">{item.price} FCFA</p>
+           {/* Cart Launcher */}
+           {cart.length > 0 && (
+                <div className="fixed bottom-6 inset-x-0 px-4 pointer-events-none z-30">
+                    <button 
+                        onClick={() => setIsCartOpen(true)}
+                        className="w-full max-w-md mx-auto pointer-events-auto bg-stone-900 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between hover:scale-[1.02] transition-transform active:scale-95"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-4 ring-stone-900">
+                                {totalItems}
+                            </div>
+                            <span className="font-bold">Voir mon plateau</span>
+                        </div>
+                        <span className="font-mono font-bold text-lg">{totalAmount} FCFA</span>
+                    </button>
                 </div>
-                
-                {quantity > 0 ? (
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => removeFromCart(item.id)}
-                      className="h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 transition-colors"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-8 text-center font-bold text-gray-900">{quantity}</span>
-                    <button 
-                      onClick={() => addToCart(item)}
-                      className="h-9 w-9 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center text-white transition-colors"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <Button 
-                      size="sm" 
-                      onClick={() => addToCart(item)} 
-                      variant="secondary"
-                      className="h-10 w-10 rounded-full flex items-center justify-center p-0 bg-gray-100 hover:bg-gray-200 text-gray-800"
-                  >
-                      <Plus className="w-5 h-5" />
-                  </Button>
-                )}
-              </div>
-              );
-            })
-        ) : (
-            <div className="text-center py-12 text-gray-400">Sélectionnez une catégorie</div>
-        )}
-         {/* Thank You Overlay */}
-       {showThankYou && (
-           <div className="fixed inset-0 bg-red-600 z-[100] flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-700">
-               <div className="bg-white/20 p-6 rounded-full mb-8 animate-bounce">
-                   <Users className="w-16 h-16 text-white" />
+            )}
+
+            {/* Cart Modal */}
+            <Modal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} title="Votre Plateau">
+                <div className="space-y-6">
+                    <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                        {cart.map(item => (
+                            <div key={item.menuItemId} className="flex items-center justify-between">
+                                <div>
+                                    <div className="font-bold text-stone-900">{item.name}</div>
+                                    <div className="text-sm text-stone-500">{item.price} FCFA</div>
+                                </div>
+                                <div className="flex items-center gap-3 bg-stone-50 rounded-lg p-1 border border-stone-100">
+                                    <button onClick={() => removeFromCart(item.menuItemId)} className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm border border-stone-200 text-stone-500"><Minus className="w-4 h-4" /></button>
+                                    <span className="font-bold w-6 text-center">{item.quantity}</span>
+                                    <button onClick={() => addToCart({ id: item.menuItemId } as MenuItem)} className="w-8 h-8 flex items-center justify-center bg-stone-800 text-white rounded-md shadow-md"><Plus className="w-4 h-4" /></button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="border-t-2 border-dashed border-stone-200 pt-6">
+                        <div className="flex justify-between items-end mb-6">
+                            <span className="text-stone-500 font-medium">Total commande</span>
+                            <span className="text-3xl font-black text-stone-900">{totalAmount} <span className="text-sm font-normal text-stone-400">FCFA</span></span>
+                        </div>
+
+                        <Button onClick={handleCheckout} isLoading={submitting} className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-lg shadow-green-200">
+                            Envoyer en cuisine 👨‍🍳
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Thank You Overlay */}
+            {showThankYou && (
+               <div className="fixed inset-0 bg-stone-900/95 backdrop-blur-md z-[100] flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-500">
+                   <div className="bg-white/10 p-6 rounded-full mb-8">
+                       <CheckCircle className="w-16 h-16 text-green-400" />
+                   </div>
+                   <h1 className="text-4xl font-black text-white mb-6 leading-tight">Merci !</h1>
+                   <p className="text-xl text-stone-300 font-medium max-w-md leading-relaxed mb-12">
+                       {thankYouMessage}
+                   </p>
+                   <div className="w-full max-w-xs bg-white/10 h-1.5 rounded-full overflow-hidden">
+                       <div className="h-full bg-green-400 w-full animate-[progress_8s_linear_forward]"></div>
+                   </div>
                </div>
-               <h1 className="text-4xl font-black text-white mb-6 leading-tight">
-                   Merci !
-               </h1>
-               <p className="text-xl text-red-50 font-medium max-w-md leading-relaxed">
-                   {thankYouMessage}
-               </p>
-               <div className="mt-12 w-16 h-1 bg-red-400/50 rounded-full overflow-hidden">
-                   <div className="h-full bg-white w-full animate-[progress_8s_linear_forward]"></div>
-               </div>
-           </div>
-       )}
-    </div>
-
-      {/* Floating Cart Launcher */}
-      {cart.length > 0 && (
-        <button 
-            onClick={() => setIsCartOpen(true)}
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-4 rounded-full shadow-xl flex items-center gap-4 font-bold animate-in slide-in-from-bottom-4 z-50 hover:scale-105 transition-transform"
-        >
-            <div className="bg-white text-black rounded-full w-6 h-6 flex items-center justify-center text-xs ml-[-4px]">
-                {totalItems}
-            </div>
-            <span>Voir la commande</span>
-            <span className="opacity-50">|</span>
-            <span>{totalAmount} FCFA</span>
-        </button>
-      )}
-
-      {/* Cart Modal */}
-      <Modal isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} title={`Commande - ${tableInfo?.name}`}>
-         <div className="space-y-4">
-             {cart.map(item => (
-                 <div key={item.menuItemId} className="flex justify-between items-center py-3 border-b border-gray-50 last:border-0">
-                     <div className="flex-1">
-                         <div className="font-medium text-gray-900">{item.name}</div>
-                         <div className="text-sm text-gray-500">{item.price * item.quantity} FCFA</div>
-                     </div>
-                     <div className="flex items-center gap-3 bg-gray-100 rounded-lg p-1">
-                         <button onClick={() => removeFromCart(item.menuItemId)} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md transition-colors"><Minus className="w-4 h-4" /></button>
-                         <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                         <button onClick={() => addToCart({ id: item.menuItemId } as MenuItem)} className="w-8 h-8 flex items-center justify-center hover:bg-white rounded-md transition-colors"><Plus className="w-4 h-4" /></button>
-                     </div>
-                 </div>
-             ))}
-
-             <div className="border-t border-gray-100 pt-4 mt-4">
-                 <div className="flex justify-between text-xl font-bold mb-6 text-gray-900">
-                     <span>Total</span>
-                     <span>{totalAmount} FCFA</span>
-                 </div>
-
-                 <Button onClick={handleCheckout} isLoading={submitting} className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700 shadow-lg shadow-green-200">
-                     Envoyer en cuisine 👨‍🍳
-                 </Button>
-             </div>
-         </div>
-      </Modal>
+           )}
+       </div>
     </div>
   );
 }

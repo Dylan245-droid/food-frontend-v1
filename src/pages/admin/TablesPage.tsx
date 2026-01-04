@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Banknote } from 'lucide-react';
+import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Banknote, Utensils, Armchair } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder, OrderItem } from '../../components/Receipt';
@@ -55,10 +55,7 @@ export default function TablesPage() {
   const [assignServerId, setAssignServerId] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   
-  // Printing State
   const [receiptOrder, setReceiptOrder] = useState<ReceiptOrder | null>(null);
-
-  // Base URL for QR codes
   const baseUrl = window.location.origin;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -100,7 +97,6 @@ export default function TablesPage() {
       }
   }
 
-  // Print bill WITHOUT changing order status (just show the bill to customer)
   const handlePrintBill = async (table: Table) => {
       if (!table.activeOrdersCount) return;
       
@@ -113,9 +109,7 @@ export default function TablesPage() {
               return;
           }
 
-          // Consolidated Items (don't change status, just print)
           let totalAmount = 0;
-
           const allItems: OrderItem[] = orders.flatMap(o => {
               if(o.status === 'cancelled') return [];
               totalAmount += o.totalAmount;
@@ -131,7 +125,7 @@ export default function TablesPage() {
               id: 0,
               dailyNumber: null,
               pickupCode: null,
-              status: 'delivered', // Not paid yet - just showing the bill
+              status: 'delivered',
               totalAmount: totalAmount,
               items: allItems,
               createdAt: new Date().toISOString(),
@@ -145,14 +139,12 @@ export default function TablesPage() {
       }
   }
 
-  // Collect payment: Mark all orders as PAID
   const handleCollectPayment = async (table: Table) => {
       if (!table.activeOrdersCount) return;
       
       try {
           const res = await api.get(`/staff/orders?table_id=${table.id}&status=pending,in_progress,delivered`);
           const orders: any[] = res.data.data;
-          
           const unpaidOrders = orders.filter(o => o.status !== 'paid' && o.status !== 'cancelled');
           
           if (unpaidOrders.length === 0) {
@@ -160,7 +152,6 @@ export default function TablesPage() {
               return;
           }
 
-          // Calculate total for confirmation
           const totalAmount = unpaidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
           
           if (!confirm(`Encaisser ${totalAmount} FCFA pour ${unpaidOrders.length} commande(s) ?`)) {
@@ -175,15 +166,10 @@ export default function TablesPage() {
       }
   }
 
-  // Trigger print when receiptOrder is updated
   useEffect(() => {
       if (receiptOrder) {
-          // Small delay to ensure DOM update
           const timer = setTimeout(() => {
               window.print();
-              // Optional: Clear receipt after print to allow re-printing same receipt if needed? 
-              // Better reset it on closing or handle duplicates. 
-              // For now, let's keep it simple.
           }, 100);
           return () => clearTimeout(timer);
       }
@@ -192,7 +178,6 @@ export default function TablesPage() {
   const openAssignModal = (table: Table) => {
       setSelectedTable(table);
       const eligibleUsers = usersData?.data?.filter(u => u.role === 'serveur') || [];
-      // Pre-select current assigned server if exists
       if (table.assignedServer) {
         setAssignServerId(table.assignedServer.id);
       } else if (eligibleUsers.length > 0) {
@@ -251,223 +236,227 @@ export default function TablesPage() {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64 text-gray-400">Chargement des tables...</div>;
+  if (loading) return (
+      <div className="flex items-center justify-center h-96">
+          <div className="animate-bounce flex flex-col items-center text-stone-400">
+              <Armchair className="w-12 h-12 mb-2" />
+              <span className="font-bold">Mise en place de la salle...</span>
+          </div>
+      </div>
+  );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-black text-gray-900">
-            {isMyTables ? 'Mes Tables' : 'Gestion des Tables'}
-        </h1>
+      <div className="flex justify-between items-center bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
+        <div>
+            <h1 className="text-2xl font-black text-stone-900 flex items-center gap-3 uppercase tracking-tight font-display">
+                <div className="bg-stone-900 p-2 rounded-xl text-white">
+                     <Armchair className="w-6 h-6" />
+                </div>
+                {isMyTables ? 'Mon Rang' : 'Salle & Tables'}
+            </h1>
+            <p className="text-stone-400 text-sm font-medium ml-14">Plan de salle et assignations</p>
+        </div>
         {!isMyTables && (
-            <Button onClick={() => setIsModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle Table
+            <Button onClick={() => setIsModalOpen(true)} className="bg-stone-900 text-white hover:bg-stone-800 gap-2 h-12 px-6 rounded-xl font-bold shadow-lg shadow-stone-900/10">
+                <Plus className="w-4 h-4" />
+                Ajouter Table
             </Button>
         )}
       </div>
 
-      {/* Grid - 2 on md, 3 on lg/xl, 4 on 2xl */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
         {data?.data.map((table) => (
           <div 
             key={table.id} 
-            className={`rounded-xl border-2 overflow-hidden transition-all hover:shadow-lg ${
+            className={`rounded-3xl border-2 overflow-hidden transition-all duration-300 relative group ${
               table.isOccupied 
-                ? 'bg-red-50 border-red-300' 
-                : 'bg-white border-gray-200 hover:border-green-300'
+                ? 'bg-red-50 border-red-200 shadow-md shadow-red-50' 
+                : 'bg-white border-stone-100 hover:border-orange-200 hover:shadow-lg hover:shadow-orange-50'
             }`}
           >
-            {/* Card Header */}
-            <div className={`p-4 ${table.isOccupied ? 'bg-red-100' : 'bg-gray-50'}`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-black text-gray-900">{table.name || 'Sans nom'}</h3>
-                  <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-                    <MapPin className="w-3 h-3" />
-                    {table.zone}
-                  </div>
-                </div>
-                <div className={`px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${
-                  table.isOccupied ? 'bg-red-200 text-red-800' : 'bg-green-100 text-green-800'
-                }`}>
-                  {table.isOccupied ? 'Occupé' : 'Libre'}
-                </div>
-              </div>
-            </div>
+             {/* Occupied Pulse */}
+             {table.isOccupied && (
+                 <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/5 rounded-bl-full pointer-events-none animate-pulse"></div>
+             )}
 
-            {/* Content */}
-            <div className="p-4 space-y-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Capacité</span>
-                <span className="font-medium text-gray-900">{table.capacity} places</span>
+            {/* Card Content */}
+            <div className="p-6 h-full flex flex-col">
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div>
+                   <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-2xl font-black text-stone-900 font-display">{table.name || 'Sans nom'}</h3>
+                      <div className={`w-3 h-3 rounded-full ${table.isOccupied ? 'bg-red-500 animate-pulse' : 'bg-green-500'}`}></div>
+                   </div>
+                   <div className="flex items-center gap-1.5 text-xs text-stone-500 font-bold uppercase tracking-wide">
+                     <MapPin className="w-3 h-3" />
+                     {table.zone}
+                     <span className="text-stone-300">|</span>
+                     <Armchair className="w-3 h-3" />
+                     {table.capacity}p
+                   </div>
+                </div>
+                {table.isActive && table.isOccupied && (
+                    <div className="bg-white px-3 py-1.5 rounded-xl border border-red-100 shadow-sm flex flex-col items-end">
+                        <span className="text-[10px] text-stone-400 font-bold uppercase">Commandes</span>
+                        <span className="text-xl font-black text-red-600 leading-none">{table.activeOrdersCount}</span>
+                    </div>
+                )}
               </div>
               
-              {table.isActive ? (
-                <>
-                  {table.isOccupied ? (
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-start text-sm p-3 bg-white rounded-lg border border-red-100 flex-col gap-2">
-                            <div className="flex justify-between w-full">
-                                <span className="text-gray-500 text-xs">Commandes</span>
-                                <span className="font-bold text-red-600 text-xs">{table.activeOrdersCount} total</span>
-                            </div>
-                            <div className="w-full space-y-1 pt-1 border-t border-gray-50">
-                                {table.pendingCount > 0 && (
-                                    <div className="flex justify-between text-xs">
-                                        <span className="text-yellow-600 font-medium">En attente</span>
-                                        <span className="font-bold text-yellow-700 bg-yellow-100 px-1.5 rounded-full">{table.pendingCount}</span>
-                                    </div>
-                                )}
-                                {table.inProgressCount > 0 && (
-                                    <div className="flex justify-between text-xs">
-                                        <span className="text-blue-600 font-medium">En préparation</span>
-                                        <span className="font-bold text-blue-700 bg-blue-100 px-1.5 rounded-full">{table.inProgressCount}</span>
-                                    </div>
-                                )}
-                                {table.deliveredCount > 0 && (
-                                    <div className="flex justify-between text-xs">
-                                        <span className="text-green-600 font-medium">Servi (Non payé)</span>
-                                        <span className="font-bold text-green-700 bg-green-100 px-1.5 rounded-full">{table.deliveredCount}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+              <div className="space-y-4 flex-1">
+                {table.isActive ? (
+                  <>
+                    {table.isOccupied && (
+                      <div className="space-y-3">
+                          {/* Order Status Pillars */}
+                          <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                               <div className={`p-2 rounded-xl transition-colors ${table.pendingCount > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-stone-50 text-stone-300'}`}>
+                                   <div className="font-black text-lg mb-0.5">{table.pendingCount}</div>
+                                   <div className="font-bold uppercase text-[9px]">Attente</div>
+                               </div>
+                               <div className={`p-2 rounded-xl transition-colors ${table.inProgressCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-stone-50 text-stone-300'}`}>
+                                   <div className="font-black text-lg mb-0.5">{table.inProgressCount}</div>
+                                   <div className="font-bold uppercase text-[9px]">Cuisson</div>
+                               </div>
+                               <div className={`p-2 rounded-xl transition-colors ${table.deliveredCount > 0 ? 'bg-green-100 text-green-800' : 'bg-stone-50 text-stone-300'}`}>
+                                   <div className="font-black text-lg mb-0.5">{table.deliveredCount}</div>
+                                   <div className="font-bold uppercase text-[9px]">Servi</div>
+                               </div>
+                          </div>
                       
-                      {table.assignedServer ? (
-                        <div className="flex items-center gap-2 text-sm p-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
-                           <User className="w-4 h-4" />
-                           <span className="font-medium">{table.assignedServer.fullName}</span>
-                        </div>
-                      ) : (
-                        <div className="bg-yellow-50 text-yellow-700 p-2 rounded-lg text-sm border border-yellow-100 flex gap-2 items-center">
-                            <AlertCircle className="w-4 h-4" />
-                            <span>Non assigné</span>
-                        </div>
-                      )}
-
-                      <div className="space-y-2 pt-2">
-                        <div className="grid grid-cols-3 gap-2">
-                          <Button 
-                              className="bg-blue-600 text-white hover:bg-blue-700 h-10 px-0 flex items-center justify-center" 
-                              onClick={() => openAssignModal(table)}
-                              title="Assigner un serveur"
-                          >
-                              <UserCheck className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                              className="bg-gray-800 text-white hover:bg-black h-10 px-0 flex items-center justify-center" 
-                              onClick={() => handlePrintBill(table)}
-                              title="Imprimer l'addition"
-                          >
-                              <Printer className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                              className="bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 h-10 px-0 flex items-center justify-center" 
-                              onClick={() => openQrModal(table)}
-                              title="Voir QR Code"
-                          >
-                              <ExternalLink className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button 
-                              className="bg-green-600 text-white hover:bg-green-700 h-10 px-2 flex items-center justify-center gap-1" 
-                              onClick={() => handleCollectPayment(table)}
-                              title="Encaisser le paiement"
-                          >
-                              <Banknote className="w-4 h-4" />
-                              <span className="text-xs font-medium">Encaisser</span>
-                          </Button>
-                          <Button 
-                              className="bg-red-100 text-red-600 hover:bg-red-200 border border-red-200 h-10 px-2 flex items-center justify-center gap-1" 
-                              onClick={() => handleFreeTable(table.id)}
-                              title="Libérer la table"
-                          >
-                               <Unlock className="w-4 h-4" />
-                               <span className="text-xs font-medium">Libérer</span>
-                          </Button>
-                        </div>
+                        {table.assignedServer ? (
+                          <div className="flex items-center gap-2 text-xs p-3 bg-white/50 rounded-xl border border-red-100 text-stone-600">
+                             <User className="w-4 h-4 text-stone-400" />
+                             <span className="font-medium">Serveur: <span className="font-bold text-stone-900">{table.assignedServer.fullName}</span></span>
+                          </div>
+                        ) : (
+                          <button onClick={() => openAssignModal(table)} className="w-full bg-yellow-50 text-yellow-700 p-2 rounded-xl text-xs font-bold border border-yellow-100 flex gap-2 items-center justify-center hover:bg-yellow-100 transition-colors">
+                              <AlertCircle className="w-3 h-3" />
+                              NON ASSIGNÉ • CLIQUEZ POUR ASSIGNER
+                          </button>
+                        )}
                       </div>
+                    )}
+                  </>
+                ) : (
+                    <div className="text-center py-4 text-red-400 font-bold bg-red-50 rounded-2xl border border-dashed border-red-200 uppercase tracking-widest text-xs">
+                        Table Désactivée
                     </div>
-                  ) : (
-                    <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm p-2 bg-gray-50 rounded-lg">
-                            <span className="text-gray-500">Statut</span>
-                            <span className="font-medium text-gray-900">Disponible</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 pt-2">
-                            <Button 
-                                variant="secondary"
-                                onClick={() => openQrModal(table)}
-                            >
-                                <ExternalLink className="w-4 h-4 mr-2" />
-                                QR Code
-                            </Button>
-                            <Button 
-                                variant="secondary"
-                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                onClick={() => handleDelete(table.id)}
-                            >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Supprimer
-                            </Button>
-                        </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                  <div className="text-center py-2 text-red-500 font-medium bg-red-50 rounded-lg">
-                      Table Inactive
-                  </div>
-              )}
+                )}
+              </div>
+              
+              {/* Actions Footer */}
+              <div className="grid grid-cols-4 gap-2 pt-4 mt-auto">
+                 {table.isOccupied ? (
+                     <>
+                        <Button 
+                            className="col-span-1 bg-stone-900 text-white hover:bg-black p-0 rounded-xl" 
+                            onClick={() => handlePrintBill(table)}
+                            title="Imprimer"
+                        >
+                            <Printer className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                            className="col-span-2 bg-green-600 text-white hover:bg-green-700 p-0 rounded-xl font-bold uppercase text-xs" 
+                            onClick={() => handleCollectPayment(table)}
+                            title="Encaisser"
+                        >
+                            Encaisser
+                        </Button>
+                        <Button 
+                            className="col-span-1 bg-white text-stone-400 border border-stone-200 hover:border-red-200 hover:text-red-500 p-0 rounded-xl" 
+                            onClick={() => handleFreeTable(table.id)}
+                            title="Libérer"
+                        >
+                             <Unlock className="w-4 h-4" />
+                        </Button>
+                     </>
+                 ) : (
+                     <>
+                        <Button 
+                            variant="secondary"
+                            className="col-span-2 rounded-xl text-stone-500 hover:text-stone-900"
+                            onClick={() => openQrModal(table)}
+                        >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            QR
+                        </Button>
+                        <Button 
+                            variant="secondary"
+                            onClick={() => openAssignModal(table)}
+                            className="col-span-1 p-0 rounded-xl text-stone-400 hover:text-stone-900"
+                            title="Assigner Serveur"
+                        >
+                             <UserCheck className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                            variant="secondary"
+                            className="col-span-1 text-red-400 hover:bg-red-50 hover:text-red-700 p-0 rounded-xl"
+                            onClick={() => handleDelete(table.id)}
+                            title="Supprimer"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
+                     </>
+                 )}
+              </div>
+
             </div>
           </div>
         ))}
       </div>
 
-      {/* Empty State */}
       {data?.data.length === 0 && (
-        <div className="text-center py-12 text-gray-400">
-          Aucune table créée. Commencez par en ajouter une !
+        <div className="text-center py-24 text-stone-300">
+           <Armchair className="w-16 h-16 mx-auto mb-4 opacity-50" />
+           <p className="text-lg font-medium">La salle est vide.</p>
+           <p>Commencez par ajouter des tables !</p>
         </div>
       )}
 
       {/* New Table Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Créer une nouvelle table">
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nouvelle Table">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <Input 
-            label="Nom de la table" 
-            placeholder="Ex: Table 1, Terrasse A..." 
+            label="Nom" 
+            placeholder="Ex: T1, Terrasse A..." 
             value={formData.name} 
             onChange={e => setFormData({...formData, name: e.target.value})} 
             required 
+            className="text-lg font-bold"
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
-            <select 
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-red-500 focus:border-red-500" 
-              value={formData.zone} 
-              onChange={e => setFormData({...formData, zone: e.target.value})}
-            >
-              <option value="Intérieur">Intérieur</option>
-              <option value="Terrasse">Terrasse</option>
-              <option value="Bar">Bar</option>
-              <option value="VIP">VIP</option>
-            </select>
+            <label className="block text-sm font-medium text-stone-700 mb-2">Zone</label>
+            <div className="grid grid-cols-2 gap-3">
+                 {['Intérieur', 'Terrasse', 'Bar', 'VIP'].map(zone => (
+                     <div 
+                        key={zone}
+                        onClick={() => setFormData({...formData, zone})}
+                        className={`cursor-pointer border-2 rounded-xl p-3 text-center transition-all ${
+                            formData.zone === zone 
+                            ? 'border-orange-500 bg-orange-50 text-orange-700 font-bold shadow-sm' 
+                            : 'border-stone-100 bg-white text-stone-500 hover:border-stone-300'
+                        }`}
+                     >
+                         {zone}
+                     </div>
+                 ))}
+            </div>
           </div>
           <Input 
-            label="Capacité (nombre de places)" 
+            label="Couverts" 
             type="number" 
             min={1}
             value={formData.capacity} 
             onChange={e => setFormData({...formData, capacity: parseInt(e.target.value) || 1})} 
             required 
           />
-          <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)}>Annuler</Button>
-            <Button type="submit" isLoading={submitting}>Créer la table</Button>
+          <div className="flex justify-end gap-3 pt-6">
+            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="h-12 rounded-xl px-6">Annuler</Button>
+            <Button type="submit" isLoading={submitting} className="bg-stone-900 text-white h-12 rounded-xl px-6 font-bold shadow-lg">Créer la table</Button>
           </div>
         </form>
       </Modal>
@@ -476,45 +465,42 @@ export default function TablesPage() {
       <Modal 
         isOpen={isQrModalOpen} 
         onClose={() => setIsQrModalOpen(false)} 
-        title={`QR Code - ${selectedTable?.name || 'Table'}`}
+        title="QR Code"
       >
-        <div className="flex flex-col items-center space-y-6 py-4">
-          {/* QR Code */}
-          <div className="bg-white p-6 rounded-xl border-2 border-gray-200 shadow-sm">
+        <div className="flex flex-col items-center space-y-8 py-6">
+          <div className="bg-white p-8 rounded-3xl border-4 border-stone-100 shadow-xl relative group hover:border-orange-500 transition-colors">
+            <div className="absolute top-0 transform -translate-y-1/2 bg-white px-4 py-1 rounded-full border border-stone-200 text-xs font-bold uppercase tracking-widest text-stone-400 group-hover:text-orange-500 group-hover:border-orange-200 transition-colors">
+                Scan Me
+            </div>
             <QRCodeSVG 
               id="qr-code-svg"
               value={`${baseUrl}/t/${selectedTable?.code}`} 
               size={200}
               level="H"
               includeMargin
+              className="group-hover:opacity-90 transition-opacity"
             />
           </div>
           
-          {/* Table Info */}
           <div className="text-center space-y-1">
-            <p className="text-lg font-bold text-gray-900">{selectedTable?.name}</p>
-            <p className="text-sm text-gray-500">{selectedTable?.zone} • {selectedTable?.capacity} places</p>
-            <p className="font-mono text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded mt-2">
-              {baseUrl}/t/{selectedTable?.code}
-            </p>
+            <h2 className="text-3xl font-black text-stone-900 font-display">{selectedTable?.name}</h2>
+            <p className="text-stone-500 font-medium">{selectedTable?.zone} • {selectedTable?.capacity} places</p>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 w-full">
+          <div className="flex gap-4 w-full">
             <Button 
-              variant="secondary" 
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl bg-stone-900 text-white font-bold shadow-lg"
               onClick={downloadQrCode}
             >
-              <Download className="w-4 h-4 mr-2" />
-              Télécharger PNG
+              <Download className="w-5 h-5 mr-2" />
+              Télécharger
             </Button>
             <Button 
               variant="secondary"
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50"
               onClick={() => handleRegenerateCode(selectedTable?.id || 0)}
             >
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw className="w-5 h-5 mr-2" />
               Régénérer
             </Button>
           </div>
@@ -522,12 +508,12 @@ export default function TablesPage() {
       </Modal>
 
       {/* Assign Modal */}
-      <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} title={`Assigner ${selectedTable?.name}`}>
-          <form onSubmit={handleAssign} className="space-y-4">
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Serveur</label>
+      <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} title={`Assignation - ${selectedTable?.name}`}>
+          <form onSubmit={handleAssign} className="space-y-6">
+              <div className="bg-stone-50 p-4 rounded-xl border border-stone-100 mb-6">
+                  <p className="text-sm text-stone-500 text-center mb-2">Assigner cette table à</p>
                   <select 
-                      className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-white"
+                      className="w-full h-12 px-4 border-2 border-stone-200 rounded-xl bg-white text-lg font-bold text-center focus:border-stone-900 focus:ring-4 focus:ring-stone-100 transition-all outline-none"
                       value={assignServerId}
                       onChange={e => setAssignServerId(Number(e.target.value))}
                   >
@@ -536,11 +522,13 @@ export default function TablesPage() {
                         ))}
                   </select>
               </div>
-              <Button type="submit" className="w-full">Valider l'assignation</Button>
+              <Button type="submit" className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200">
+                  <UserCheck className="w-5 h-5 mr-2" />
+                  Valider l'assignation
+              </Button>
           </form>
       </Modal>
 
-      {/* Hidden Receipt for Printing */}
       {createPortal(
         <div id="printable-receipt">
             <Receipt order={receiptOrder} />
