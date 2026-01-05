@@ -54,6 +54,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          port: 6666
           script: |
             # Navigate to project directory
             cd ~/apps/food/v1/frontend
