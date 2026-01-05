@@ -1,5 +1,5 @@
 import { useFetch } from '../../lib/useFetch';
-import { Loader2, TrendingUp, Users, ShoppingBag } from 'lucide-react';
+import { Loader2, TrendingUp, ShoppingBag } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function DashboardPage() {

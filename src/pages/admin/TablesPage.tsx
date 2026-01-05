@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Banknote, Utensils, Armchair } from 'lucide-react';
+import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Armchair } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder, OrderItem } from '../../components/Receipt';
@@ -66,7 +66,7 @@ export default function TablesPage() {
       setIsModalOpen(false);
       setFormData({ name: '', zone: 'Intérieur', capacity: 4 });
       refetch();
-    } catch (error) {
+    } catch {
       alert('Erreur lors de la création');
     } finally {
       setSubmitting(false);
@@ -81,7 +81,7 @@ export default function TablesPage() {
           setIsAssignModalOpen(false);
           refetch();
           alert('Serveur assigné avec succès !');
-      } catch(e) {
+      } catch {
           alert('Erreur: Vérifiez qu\'il y a des commandes actives sur cette table.');
       }
   }
@@ -92,7 +92,7 @@ export default function TablesPage() {
           await api.post(`/admin/tables/${tableId}/free`);
           refetch();
           alert('Table libérée !');
-      } catch(e) {
+      } catch {
           alert('Erreur lors de la libération de la table.');
       }
   }
@@ -134,7 +134,7 @@ export default function TablesPage() {
           };
           
           setReceiptOrder(consolidatedOrder);
-      } catch (e) {
+      } catch {
           alert('Erreur lors de la récupération de l\'addition');
       }
   }
@@ -161,7 +161,7 @@ export default function TablesPage() {
           await Promise.all(unpaidOrders.map(o => api.patch(`/staff/orders/${o.id}/status`, { status: 'paid' })));
           refetch();
           alert('Paiement enregistré ! Vous pouvez maintenant libérer la table.');
-      } catch (e) {
+      } catch {
           alert('Erreur lors de l\'encaissement');
       }
   }
@@ -221,7 +221,7 @@ export default function TablesPage() {
     try {
       await api.post(`/admin/tables/${id}/regenerate-code`);
       refetch();
-    } catch (error) {
+    } catch {
       alert('Erreur');
     }
   };
@@ -231,7 +231,7 @@ export default function TablesPage() {
     try {
       await api.delete(`/admin/tables/${id}`);
       refetch();
-    } catch (error) {
+    } catch {
         alert('Erreur');
     }
   };

@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, AlertCircle, Printer, Search, Banknote, Flame, BellRing } from 'lucide-react';
+import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, Search, Banknote, Flame, BellRing } from 'lucide-react';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder } from '../../components/Receipt';
 
@@ -55,7 +55,7 @@ export default function OrdersPage() {
   const [pickupCode, setPickupCode] = useState('');
   const [pickupOrder, setPickupOrder] = useState<Order | null>(null);
   const [pickupLoading, setPickupLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [, setError] = useState('');
   
   // Printing State
   const [receiptOrder, setReceiptOrder] = useState<ReceiptOrder | null>(null);
@@ -74,7 +74,7 @@ export default function OrdersPage() {
       try {
           await api.patch(`/staff/orders/${id}/status`, { status });
           refetch();
-      } catch (e) { alert('Erreur'); }
+      } catch { alert('Erreur'); }
   };
 
   const handlePickupSearch = async (e: React.FormEvent) => {
@@ -90,7 +90,7 @@ export default function OrdersPage() {
           } else {
               setError('Code introuvable');
           }
-      } catch (e) {
+      } catch {
           setError('Erreur lors de la recherche');
       } finally {
           setPickupLoading(false);
@@ -150,7 +150,7 @@ export default function OrdersPage() {
         setPickupOrder(null);
         setPickupCode('');
         refetch();
-      } catch (e) {
+      } catch {
           alert('Erreur lors du paiement');
       }
   };
@@ -191,7 +191,7 @@ export default function OrdersPage() {
           
           setReceiptOrder(consolidatedOrder);
           setTimeout(() => window.print(), 500);
-      } catch (e) {
+      } catch {
           alert('Erreur lors de la récupération de l\'addition');
       }
   }
@@ -508,13 +508,14 @@ function EmptyState({ message, icon: Icon }: { message: string, icon: any }) {
     )
 }
 
-function OrderCard({ order, onAction, actionLabel, variant, readonly = false, onSecondaryAction, secondaryActionLabel, icon: ActionIcon }: any) {
-    const theme = {
+function OrderCard({ order, onAction, actionLabel, variant, readonly = false, onSecondaryAction, secondaryActionLabel }: any) {
+    const themes: Record<string, any> = {
         pending: { border: 'border-yellow-400', bg: 'bg-white', text: 'text-stone-900', btn: 'bg-stone-900 text-white hover:bg-stone-800' },
         progress: { border: 'border-orange-500', bg: 'bg-white', text: 'text-stone-900', btn: 'bg-orange-600 text-white hover:bg-orange-700' },
         delivered: { border: 'border-green-500', bg: 'bg-green-50/30', text: 'text-stone-900', btn: 'bg-white text-stone-900 border border-stone-200 hover:bg-stone-50' },
         paid: { border: 'border-stone-200', bg: 'bg-stone-50', text: 'text-stone-400', btn: 'bg-white text-stone-500 border border-stone-200 hover:bg-stone-50' }
-    }[variant];
+    };
+    const theme = themes[variant] || themes.pending;
 
     return (
         <div className={`rounded-xl shadow-sm border border-stone-200 ${theme.bg} flex flex-col overflow-hidden relative group hover:shadow-md transition-all`}>
@@ -542,7 +543,7 @@ function OrderCard({ order, onAction, actionLabel, variant, readonly = false, on
             </div>
 
             <div className="p-3 pl-5 space-y-2 flex-1">
-                {order.items.map((item, i) => (
+                {order.items.map((item: any, i: number) => (
                     <div key={i} className="flex justify-between items-start text-sm leading-tight">
                         <div className="text-stone-900">
                             <span className="font-black mr-2 bg-stone-100 px-1.5 rounded-md text-stone-600">{item.quantity}</span> 

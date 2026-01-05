@@ -43,7 +43,7 @@ export default function OrderTrackingPage() {
         try {
             await api.post(`/orders/cancel/${code}`);
             refetch();
-        } catch (e) { alert('Impossible d\'annuler maintenant'); }
+        } catch { alert('Impossible d\'annuler maintenant'); }
     };
 
     if (!code) {
@@ -150,7 +150,7 @@ export default function OrderTrackingPage() {
 
                             {steps.map((step, index) => {
                                 const isActive = index <= currentStepIndex || isPaid;
-                                const isCurrent = index === currentStepIndex && !isPaid;
+
                                 
                                 return (
                                     <div key={step.status} className="flex flex-col items-center gap-3">
