@@ -62,54 +62,55 @@ export default function HomePage() {
         <div className="absolute bottom-0 right-0 w-[50vw] h-[50vw] bg-yellow-200/20 rounded-full blur-[80px] mix-blend-multiply"></div>
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl mx-auto min-h-screen flex flex-col p-6 md:p-12">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto min-h-screen flex flex-col p-6 md:p-12">
         
-        {/* Header / Hero Section - Asymmetric & Bold */}
-        <header className="pt-8 pb-12 md:text-center md:pt-16">
-          <div className="flex items-center gap-2 mb-4 md:justify-center">
-            <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase border border-red-200 shadow-sm">
+        {/* Header / Hero Section - Compact Mobile, Bold Desktop */}
+        <header className="pt-4 pb-6 md:pb-12 md:text-center md:pt-16">
+          <div className="flex items-center gap-2 mb-2 md:mb-4 md:justify-center">
+            <span className="bg-red-100 text-red-800 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase border border-red-200 shadow-sm">
               Ouvert
             </span>
-            <span className="text-stone-400 text-sm italic">Le plaisir de manger</span>
+            <span className="text-stone-400 text-xs md:text-sm italic">Le plaisir de manger</span>
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-stone-900 leading-[0.95] tracking-tight mb-4">
+          <h1 className="text-4xl md:text-7xl font-black text-stone-900 leading-[0.9] tracking-tight mb-2 md:mb-6">
             Sauce <br className="md:hidden" />
             <span className="text-red-600 italic font-serif pr-2">Créole.</span>
           </h1>
-          <p className="text-lg text-stone-600 font-medium max-w-[80%] md:max-w-xl md:mx-auto leading-relaxed border-l-4 md:border-l-0 md:border-t-4 border-orange-300 pl-4 md:pl-0 md:pt-4 mt-6">
+          <p className="text-sm md:text-lg text-stone-600 font-medium max-w-[90%] md:max-w-xl md:mx-auto leading-relaxed border-l-2 md:border-l-0 md:border-t-4 border-orange-300 pl-3 md:pl-0 md:pt-4 mt-3 md:mt-6">
             L'authenticité dans chaque assiette. Pas de chichis, juste du goût.
           </p>
         </header>
 
-        {/* Main Actions - Distinct Visual Hierarchy */}
-        <main className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        {/* Main Actions - Stacked Vertical Layout */}
+        <main className="flex-1 flex flex-col gap-8 md:gap-12 max-w-4xl mx-auto w-full">
           
-          {/* Card 1: Takeout - The "Hot" Option */}
-          <section className="relative group h-full">
-            <div className="absolute inset-0 bg-gradient-to-br from-red-600 to-orange-600 rounded-3xl transform rotate-1 group-hover:rotate-2 transition-transform duration-300 shadow-xl shadow-orange-900/20"></div>
-            <div className="relative bg-[#1A1A1A] rounded-2xl p-8 text-white overflow-hidden shadow-inner border border-white/5 h-full flex flex-col justify-between">
+          {/* Card 1: Takeout - Express Mobile Layout */}
+          <section className="relative group w-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl md:rounded-3xl transform rotate-0 md:rotate-1 group-hover:rotate-2 transition-transform duration-300 shadow-xl shadow-orange-900/20"></div>
+            <div className="relative bg-[#1A1A1A] rounded-2xl md:rounded-2xl p-5 md:p-8 text-white overflow-hidden shadow-inner border border-white/5 flex flex-col justify-between">
               
               {/* Abstract pattern overlay */}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 md:w-32 md:h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
               
-              <div className="flex justify-between items-start mb-6">
-                <div>
-                   <h2 className="text-3xl font-bold mb-2 flex items-center gap-2">
-                    <ShoppingBag className="w-8 h-8 text-orange-400" />
+              <div className="flex justify-between items-start mb-6 md:mb-6 relative z-10">
+                <div className="max-w-[75%] md:max-w-[70%]">
+                   <h2 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2 flex items-center gap-2">
+                    <ShoppingBag className="w-6 h-6 md:w-8 md:h-8 text-orange-400 flex-shrink-0" />
                     À Emporter
                    </h2>
-                   <p className="text-stone-400">Pas le temps ? On prépare tout.</p>
+                   <p className="text-stone-400 text-xs md:text-base leading-tight">Pas le temps ? On prépare tout.</p>
                 </div>
+                {/* QR Trigger - Top Right for easy reach or visual balance */}
                 <div 
-                  className="bg-white/10 p-2 rounded-xl backdrop-blur-md border border-white/10 cursor-pointer hover:bg-white/20 transition-colors"
+                  className="bg-white/10 p-2 md:p-2 rounded-xl backdrop-blur-md border border-white/10 cursor-pointer hover:bg-white/20 transition-colors flex-shrink-0 active:scale-95 duration-200"
                   onClick={() => setIsQrModalOpen(true)}
                 >
-                  <QRCodeSVG value={takeoutUrl} size={56} fgColor="#FFFFFF" bgColor="transparent" />
+                  <QRCodeSVG value={takeoutUrl} size={32} fgColor="#FFFFFF" bgColor="transparent" className="md:w-[56px] md:h-[56px]" />
                 </div>
               </div>
 
-              <Link to="/takeout" className="mt-auto">
-                <button className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 rounded-xl flex items-center justify-between px-6 transition-all shadow-lg shadow-orange-900/30 group-hover:translate-x-1">
+              <Link to="/takeout" className="mt-auto relative z-10">
+                <button className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3.5 md:py-4 rounded-xl flex items-center justify-between px-5 md:px-6 transition-all shadow-lg shadow-orange-900/30 group-hover:translate-x-1 text-base md:text-base active:bg-orange-700 active:scale-[0.98]">
                   <span>Commander maintenant</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -117,64 +118,64 @@ export default function HomePage() {
             </div>
           </section>
 
-          {/* Card 2: Dine-in - The "Cozy" Option */}
-          <section className="relative h-full">
+          {/* Card 2: Dine-in - Compact Input & Grid */}
+          <section className="relative w-full">
             {/* Ticket/Paper texture effect */}
-            <div className="bg-white rounded-t-2xl rounded-b-lg p-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-stone-100 h-full flex flex-col">
-               <div className="border-2 border-dashed border-stone-200 rounded-xl p-8 bg-stone-50/50 flex-1 flex flex-col">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-600">
-                    <UtensilsCrossed className="w-6 h-6" />
+            <div className="bg-white rounded-2xl md:rounded-t-2xl md:rounded-b-lg p-1 md:p-1 shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-stone-100 flex flex-col">
+               <div className="border border-dashed border-stone-200 rounded-xl md:rounded-xl p-5 md:p-8 bg-stone-50/50 flex-1 flex flex-col">
+                <div className="flex items-center gap-3 md:gap-3 mb-5 md:mb-6">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-600 flex-shrink-0">
+                    <UtensilsCrossed className="w-5 h-5 md:w-6 md:h-6" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-stone-800">Sur Place</h2>
-                    <p className="text-sm text-stone-500 font-medium uppercase tracking-wide">Service en salle</p>
+                    <h2 className="text-xl md:text-2xl font-bold text-stone-800">Sur Place</h2>
+                    <p className="text-[10px] md:text-sm text-stone-500 font-bold uppercase tracking-wide">Service en salle</p>
                   </div>
                 </div>
 
-                <div className="space-y-6 flex-1">
+                <div className="space-y-5 md:space-y-6 flex-1">
                   <div className="relative">
-                     <label className="absolute -top-2.5 left-3 bg-stone-50 px-2 text-xs font-bold text-stone-400 uppercase tracking-wider">
+                     <label className="absolute -top-2 md:-top-2.5 left-3 md:left-3 bg-stone-50 px-1 md:px-2 text-[10px] md:text-xs font-bold text-stone-400 uppercase tracking-wider">
                        Votre Table
                      </label>
-                     <div className="flex gap-2">
+                     <div className="flex gap-2 md:gap-2">
                        <Input 
                           placeholder="A1..." 
                           value={tableCode} 
                           onChange={e => setTableCode(e.target.value.toUpperCase())} 
-                          className="h-16 text-xl font-mono tracking-widest bg-white border-stone-200 shadow-sm focus:border-red-400 focus:ring-red-100"
+                          className="h-14 md:h-16 text-xl md:text-xl font-mono tracking-widest bg-white border-stone-200 shadow-sm focus:border-red-400 focus:ring-red-100 pl-4 md:pl-4 rounded-lg md:rounded-lg"
                         />
                         <Button 
                           onClick={handleGo} 
                           disabled={!tableCode}
                           variant="ghost"
-                          className="h-16 px-8 bg-stone-800 text-white hover:bg-stone-700 font-bold rounded-lg shadow-md disabled:bg-stone-200 disabled:text-stone-400 text-lg"
+                          className="h-14 md:h-16 px-6 md:px-8 bg-stone-800 text-white hover:bg-stone-700 font-bold rounded-lg md:rounded-lg shadow-md md:shadow-md disabled:bg-stone-200 disabled:text-stone-400 text-lg md:text-lg"
                         >
                           GO
                         </Button>
                      </div>
                   </div>
 
-                  {/* Available Tables - Organic Tags */}
+                  {/* Available Tables - Organic Tags but Compact */}
                   {loading ? (
-                       <div className="h-8 w-1/2 bg-stone-200/50 rounded animate-pulse"></div>
+                       <div className="h-8 md:h-8 w-1/2 bg-stone-200/50 rounded animate-pulse"></div>
                   ) : (
-                    <div className="flex flex-wrap gap-2 mt-4">
+                    <div className="grid grid-cols-3 md:flex md:flex-wrap gap-2 md:gap-2 mt-4 md:mt-4">
                         {tablesData?.data.map((table, idx) => (
                           <button 
                               key={table.id}
                               onClick={() => setTableCode(table.code)}
                               className={`
-                                text-sm font-bold px-4 py-2 rounded-md border transition-all duration-200
-                                ${idx % 2 === 0 ? 'bg-green-50 text-green-700 border-green-100 rotate-1' : 'bg-blue-50 text-blue-700 border-blue-100 -rotate-1'}
-                                hover:scale-105 hover:shadow-sm hover:z-10
+                                text-sm md:text-sm font-bold py-2 md:px-4 md:py-2 rounded-lg md:rounded-md border transition-all duration-200 shadow-sm
+                                ${idx % 2 === 0 ? 'bg-white text-green-700 border-green-100 md:rotate-1 hover:border-green-300' : 'bg-white text-blue-700 border-blue-100 md:-rotate-1 hover:border-blue-300'}
+                                active:scale-95 hover:md:scale-105 hover:shadow-md hover:z-10
                               `}
                           >
                               {table.name}
                           </button>
                         ))}
                          {tablesData?.data?.length === 0 && (
-                            <span className="text-xs text-stone-400 italic">Tout est complet...</span>
+                            <span className="text-xs md:text-xs text-stone-400 italic">Tout est complet...</span>
                         )}
                     </div>
                   )}

@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Minus, Plus, UtensilsCrossed, Bell, Receipt, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Minus, Plus, UtensilsCrossed, Bell, Receipt, CheckCircle, Clock, XCircle, ChefHat } from 'lucide-react';
 
 interface MenuItem {
   id: number;
@@ -44,6 +44,7 @@ export default function DineInPage() {
   const [showThankYou, setShowThankYou] = useState(false);
   const [hasPlacedOrders, setHasPlacedOrders] = useState(false);
   const [thankYouMessage, setThankYouMessage] = useState('');
+  const [isActiveOrdersOpen, setIsActiveOrdersOpen] = useState(false);
 
   const menuCategories: MenuCategory[] = tableData?.menu || [];
   const tableInfo = tableData?.table;
@@ -217,8 +218,64 @@ export default function DineInPage() {
 
   const activeCategory = menuCategories.find(c => c.id === activeCategoryId);
 
+  const renderOngoingOrdersList = () => (
+      <div className="space-y-3">
+           {ongoingOrders.map((order: any) => {
+               const orderItems = order.items.map((item: any) => ({
+                   ...item,
+                   finalPrice: item.unitPrice !== undefined ? item.unitPrice : item.price || 0
+               }));
+               const isPending = order.status === 'pending';
+               const isInProgress = order.status === 'in_progress';
+
+               return (
+                   <div key={order.id} className="bg-stone-50/50 border border-stone-100 rounded-xl p-3 relative">
+                       <div className={`absolute left-0 top-3 bottom-3 w-1 ${
+                           isPending ? 'bg-yellow-400' : isInProgress ? 'bg-blue-400' : 'bg-green-400'
+                       } rounded-r-full`}></div>
+
+                       <div className="flex justify-between items-start mb-2 pl-3">
+                           <span className="text-xs font-mono text-stone-400">#{order.dailyNumber || order.id}</span>
+                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                isPending ? 'bg-yellow-100 text-yellow-700' : 
+                                isInProgress ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+                           }`}>
+                               {isPending ? 'Reçu' : isInProgress ? 'Prépa' : 'Servi'}
+                           </span>
+                       </div>
+
+                       <div className="space-y-1 mb-2 pl-3">
+                           {orderItems.map((item: any) => (
+                               <div key={item.id} className="flex justify-between text-xs">
+                                   <span className="text-stone-700">
+                                       <span className="font-bold mr-1">{item.quantity}x</span> 
+                                       {item.menuItem?.name}
+                                   </span>
+                               </div>
+                           ))}
+                       </div>
+
+                       {isPending && (
+                           <button 
+                               onClick={() => handleCancelOrder(order.id)}
+                               className="text-[10px] text-red-400 hover:text-red-600 font-medium underline decoration-red-200 underline-offset-2 pl-3"
+                           >
+                               Annuler
+                           </button>
+                       )}
+                   </div>
+               );
+           })}
+           
+           <div className="bg-stone-900 text-white p-4 rounded-xl flex justify-between items-center shadow-lg mt-4">
+                <span className="text-stone-400 text-xs font-medium">Total table</span>
+                <span className="font-mono text-lg font-bold">{tableGrandTotal} <span className="text-xs opacity-50">FCFA</span></span>
+           </div>
+      </div>
+  );
+
   return (
-    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 pb-32 overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 pb-12 overflow-x-hidden relative">
       
        {/* Background Decoration */}
        <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -303,7 +360,7 @@ export default function DineInPage() {
                    </div>
 
                    {/* Menu Grid */}
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-24">
+                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-6">
                         {activeCategory ? (
                             activeCategory.items.map(item => {
                                 const cartItem = cart.find(i => i.menuItemId === item.id);
@@ -374,70 +431,52 @@ export default function DineInPage() {
                </div>
 
                {/* Ongoing Orders Sidebar (Desktop) / Top block (Mobile) */}
+               {/* Ongoing Orders Sidebar (Desktop Only) */}
                {ongoingOrders.length > 0 && (
-                   <div className="lg:w-80 lg:sticky lg:top-6 order-first lg:order-last mb-8 lg:mb-0 animate-in slide-in-from-top-4 duration-700">
+                   <div className="hidden lg:block lg:w-80 lg:sticky lg:top-6 lg:order-last animate-in slide-in-from-right-4 duration-700">
                        <div className="bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
                            <div className="flex items-center gap-2 mb-4 px-1">
                                <Clock className="w-4 h-4 text-stone-400" />
                                <h3 className="font-bold text-stone-500 text-sm uppercase tracking-wide">Commandes suivies</h3>
                            </div>
-                           
-                           <div className="space-y-3">
-                               {ongoingOrders.map((order: any) => {
-                                   const orderItems = order.items.map((item: any) => ({
-                                       ...item,
-                                       finalPrice: item.unitPrice !== undefined ? item.unitPrice : item.price || 0
-                                   }));
-                                   const isPending = order.status === 'pending';
-                                   const isInProgress = order.status === 'in_progress';
-
-                                   return (
-                                       <div key={order.id} className="bg-stone-50/50 border border-stone-100 rounded-xl p-3 relative">
-                                           <div className={`absolute left-0 top-3 bottom-3 w-1 ${
-                                               isPending ? 'bg-yellow-400' : isInProgress ? 'bg-blue-400' : 'bg-green-400'
-                                           } rounded-r-full`}></div>
-
-                                           <div className="flex justify-between items-start mb-2 pl-3">
-                                               <span className="text-xs font-mono text-stone-400">#{order.dailyNumber || order.id}</span>
-                                               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                                                    isPending ? 'bg-yellow-100 text-yellow-700' : 
-                                                    isInProgress ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
-                                               }`}>
-                                                   {isPending ? 'Reçu' : isInProgress ? 'Prépa' : 'Servi'}
-                                               </span>
-                                           </div>
-
-                                           <div className="space-y-1 mb-2 pl-3">
-                                               {orderItems.map((item: any) => (
-                                                   <div key={item.id} className="flex justify-between text-xs">
-                                                       <span className="text-stone-700">
-                                                           <span className="font-bold mr-1">{item.quantity}x</span> 
-                                                           {item.menuItem?.name}
-                                                       </span>
-                                                   </div>
-                                               ))}
-                                           </div>
-
-                                           {isPending && (
-                                               <button 
-                                                   onClick={() => handleCancelOrder(order.id)}
-                                                   className="text-[10px] text-red-400 hover:text-red-600 font-medium underline decoration-red-200 underline-offset-2 pl-3"
-                                               >
-                                                   Annuler
-                                               </button>
-                                           )}
-                                       </div>
-                                   );
-                               })}
-                               
-                               <div className="bg-stone-900 text-white p-4 rounded-xl flex justify-between items-center shadow-lg mt-4">
-                                    <span className="text-stone-400 text-xs font-medium">Total table</span>
-                                    <span className="font-mono text-lg font-bold">{tableGrandTotal} <span className="text-xs opacity-50">FCFA</span></span>
-                               </div>
-                           </div>
+                           {renderOngoingOrdersList()}
                        </div>
                    </div>
                )}
+
+
+           {/* Floating Active Orders Button (Mobile/Tablet) */}
+           {ongoingOrders.length > 0 && (
+                <>
+                    <div className={`fixed z-30 transition-all duration-300 ${cart.length > 0 ? 'bottom-28' : 'bottom-6'} right-4 lg:hidden animate-in slide-in-from-bottom-20`}>
+                        <button 
+                            onClick={() => setIsActiveOrdersOpen(true)}
+                            className="bg-white text-stone-900 p-3 rounded-full shadow-xl border-2 border-orange-100 hover:scale-110 transition-transform flex items-center justify-center relative group"
+                        >
+                             <div className="absolute inset-0 bg-orange-500 rounded-full animate-ping opacity-20"></div>
+                             <div className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
+                                {ongoingOrders.length}
+                             </div>
+                             <ChefHat className="w-6 h-6 text-orange-600" />
+                        </button>
+                    </div>
+
+                    <Modal isOpen={isActiveOrdersOpen} onClose={() => setIsActiveOrdersOpen(false)} title="Suivi Cuisine">
+                        <div className="space-y-4">
+                             <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 flex items-start gap-3 mb-4">
+                                 <Clock className="w-5 h-5 text-orange-600 mt-0.5" />
+                                 <div>
+                                     <h4 className="font-bold text-orange-800 text-sm">En préparation</h4>
+                                     <p className="text-xs text-orange-600 leading-relaxed">
+                                         Vos commandes sont en train d'être cuisinées avec amour.
+                                     </p>
+                                 </div>
+                             </div>
+                             {renderOngoingOrdersList()}
+                        </div>
+                    </Modal>
+                </>
+           )}
            </div>
 
            {/* Cart Launcher */}
