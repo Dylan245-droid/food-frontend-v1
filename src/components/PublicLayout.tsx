@@ -1,18 +1,41 @@
 import { Outlet, Link } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, ChefHat } from 'lucide-react';
+import { useBranding } from '../context/BrandingContext';
 
 export default function PublicLayout() {
+  const { branding } = useBranding();
+  
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header Mobile-First */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-3 text-red-600 font-bold text-xl">
-            <img src="/logo.jpg" alt="Sauce Creole" className="h-10 w-auto object-contain" />
-            <span className="sr-only">Sauce Creole</span>
+          <Link to="/" className="flex items-center gap-3 font-bold text-xl">
+            {branding.logo ? (
+              <img 
+                src={branding.logo} 
+                alt={branding.name} 
+                className="h-10 w-auto object-contain" 
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            ) : null}
+            <div 
+              className={`h-10 w-10 rounded-xl flex items-center justify-center text-white ${branding.logo ? 'hidden' : ''}`}
+              style={{ background: 'var(--primary-gradient)' }}
+            >
+              <ChefHat className="w-6 h-6" />
+            </div>
+            <span className="text-stone-900" style={{ color: 'var(--primary-700)' }}>{branding.name}</span>
           </Link>
           <div className="flex items-center gap-4">
-            <Link to="/track" className="text-sm font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1">
+            <Link 
+              to="/track" 
+              className="text-sm font-medium flex items-center gap-1 transition-colors"
+              style={{ color: 'var(--primary-600)' }}
+            >
                 <ShoppingBag className="w-4 h-4" />
                 <span className="hidden sm:inline">Suivi</span>
             </Link>

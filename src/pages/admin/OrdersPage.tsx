@@ -64,6 +64,10 @@ export default function OrdersPage() {
   const [verifyingOrder, setVerifyingOrder] = useState<Order | null>(null);
   const [verifyCode, setVerifyCode] = useState('');
 
+  // Search and Filter State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'dine_in' | 'takeout'>('all');
+
   // Auto-refresh toutes les 30s
   useEffect(() => {
     const interval = setInterval(refetch, 30000);
@@ -206,17 +210,35 @@ export default function OrdersPage() {
       </div>
   );
 
-  const pendingOrders = data?.data.filter(o => o.status === 'pending') || [];
-  const inProgressOrders = data?.data.filter(o => o.status === 'in_progress') || [];
-  const deliveredOrders = data?.data.filter(o => o.status === 'delivered') || [];
-  const paidOrders = (data?.data.filter(o => o.status === 'paid') || []).sort((a, b) => 
+  // Apply search and type filter
+  const filterOrders = (orders: Order[]) => {
+    return orders.filter(order => {
+      // Type filter
+      if (typeFilter !== 'all' && order.type !== typeFilter) return false;
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesPickup = order.pickupCode?.toLowerCase().includes(query);
+        const matchesClient = order.clientName?.toLowerCase().includes(query);
+        const matchesNumber = order.dailyNumber?.toString().includes(query);
+        const matchesTable = order.table?.name?.toLowerCase().includes(query);
+        return matchesPickup || matchesClient || matchesNumber || matchesTable;
+      }
+      return true;
+    });
+  };
+
+  const pendingOrders = filterOrders(data?.data.filter(o => o.status === 'pending') || []);
+  const inProgressOrders = filterOrders(data?.data.filter(o => o.status === 'in_progress') || []);
+  const deliveredOrders = filterOrders(data?.data.filter(o => o.status === 'delivered') || []);
+  const paidOrders = filterOrders((data?.data.filter(o => o.status === 'paid') || []).sort((a, b) => 
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  );
+  ));
 
 
   return (
     <div className="space-y-6 h-full flex flex-col">
-      <div className="flex justify-between items-center bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
         <div>
             <h1 className="text-2xl font-black text-stone-900 flex items-center gap-3 uppercase tracking-tight font-display">
                 <div className="bg-orange-100 p-2 rounded-xl text-orange-600">
@@ -226,12 +248,49 @@ export default function OrdersPage() {
             </h1>
             <p className="text-stone-400 text-sm font-medium ml-14">Gérez le flux de production</p>
         </div>
+        
+        {/* Search Bar */}
+        <div className="flex-1 max-w-md w-full md:w-auto">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <input 
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Rechercher par code, nom, table..."
+                    className="w-full h-10 pl-10 pr-4 rounded-xl border border-stone-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-100 text-sm"
+                />
+            </div>
+        </div>
+        
         <div className="flex gap-3 items-center">
             <Button onClick={() => setIsPickupModalOpen(true)} className="bg-stone-900 text-white hover:bg-stone-800 gap-2 h-12 px-6 rounded-xl font-bold shadow-lg shadow-stone-900/10">
                 <ShoppingBag className="w-4 h-4" />
                 Retrait Client
             </Button>
         </div>
+      </div>
+
+      {/* Filter Chips */}
+      <div className="flex gap-2 px-1">
+        <button 
+          onClick={() => setTypeFilter('all')}
+          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'all' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
+        >
+          Tous ({data?.data?.length || 0})
+        </button>
+        <button 
+          onClick={() => setTypeFilter('dine_in')}
+          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'dine_in' ? 'bg-orange-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
+        >
+          🍽️ Sur Place ({data?.data?.filter(o => o.type === 'dine_in').length || 0})
+        </button>
+        <button 
+          onClick={() => setTypeFilter('takeout')}
+          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'takeout' ? 'bg-purple-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
+        >
+          👜 À Emporter ({data?.data?.filter(o => o.type === 'takeout').length || 0})
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 flex-1 min-h-0 overflow-x-auto pb-4">
@@ -511,9 +570,9 @@ function EmptyState({ message, icon: Icon }: { message: string, icon: any }) {
 function OrderCard({ order, onAction, actionLabel, variant, readonly = false, onSecondaryAction, secondaryActionLabel }: any) {
     const themes: Record<string, any> = {
         pending: { border: 'border-yellow-400', bg: 'bg-white', text: 'text-stone-900', btn: 'bg-stone-900 text-white hover:bg-stone-800' },
-        progress: { border: 'border-orange-500', bg: 'bg-white', text: 'text-stone-900', btn: 'bg-orange-600 text-white hover:bg-orange-700' },
+        progress: { border: 'border-orange-500', bg: 'bg-white', text: 'text-stone-900', btn: 'text-white hover:opacity-90 shadow-md' },
         delivered: { border: 'border-green-500', bg: 'bg-green-50/30', text: 'text-stone-900', btn: 'bg-white text-stone-900 border border-stone-200 hover:bg-stone-50' },
-        paid: { border: 'border-stone-200', bg: 'bg-stone-50', text: 'text-stone-400', btn: 'bg-white text-stone-500 border border-stone-200 hover:bg-stone-50' }
+        paid: { border: 'border-stone-200', bg: 'bg-stone-50', text: 'text-stone-400', btn: 'text-white hover:opacity-90 shadow-md transform active:scale-95' }
     };
     const theme = themes[variant] || themes.pending;
 
@@ -571,6 +630,7 @@ function OrderCard({ order, onAction, actionLabel, variant, readonly = false, on
                     <Button
                         onClick={onAction} 
                         className={`font-black uppercase tracking-wide text-xs py-2 h-10 ${onSecondaryAction ? 'flex-1' : 'w-full'} ${theme.btn} rounded-lg shadow-sm`}
+                        style={(variant === 'paid' || variant === 'progress') ? { background: 'var(--primary-gradient)' } : undefined}
                     >
                         {variant === 'pending' && <Flame className="w-3 h-3 mr-1" />}
                         {actionLabel}

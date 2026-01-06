@@ -123,7 +123,7 @@ export default function UsersPage() {
 
             {/* Actions */}
             <div className="flex gap-2 mt-auto pt-2">
-                <Button variant="secondary" className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 h-9" onClick={() => openModal(user)}>
+                <Button variant="secondary" className="flex-1 h-9" onClick={() => openModal(user)}>
                     <Pencil className="w-3.5 h-3.5 mr-2" />
                     Modifier
                 </Button>

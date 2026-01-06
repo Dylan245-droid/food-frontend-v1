@@ -108,15 +108,15 @@ export default function TakeoutPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 pb-24 relative overflow-x-hidden">
+    <div className="min-h-screen text-stone-800 pb-24 relative overflow-x-hidden" style={{ background: 'var(--bg-app)' }}>
         {/* Background Blobs */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-orange-100/40 rounded-full blur-[80px] mix-blend-multiply"></div>
-            <div className="absolute top-[20%] -left-[10%] w-[60vw] h-[60vw] bg-yellow-100/40 rounded-full blur-[80px] mix-blend-multiply"></div>
+            <div className="absolute top-0 right-0 w-[50vw] h-[50vw] rounded-full blur-[80px] mix-blend-multiply opacity-40" style={{ background: 'var(--primary-100)' }}></div>
+            <div className="absolute top-[20%] -left-[10%] w-[60vw] h-[60vw] rounded-full blur-[80px] mix-blend-multiply opacity-40" style={{ background: 'var(--secondary-100)' }}></div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto p-4 md:p-6">
-            <button onClick={() => navigate('/')} className="mb-6 flex items-center text-stone-500 hover:text-orange-600 transition-colors bg-white/50 backdrop-blur px-4 py-2 rounded-full border border-stone-100 shadow-sm w-fit">
+            <button onClick={() => navigate('/')} className="mb-6 flex items-center text-stone-500 hover:text-[var(--primary-600)] transition-colors bg-white/50 backdrop-blur px-4 py-2 rounded-full border border-stone-100 shadow-sm w-fit">
                 <ArrowLeft className="w-4 h-4 mr-1" /> Retour
             </button>
 
@@ -124,12 +124,12 @@ export default function TakeoutPage() {
             <header className="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                 <div>
                         <h1 className="text-4xl md:text-5xl font-black text-stone-900 leading-tight font-display tracking-tight">
-                        À Emporter <span className="text-orange-500">.</span>
+                        À Emporter <span style={{ color: 'var(--primary)' }}>.</span>
                     </h1>
                     <p className="text-stone-500 mt-2 font-medium text-lg">Les saveurs créoles, directement chez vous.</p>
                 </div>
-                <div className="bg-orange-100 p-4 rounded-full rotate-3 shadow-lg shadow-orange-100 hidden md:block">
-                    <ShoppingBag className="w-8 h-8 text-orange-600" />
+                <div className="p-4 rounded-full rotate-3 shadow-lg hidden md:block" style={{ background: 'var(--primary-100)', boxShadow: '0 10px 15px -3px var(--primary-100)' }}>
+                    <ShoppingBag className="w-8 h-8" style={{ color: 'var(--primary-600)' }} />
                 </div>
             </header>
 
@@ -143,7 +143,7 @@ export default function TakeoutPage() {
                             px-6 py-3 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-300
                             ${activeCategoryId === cat.id 
                                 ? 'bg-stone-900 text-white shadow-xl shadow-stone-900/20 scale-105' 
-                                : 'bg-white text-stone-600 border border-stone-100 hover:bg-orange-50 hover:border-orange-100 hover:text-orange-600 shadow-sm'
+                                : 'bg-white text-stone-600 border border-stone-100 hover:bg-[var(--primary-50)] hover:border-[var(--primary-100)] hover:text-[var(--primary-600)] shadow-sm'
                             }
                         `}
                     >
@@ -163,7 +163,7 @@ export default function TakeoutPage() {
                     <div 
                         key={item.id} 
                         onClick={() => addToCart(item)}
-                        className="group bg-white rounded-[2rem] shadow-sm border border-stone-100 hover:border-orange-200 transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden cursor-pointer flex flex-col h-full"
+                        className="group bg-white rounded-[2rem] shadow-sm border border-stone-100 hover:border-[var(--primary-200)] transition-all hover:shadow-xl hover:-translate-y-1 relative overflow-hidden cursor-pointer flex flex-col h-full"
                     >
                          {/* Image Header */}
                          <div className="h-48 bg-stone-100 relative overflow-hidden shrink-0">
@@ -186,7 +186,7 @@ export default function TakeoutPage() {
                                 <span className="text-[10px] font-bold text-stone-400 uppercase">FCFA</span>
                             </div>
 
-                            <h3 className="font-black text-xl text-stone-900 mb-2 font-display pr-16 leading-tight group-hover:text-orange-600 transition-colors">{item.name}</h3>
+                            <h3 className="font-black text-xl text-stone-900 mb-2 font-display pr-16 leading-tight group-hover:text-[var(--primary-600)] transition-colors">{item.name}</h3>
                             
                             {item.description && (
                                 <p className="text-sm text-stone-500 leading-relaxed mb-4 line-clamp-2 flex-1 font-medium">{item.description}</p>
@@ -204,7 +204,8 @@ export default function TakeoutPage() {
                                         <span className="font-black text-white text-lg w-full text-center">{quantity}</span>
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); addToCart(item); }}
-                                            className="h-10 w-12 rounded-lg bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors"
+                                            className="h-10 w-12 rounded-lg text-white flex items-center justify-center transition-all hover:scale-105"
+                                            style={{ background: 'var(--primary)' }}
                                         >
                                             <Plus className="w-4 h-4" />
                                         </button>
@@ -240,7 +241,7 @@ export default function TakeoutPage() {
                 className="w-full pointer-events-auto max-w-md mx-auto bg-stone-900/90 text-white p-4 rounded-3xl shadow-2xl backdrop-blur-md border border-white/10 flex items-center justify-between animate-in slide-in-from-bottom-10 group"
             >
                 <div className="flex items-center gap-3">
-                    <div className="bg-orange-500 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-sm shadow-lg shadow-orange-900/20 group-hover:scale-110 transition-transform">
+                    <div className="text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-sm shadow-lg group-hover:scale-110 transition-transform" style={{ background: 'var(--primary)', boxShadow: '0 10px 15px -3px var(--primary-100)' }}>
                         {totalItems}
                     </div>
                     <span className="font-bold">Voir le panier</span>
@@ -268,7 +269,7 @@ export default function TakeoutPage() {
                         <div className="flex items-center gap-3 bg-white rounded-xl p-1 shadow-sm border border-stone-100">
                             <button onClick={() => removeFromCart(item.menuItemId)} className="p-1 hover:bg-stone-50 rounded-lg transition-colors text-stone-400 hover:text-red-500"><Minus className="w-3 h-3" /></button>
                             <span className="text-sm font-bold w-4 text-center text-stone-700">{item.quantity}</span>
-                            <button onClick={() => addToCart({ id: item.menuItemId } as MenuItem)} className="p-1 hover:bg-stone-50 rounded-lg transition-colors text-stone-600 hover:text-orange-500"><Plus className="w-3 h-3" /></button>
+                            <button onClick={() => addToCart({ id: item.menuItemId } as MenuItem)} className="p-1 hover:bg-stone-50 rounded-lg transition-colors text-stone-600 hover:text-[var(--primary-500)]"><Plus className="w-3 h-3" /></button>
                         </div>
                     </div>
                 ))}
@@ -281,8 +282,8 @@ export default function TakeoutPage() {
                  </div>
 
                  <form onSubmit={handleCheckout} className="space-y-4">
-                     <Input label="Votre Nom" value={clientName} onChange={e => setClientName(e.target.value)} required placeholder="Comment vous appeler ?" className="bg-stone-50 border-stone-200 focus:border-orange-500 focus:ring-orange-100" />
-                     <Input label="Téléphone (optionnel)" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="06..." className="bg-stone-50 border-stone-200 focus:border-orange-500 focus:ring-orange-100" />
+                     <Input label="Votre Nom" value={clientName} onChange={e => setClientName(e.target.value)} required placeholder="Comment vous appeler ?" className="bg-stone-50 border-stone-200 focus:border-[var(--primary-500)] focus:ring-[var(--primary-100)]" />
+                     <Input label="Téléphone (optionnel)" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="06..." className="bg-stone-50 border-stone-200 focus:border-[var(--primary-500)] focus:ring-[var(--primary-100)]" />
                      
                      <Button type="submit" isLoading={submitting} className="w-full h-14 text-lg bg-stone-900 hover:bg-stone-800 text-white rounded-2xl font-bold shadow-xl shadow-stone-900/10 mt-4">
                          Valider la commande

@@ -14,6 +14,7 @@ import OrdersPage from './pages/admin/OrdersPage';
 import ServerCallsPage from './pages/admin/ServerCallsPage';
 import AuditLogsPage from './pages/admin/AuditLogsPage';
 import FinancePage from './pages/admin/FinancePage';
+import SettingsPage from './pages/admin/SettingsPage';
 import { useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -27,9 +28,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 import { Toaster } from 'sonner';
 import { NotificationProvider } from './context/NotificationContext';
+import { BrandingProvider } from './context/BrandingContext';
 
 export default function App() {
   return (
+    <BrandingProvider>
     <NotificationProvider>
       <Toaster position="top-right" richColors closeButton />
       <Routes>
@@ -57,11 +60,13 @@ export default function App() {
         <Route path="orders" element={<OrdersPage />} />
         <Route path="calls" element={<ServerCallsPage />} />
         <Route path="finance" element={<FinancePage />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="audit-logs" element={<AuditLogsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/admin" />} />
       </Routes>
     </NotificationProvider>
+    </BrandingProvider>
   );
 }

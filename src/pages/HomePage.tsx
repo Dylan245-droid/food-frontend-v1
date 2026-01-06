@@ -6,8 +6,10 @@ import { Input } from '../components/ui/Input';
 import { UtensilsCrossed, ShoppingBag, Download, ArrowRight, MapPin, ChefHat } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Modal } from '../components/ui/Modal';
+import { useBranding } from '../context/BrandingContext';
 
 export default function HomePage() {
+  const { branding } = useBranding();
   const { data: tablesData, loading } = useFetch<{ data: any[] }>('/tables/available');
   const [tableCode, setTableCode] = useState('');
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -54,7 +56,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 font-sans overflow-x-hidden">
+    <div className="min-h-screen text-stone-800 font-sans overflow-x-hidden" style={{ background: 'var(--bg-app)' }}>
       {/* Decorative Background Blobs - Warm & Organic */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-[10%] -right-[10%] w-[70vw] h-[70vw] bg-orange-200/20 rounded-full blur-[100px] mix-blend-multiply"></div>
@@ -73,8 +75,8 @@ export default function HomePage() {
             <span className="text-stone-400 text-xs md:text-sm italic">Le plaisir de manger</span>
           </div>
           <h1 className="text-4xl md:text-7xl font-black text-stone-900 leading-[0.9] tracking-tight mb-2 md:mb-6">
-            Sauce <br className="md:hidden" />
-            <span className="text-red-600 italic font-serif pr-2">Créole.</span>
+            {branding.name.split(' ')[0]} <br className="md:hidden" />
+            <span className="italic font-serif pr-2" style={{ color: 'var(--primary)' }}>{branding.name.split(' ').slice(1).join(' ') || ''}.</span>
           </h1>
           <p className="text-sm md:text-lg text-stone-600 font-medium max-w-[90%] md:max-w-xl md:mx-auto leading-relaxed border-l-2 md:border-l-0 md:border-t-4 border-orange-300 pl-3 md:pl-0 md:pt-4 mt-3 md:mt-6">
             L'authenticité dans chaque assiette. Pas de chichis, juste du goût.
@@ -86,7 +88,10 @@ export default function HomePage() {
           
           {/* Card 1: Takeout - Express Mobile Layout */}
           <section className="relative group w-full">
-            <div className="absolute inset-0 bg-gradient-to-br from-red-600 to-orange-600 rounded-2xl md:rounded-3xl transform rotate-0 md:rotate-1 group-hover:rotate-2 transition-transform duration-300 shadow-xl shadow-orange-900/20"></div>
+            <div 
+              className="absolute inset-0 rounded-2xl md:rounded-3xl transform rotate-0 md:rotate-1 group-hover:rotate-2 transition-transform duration-300 shadow-xl"
+              style={{ background: 'var(--gradient-brand)' }}
+            ></div>
             <div className="relative bg-[#1A1A1A] rounded-2xl md:rounded-2xl p-5 md:p-8 text-white overflow-hidden shadow-inner border border-white/5 flex flex-col justify-between">
               
               {/* Abstract pattern overlay */}
@@ -110,7 +115,10 @@ export default function HomePage() {
               </div>
 
               <Link to="/takeout" className="mt-auto relative z-10">
-                <button className="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3.5 md:py-4 rounded-xl flex items-center justify-between px-5 md:px-6 transition-all shadow-lg shadow-orange-900/30 group-hover:translate-x-1 text-base md:text-base active:bg-orange-700 active:scale-[0.98]">
+                <button 
+                  className="w-full text-white font-bold py-3.5 md:py-4 rounded-xl flex items-center justify-between px-5 md:px-6 transition-all shadow-lg group-hover:translate-x-1 text-base md:text-base active:scale-[0.98]"
+                  style={{ background: 'var(--primary-gradient)' }}
+                >
                   <span>Commander maintenant</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
@@ -203,7 +211,7 @@ export default function HomePage() {
                  <span className="text-[10px] font-bold tracking-wider uppercase">Local</span>
               </div>
            </div>
-           <p className="text-xs font-medium text-stone-400">© 2026 Sauce Créole.</p>
+           <p className="text-xs font-medium text-stone-400">{branding.footerText}</p>
         </footer>
       </div>
 

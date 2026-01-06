@@ -28,13 +28,23 @@ export interface ReceiptOrder {
 
 interface ReceiptProps {
     order: ReceiptOrder | null;
+    branding?: {
+        name: string;
+        tagline: string;
+        receiptFooter: string;
+    };
 }
 
-export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({ order }, ref) => {
+export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({ order, branding }, ref) => {
     if (!order) return null;
 
     const total = order.totalAmount; // en FCFA
     const date = new Date(order.createdAt).toLocaleString('fr-FR');
+    
+    // Default branding values
+    const brandName = branding?.name || 'Mon Restaurant';
+    const brandTagline = branding?.tagline || 'Saveurs authentiques';
+    const brandFooter = branding?.receiptFooter || 'À bientôt !';
 
     return (
         <div ref={ref} className="hidden print:block print:w-full print:px-8 print:text-black font-mono leading-tight text-xs">
@@ -43,8 +53,8 @@ export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({ order }, ref)
                 <div className="flex justify-center mb-2">
                     <img src="/logo.jpg" alt="Logo" className="h-12 w-auto object-contain grayscale" onError={(e) => e.currentTarget.style.display = 'none'} />
                 </div>
-                <h1 className="text-xl font-bold uppercase mb-1">Sauce Créole</h1>
-                <p className="text-[10px] italic font-medium mb-1">"Le plaisir de manger"</p>
+                <h1 className="text-xl font-bold uppercase mb-1">{brandName}</h1>
+                <p className="text-[10px] italic font-medium mb-1">"{brandTagline}"</p>
                 <p className="text-[10px]">{date}</p>
             </div>
 
@@ -94,7 +104,7 @@ export const Receipt = forwardRef<HTMLDivElement, ReceiptProps>(({ order }, ref)
                 </div>
                 <div className="text-center text-[10px] mt-6 space-y-1">
                     <p>Merci de votre visite !</p>
-                    <p>À bientôt chez Sauce Créole</p>
+                    <p>{brandFooter}</p>
                 </div>
             </div>
             

@@ -37,13 +37,23 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
       <div 
         ref={overlayRef}
         onClick={(e) => e.target === overlayRef.current && onClose()}
-        className={cn("bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]", className)}
+        className={cn(
+          "bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh]",
+          "animate-in zoom-in-95 duration-200",
+          className
+        )}
       >
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        {/* Header with theme colors */}
+        <div 
+          className="flex items-center justify-between p-5 rounded-t-2xl"
+          style={{ 
+            background: 'var(--primary-gradient)',
+          }}
+        >
+          <h2 className="text-xl font-bold text-white">{title}</h2>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 hover:bg-gray-100 p-2 rounded-full transition-colors"
+            className="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-colors"
           >
             <X className="w-5 h-5" />
           </button>

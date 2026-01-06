@@ -2,11 +2,13 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ServerCallsNotification } from './ServerCallsNotification';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, ShoppingBag, Users, FileText, LogOut, Coffee, Bell, TrendingUp, Menu, X, ChefHat } from 'lucide-react';
+import { useBranding } from '../context/BrandingContext';
+import { LayoutDashboard, ShoppingBag, Users, FileText, LogOut, Coffee, Bell, TrendingUp, Menu, X, ChefHat, Settings } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
+  const { branding } = useBranding();
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -31,6 +33,7 @@ export default function AdminLayout() {
 
   if (user?.role === 'super_admin' || user?.role === 'admin') {
       menuItems.push({ icon: TrendingUp, label: 'Finances', path: '/admin/finance', roles: ['super_admin', 'admin'] });
+      menuItems.push({ icon: Settings, label: 'Paramètres', path: '/admin/settings', roles: ['super_admin', 'admin'] });
   }
 
   if (user?.role === 'super_admin') {
@@ -48,17 +51,25 @@ export default function AdminLayout() {
   const allowedMenuItems = menuItems.filter(item => !item.roles || item.roles.includes(user?.role || ''));
 
   return (
-    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 flex flex-col md:flex-row">
+    <div className="min-h-screen text-stone-800 flex flex-col md:flex-row" style={{ background: 'var(--bg-app)' }}>
       
       {/* Mobile Header */}
-      <div className="md:hidden bg-white/80 backdrop-blur-md border-b border-orange-100 p-4 flex justify-between items-center sticky top-0 z-30">
+      <div className="md:hidden bg-white/80 backdrop-blur-md border-b p-4 flex justify-between items-center sticky top-0 z-30" style={{ borderColor: 'var(--primary-100)' }}>
         <h1 className="text-lg font-black text-stone-900 flex items-center gap-2 font-display">
-             <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                <ChefHat className="w-5 h-5" />
-             </div>
-             Sauce Créole
+             {branding.logo ? (
+               <img src={branding.logo} alt={branding.name} className="w-8 h-8 rounded-full object-contain" />
+             ) : (
+               <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'var(--primary-100)', color: 'var(--primary-600)' }}>
+                 <ChefHat className="w-5 h-5" />
+               </div>
+             )}
+             {branding.name}
         </h1>
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 text-stone-500 hover:bg-orange-50 hover:text-orange-600 rounded-xl transition-colors">
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+          className="p-2 rounded-xl transition-colors"
+          style={{ color: 'var(--primary-600)' }}
+        >
             {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
       </div>
@@ -71,18 +82,41 @@ export default function AdminLayout() {
           />
       )}
 
-      {/* Sidebar */}
-      <aside className={cn(
-          "bg-white border-r border-orange-100 flex flex-col fixed md:sticky top-0 h-screen z-40 transition-transform duration-300 w-72 shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
-          "md:translate-x-0", // Always visible on desktop
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full" // Toggle on mobile
-      )}>
+      <aside 
+        className={cn(
+            "bg-white flex flex-col fixed md:sticky top-0 h-screen z-40 transition-transform duration-300 w-72",
+            "md:translate-x-0",
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+        style={{ 
+          borderRight: '1px solid var(--border-light)',
+          boxShadow: 'var(--shadow-md)'
+        }}
+      >
         <div className="p-8 pb-4">
           <h1 className="text-2xl font-black text-stone-900 flex items-center gap-3 font-display tracking-tight">
-             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white shadow-lg shadow-orange-500/20 rotate-3">
+             {branding.logo ? (
+               <img 
+                 src={branding.logo} 
+                 alt={branding.name}
+                 className="w-12 h-12 rounded-2xl object-contain shadow-lg"
+                 onError={(e) => {
+                   // Fallback to icon if image fails
+                   e.currentTarget.style.display = 'none';
+                   e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                 }}
+               />
+             ) : null}
+             <div 
+               className={cn(
+                 "w-10 h-10 rounded-2xl flex items-center justify-center text-white shadow-lg rotate-3",
+                 branding.logo ? "hidden" : ""
+               )}
+               style={{ background: 'var(--primary-gradient)' }}
+             >
                 <ChefHat className="w-6 h-6" />
              </div>
-             Sauce <br/>Créole
+             {branding.name.split(' ')[0]} <br/>{branding.name.split(' ').slice(1).join(' ') || ''}
           </h1>
         </div>
         
@@ -96,19 +130,37 @@ export default function AdminLayout() {
                 className={cn(
                     "flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all duration-200 group relative",
                     isActive
-                    ? "bg-orange-50 text-orange-700 shadow-sm" 
+                    ? "shadow-sm" 
                     : "text-stone-500 hover:bg-stone-50 hover:text-stone-900"
                 )}
+                style={isActive ? { 
+                  backgroundColor: `${branding.primaryColor}15`,
+                  color: branding.primaryColor
+                } : undefined}
                 >
-                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-orange-500 rounded-r-full"></div>}
-                <item.icon className={cn("w-5 h-5 transition-colors", isActive ? "text-orange-600" : "text-stone-400 group-hover:text-stone-600")} />
+                {isActive && (
+                  <div 
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full"
+                    style={{ backgroundColor: branding.primaryColor }}
+                  />
+                )}
+                <item.icon 
+                  className={cn("w-5 h-5 transition-colors", !isActive && "text-stone-400 group-hover:text-stone-600")} 
+                  style={isActive ? { color: branding.primaryColor } : undefined}
+                />
                 {item.label}
                 </Link>
             );
           })}
         </nav>
 
-        <div className="p-4 border-t border-orange-50/50 mt-auto m-4 bg-orange-50/30 rounded-2xl">
+        <div 
+          className="p-4 mt-auto m-4 rounded-2xl"
+          style={{ 
+            background: 'var(--primary-50)',
+            borderColor: 'var(--border-light)'
+          }}
+        >
           <div className="flex items-center gap-3 mb-3">
              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md ${user?.role === 'super_admin' ? 'bg-purple-600' : 'bg-stone-900'}`}>
                 {user?.fullName?.charAt(0) || 'U'}

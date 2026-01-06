@@ -50,12 +50,12 @@ export default function OrderTrackingPage() {
         return (
             <div className="flex flex-col items-center justify-center min-h-[80vh] text-center space-y-8 bg-[#FFF8F3] p-6 relative overflow-hidden">
                 {/* Background Blobs */}
-                <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-yellow-100/40 rounded-full blur-[80px] mix-blend-multiply pointer-events-none"></div>
-                <div className="absolute bottom-0 left-0 w-[50vw] h-[50vw] bg-orange-100/40 rounded-full blur-[80px] mix-blend-multiply pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-[60vw] h-[60vw] rounded-full blur-[80px] mix-blend-multiply pointer-events-none opacity-40" style={{ background: 'var(--primary-100)' }}></div>
+                <div className="absolute bottom-0 left-0 w-[50vw] h-[50vw] rounded-full blur-[80px] mix-blend-multiply pointer-events-none opacity-40" style={{ background: 'var(--secondary-100)' }}></div>
 
                 <div className="relative z-10 bg-white p-8 rounded-3xl shadow-xl border border-stone-100 max-w-sm w-full mx-auto transform rotate-1">
-                    <div className="bg-orange-50 p-6 rounded-full inline-block mb-6 shadow-inner">
-                        <Search className="w-10 h-10 text-orange-500" />
+                    <div className="p-6 rounded-full inline-block mb-6 shadow-inner" style={{ background: 'var(--primary-50)' }}>
+                        <Search className="w-10 h-10" style={{ color: 'var(--primary-500)' }} />
                     </div>
                     <h1 className="text-3xl font-black text-stone-900 mb-2">Suivi Commande</h1>
                     <p className="text-stone-500 mb-8 font-medium">Où est votre festin ?</p>
@@ -64,7 +64,8 @@ export default function OrderTrackingPage() {
                             placeholder="CODE RETRAIT" 
                             value={searchCode} 
                             onChange={e => setSearchCode(e.target.value)} 
-                            className="text-center uppercase font-mono tracking-[0.2em] text-xl h-14 bg-stone-50 border-stone-200 focus:ring-orange-200 focus:border-orange-400"
+                            className="text-center uppercase font-mono tracking-[0.2em] text-xl h-14 bg-stone-50 border-stone-200 focus:ring-[var(--primary-200)] focus:border-[var(--primary-400)] transition-all"
+                            style={{ '--tw-ring-color': 'var(--primary-200)', borderColor: 'var(--primary-400)' } as React.CSSProperties}
                             maxLength={6}
                         />
                         <Button type="submit" className="w-full h-14 text-lg font-bold bg-stone-900 text-white rounded-xl shadow-lg hover:bg-stone-800">
@@ -102,7 +103,7 @@ export default function OrderTrackingPage() {
 
     const steps = [
         { status: 'pending', label: 'Reçue', icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-100' },
-        { status: 'in_progress', label: 'Au Fourneau', icon: ChefHat, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-100' },
+        { status: 'in_progress', label: 'Au Fourneau', icon: ChefHat, color: 'text-[var(--primary-600)]', bg: 'bg-[var(--primary-50)]', border: 'border-[var(--primary-100)]' },
         { status: 'delivered', label: 'Prête !', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
         { status: 'paid', label: 'Payée', icon: PartyPopper, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
     ];
@@ -126,7 +127,7 @@ export default function OrderTrackingPage() {
 
                 {/* Pickup Code Card */}
                 <div className="bg-white p-6 rounded-3xl shadow-xl border border-stone-100 text-center mb-8 relative overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500"></div>
+                    <div className="absolute top-0 left-0 w-full h-2" style={{ background: 'var(--gradient-brand)' }}></div>
                     <p className="text-stone-400 text-xs font-bold uppercase tracking-[0.2em] mb-4">Code de retrait</p>
                     <div className="text-5xl font-black text-stone-900 font-mono tracking-widest bg-stone-50 inline-block px-8 py-4 rounded-2xl border-2 border-stone-100 border-dashed">
                         {order.pickupCode}
@@ -145,8 +146,10 @@ export default function OrderTrackingPage() {
                             {/* Connecting Line */}
                             <div className="absolute top-1/2 left-6 right-6 h-1 bg-stone-100 -z-10 rounded-full"></div>
                             <div 
-                                className="absolute top-1/2 left-6 h-1 bg-gradient-to-r from-yellow-400 to-purple-500 -z-10 rounded-full transition-all duration-1000"
-                                style={{ width: `calc(${(Math.min(currentStepIndex, 3) / 3) * 100}% - 3rem)` }}
+                                style={{ 
+                                    width: `calc(${(Math.min(currentStepIndex, 3) / 3) * 100}% - 3rem)`,
+                                    background: 'var(--gradient-brand)'
+                                }}
                             ></div>
 
                             {steps.map((step, index) => {
@@ -158,11 +161,20 @@ export default function OrderTrackingPage() {
                                         <div className={`
                                             w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-4 transition-all duration-500 z-10
                                             ${isActive 
-                                                ? 'bg-white border-orange-500 shadow-lg shadow-orange-200 scale-110' 
+                                                ? 'bg-white shadow-lg scale-110' 
                                                 : 'bg-stone-50 border-stone-100 text-stone-300'
                                             }
-                                        `}>
-                                            <step.icon className={`w-4 h-4 md:w-5 md:h-5 ${isActive ? 'text-orange-600' : 'text-stone-300'}`} />
+                                        `}
+                                        style={isActive ? { borderColor: 'var(--primary-500)', boxShadow: '0 4px 6px -1px var(--primary-200)' } : {}}
+                                        >
+                                            <step.icon 
+                                                className={`w-4 h-4 md:w-5 md:h-5 ${!isActive && 'text-stone-300'}`} 
+                                                style={isActive ? { color: step.status === 'in_progress' ? 'var(--primary-600)' : undefined } : undefined}
+                                                // Note: step.color contains class names, but for in_progress we want dynamic style if possible, 
+                                                // but since we replaced the class in steps array, it should be fine.
+                                                // However step.color is passed as classname? No, let's see where it's used.
+                                                // Ah, below: `isActive ? 'text-orange-600' : ...` was hardcoded!
+                                            />
                                         </div>
                                         <span className={`text-[8px] md:text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-stone-800' : 'text-stone-300'}`}>
                                             {step.label}
@@ -183,11 +195,11 @@ export default function OrderTrackingPage() {
                                 </div>
                             )}
                             {order.status === 'in_progress' && (
-                                <div className="bg-orange-50 border border-orange-100 p-6 rounded-2xl text-center relative overflow-hidden">
-                                    <div className="absolute -left-4 -bottom-4 w-20 h-20 bg-orange-100 rounded-full blur-xl animate-pulse"></div>
-                                    <ChefHat className="w-8 h-8 text-orange-600 mx-auto mb-3 animate-bounce" />
-                                    <h3 className="text-lg font-bold text-orange-800 mb-1">Ça chauffe en cuisine !</h3>
-                                    <p className="text-orange-700/80 text-sm">Vos plats sont en cours de préparation avec amour.</p>
+                                <div className="p-6 rounded-2xl text-center relative overflow-hidden border" style={{ background: 'var(--primary-50)', borderColor: 'var(--primary-100)' }}>
+                                    <div className="absolute -left-4 -bottom-4 w-20 h-20 rounded-full blur-xl animate-pulse" style={{ background: 'var(--primary-100)' }}></div>
+                                    <ChefHat className="w-8 h-8 mx-auto mb-3 animate-bounce" style={{ color: 'var(--primary-600)' }} />
+                                    <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--primary-900)' }}>Ça chauffe en cuisine !</h3>
+                                    <p className="text-sm" style={{ color: 'var(--primary-700)' }}>Vos plats sont en cours de préparation avec amour.</p>
                                 </div>
                             )}
                             {order.status === 'delivered' && (
@@ -214,7 +226,7 @@ export default function OrderTrackingPage() {
                     {/* Ragged Top Edge (CSS Trick or SVG could work, simpler here) */}
                     <div className="flex justify-between items-center mb-6 pb-4 border-b border-dashed border-stone-200">
                         <h3 className="font-bold text-stone-900 flex items-center gap-2">
-                            <span className="w-1 h-4 bg-orange-500 rounded-full"></span>
+                            <span className="w-1 h-4 rounded-full" style={{ background: 'var(--primary-500)' }}></span>
                             Votre commande
                         </h3>
                         <span className="text-xs text-stone-400 font-mono">{new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>

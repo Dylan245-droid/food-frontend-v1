@@ -1,9 +1,11 @@
 import { useFetch } from '../../lib/useFetch';
+import { useBranding } from '../../context/BrandingContext';
 import { Loader2, TrendingUp, ShoppingBag } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function DashboardPage() {
   const { data: stats, loading, error } = useFetch<any>('/staff/orders/stats');
+  const { branding } = useBranding();
 
   if (loading) return (
       <div className="flex justify-center p-24">
@@ -25,11 +27,11 @@ export default function DashboardPage() {
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Active Orders Card */}
-            <div className="bg-white p-6 rounded-3xl shadow-[0_2px_15px_rgb(0,0,0,0.03)] border border-stone-100 flex flex-col justify-between h-40 relative overflow-hidden group hover:border-orange-200 transition-colors">
+            <div className="bg-white p-6 rounded-3xl shadow-[0_2px_15px_rgb(0,0,0,0.03)] border border-stone-100 flex flex-col h-40 relative overflow-hidden group hover:border-orange-200 transition-colors">
                 <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform rotate-12 scale-150">
                     <Loader2 className="w-24 h-24 text-blue-600" />
                 </div>
-                <div>
+                <div className="flex-1">
                    <div className="flex items-center gap-2 mb-2">
                         <div className="bg-blue-50 p-2 rounded-xl text-blue-600">
                              <Loader2 className="w-5 h-5" />
@@ -38,7 +40,7 @@ export default function DashboardPage() {
                    </div>
                    <p className="text-5xl font-black text-stone-900 mt-2 font-display tracking-tight">{stats?.pending + stats?.inProgress || 0}</p>
                 </div>
-                <div className="flex gap-2 text-xs font-bold relative z-10 pt-4">
+                <div className="flex gap-2 text-xs font-bold relative z-10">
                     <span className="text-yellow-700 bg-yellow-50 px-3 py-1 rounded-lg border border-yellow-100 flex items-center gap-1.5 shadow-sm">
                         <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div> {stats?.pending} Attente
                     </span>
@@ -67,10 +69,13 @@ export default function DashboardPage() {
                 </div>
             </div>
 
-            {/* Revenue Card - Dark Mode */}
-            <div className="bg-stone-900 p-6 rounded-3xl shadow-xl flex flex-col justify-between h-40 text-white relative overflow-hidden group">
+            {/* Revenue Card - Themed */}
+            <div 
+              className="p-6 rounded-3xl shadow-xl flex flex-col justify-between h-40 text-white relative overflow-hidden group"
+              style={{ background: 'var(--gradient-brand)' }}
+            >
                  {/* Background decoration */}
-                 <div className="absolute right-0 top-0 w-32 h-32 bg-gradient-to-br from-orange-500 to-red-600 rounded-full blur-[50px] opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                 <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-[50px] opacity-30 group-hover:opacity-50 transition-opacity"></div>
                  
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-2">
@@ -127,7 +132,7 @@ export default function DashboardPage() {
                                 />
                                 <Bar 
                                     dataKey="revenue" 
-                                    fill="#292524" 
+                                    fill={branding.primaryColor} 
                                     radius={[6, 6, 6, 6]} 
                                     name="Chiffre d'affaires (FCFA)"
                                     barSize={20}

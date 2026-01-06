@@ -377,8 +377,8 @@ export default function TablesPage() {
                  ) : (
                      <>
                         <Button 
-                            variant="secondary"
-                            className="col-span-2 rounded-xl text-stone-500 hover:text-stone-900"
+                            variant="primary" // Changed to primary for better visibility as main action
+                            className="col-span-2 rounded-xl"
                             onClick={() => openQrModal(table)}
                         >
                             <ExternalLink className="w-4 h-4 mr-2" />
@@ -387,14 +387,14 @@ export default function TablesPage() {
                         <Button 
                             variant="secondary"
                             onClick={() => openAssignModal(table)}
-                            className="col-span-1 p-0 rounded-xl text-stone-400 hover:text-stone-900"
+                            className="col-span-1 p-0 rounded-xl"
                             title="Assigner Serveur"
                         >
                              <UserCheck className="w-4 h-4" />
                         </Button>
                         <Button 
-                            variant="secondary"
-                            className="col-span-1 text-red-400 hover:bg-red-50 hover:text-red-700 p-0 rounded-xl"
+                            variant="danger"
+                            className="col-span-1 p-0 rounded-xl"
                             onClick={() => handleDelete(table.id)}
                             title="Supprimer"
                         >
@@ -497,7 +497,7 @@ export default function TablesPage() {
             </Button>
             <Button 
               variant="secondary"
-              className="flex-1 h-12 rounded-xl text-red-400 hover:text-red-600 hover:bg-red-50"
+              className="flex-1 h-12 rounded-xl"
               onClick={() => handleRegenerateCode(selectedTable?.id || 0)}
             >
               <RefreshCw className="w-5 h-5 mr-2" />
@@ -522,7 +522,7 @@ export default function TablesPage() {
                         ))}
                   </select>
               </div>
-              <Button type="submit" className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-200">
+              <Button type="submit" variant="secondary" className="w-full h-12 rounded-xl font-bold shadow-lg">
                   <UserCheck className="w-5 h-5 mr-2" />
                   Valider l'assignation
               </Button>

@@ -5,6 +5,7 @@ import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Minus, Plus, UtensilsCrossed, Bell, Receipt, CheckCircle, Clock, XCircle, ChefHat } from 'lucide-react';
+import { useBranding } from '../../context/BrandingContext';
 
 interface MenuItem {
   id: number;
@@ -30,6 +31,7 @@ interface CartItem {
 }
 
 export default function DineInPage() {
+  const { branding } = useBranding();
   const { code } = useParams();
   const { data: tableData, loading, error } = useFetch<any>(`/tables/${code}`);
   const { data: tableOrders, refetch: refreshOrders } = useFetch<any>(`/tables/${code}/orders`);
@@ -75,7 +77,7 @@ export default function DineInPage() {
 
   const thankYouMessages = [
       "Revenez vite, ce fût un plaisir de vous avoir !",
-      "Merci de votre visite ! À très bientôt chez Sauce Créole.",
+      branding.thankYouMessage,
       "Nous espérons que vous avez passé un excellent moment.",
       "Toute l'équipe vous remercie. Revenez nous voir vite !",
       "Un grand merci ! Nous avons hâte de vous régaler à nouveau."
@@ -275,19 +277,19 @@ export default function DineInPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFF8F3] text-stone-800 pb-12 overflow-x-hidden relative">
+    <div className="min-h-screen text-stone-800 pb-12 overflow-x-hidden relative" style={{ background: 'var(--bg-app)' }}>
       
        {/* Background Decoration */}
        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 right-0 w-[60vw] h-[60vw] bg-yellow-100/30 rounded-full blur-[100px] mix-blend-multiply"></div>
-          <div className="absolute bottom-0 left-0 w-[60vw] h-[60vw] bg-orange-100/30 rounded-full blur-[100px] mix-blend-multiply"></div>
+          <div className="absolute top-0 right-0 w-[60vw] h-[60vw] rounded-full blur-[100px] mix-blend-multiply opacity-30" style={{ background: 'var(--primary-100)' }}></div>
+          <div className="absolute bottom-0 left-0 w-[60vw] h-[60vw] rounded-full blur-[100px] mix-blend-multiply opacity-30" style={{ background: 'var(--secondary-100)' }}></div>
        </div>
 
        <div className="relative z-10 w-full max-w-6xl mx-auto p-4 md:p-8">
            
            {/* Header Card - Ticket Style */}
            <header className="bg-white p-5 rounded-2xl shadow-[0_2px_15px_rgb(0,0,0,0.03)] border border-stone-100 mb-6 relative overflow-hidden md:flex md:justify-between md:items-center">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+                <div className="absolute top-0 left-0 w-full h-1" style={{ background: 'var(--gradient-brand)' }}></div>
                 
                 <div className="flex justify-between items-start w-full">
                     <div>
@@ -308,7 +310,8 @@ export default function DineInPage() {
                 <div className="grid grid-cols-2 gap-3 mt-6 md:mt-0 md:ml-6 md:w-auto md:flex">
                     <button 
                         onClick={() => handleServerCall('general')}
-                        className="flex items-center justify-center gap-2 py-3 px-6 bg-stone-50 hover:bg-orange-50 text-stone-600 hover:text-orange-600 rounded-xl transition-colors text-sm font-bold border border-stone-100 md:w-auto"
+                        className="flex items-center justify-center gap-2 py-3 px-6 bg-stone-50 hover:bg-[var(--primary-50)] text-stone-600 hover:text-[var(--primary-700)] rounded-xl transition-colors text-sm font-bold border border-stone-100 md:w-auto"
+                        style={{ '--primary-50': 'var(--primary-50)', '--primary-700': 'var(--primary-700)' } as React.CSSProperties}
                     >
                         <Bell className="w-4 h-4" />
                         Appeler
@@ -349,10 +352,12 @@ export default function DineInPage() {
                                 className={`
                                     px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 border
                                     ${activeCategoryId === cat.id 
-                                        ? 'bg-stone-800 text-white border-stone-900 shadow-md transform -translate-y-0.5' 
+                                        ? 'text-white shadow-md transform -translate-y-0.5 border-transparent' 
                                         : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300 hover:text-stone-700'
                                     }
                                 `}
+                                style={activeCategoryId === cat.id ? { background: 'var(--primary-900)' } : undefined}
+
                             >
                                 {cat.name}
                             </button>
@@ -392,7 +397,7 @@ export default function DineInPage() {
                                         <div className="p-5 flex flex-col flex-1">
                                             <div className="flex justify-between items-start mb-2">
                                                 <h3 className="font-bold text-stone-900 text-lg leading-tight flex-1">{item.name}</h3>
-                                                <span className="font-black text-orange-600 text-lg whitespace-nowrap ml-3">
+                                                <span className="font-black text-lg whitespace-nowrap ml-3" style={{ color: 'var(--primary-600)' }}>
                                                     {item.price} <span className="text-xs font-bold text-stone-400">FCFA</span>
                                                 </span>
                                             </div>
@@ -413,7 +418,15 @@ export default function DineInPage() {
                                                     <div className="flex items-center gap-2 bg-stone-900 p-1.5 rounded-xl text-white w-full justify-between shadow-lg shadow-stone-900/10">
                                                          <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} className="w-10 h-9 flex items-center justify-center bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors"><Minus className="w-4 h-4" /></button>
                                                          <span className="font-bold text-lg">{quantity}</span>
-                                                         <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} className="w-10 h-9 flex items-center justify-center bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors"><Plus className="w-4 h-4" /></button>
+                                                         <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} className="w-10 h-9 flex items-center justify-center bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors"><Minus className="w-4 h-4" /></button>
+                                                         <span className="font-bold text-lg">{quantity}</span>
+                                                         <button 
+                                                            onClick={(e) => { e.stopPropagation(); addToCart(item); }} 
+                                                            className="w-10 h-9 flex items-center justify-center rounded-lg transition-colors text-white"
+                                                            style={{ background: 'var(--primary)', color: 'white' }}
+                                                         >
+                                                            <Plus className="w-4 h-4" />
+                                                         </button>
                                                     </div>
                                                 )}
                                             </div>
@@ -448,26 +461,27 @@ export default function DineInPage() {
            {/* Floating Active Orders Button (Mobile/Tablet) */}
            {ongoingOrders.length > 0 && (
                 <>
-                    <div className={`fixed z-30 transition-all duration-300 ${cart.length > 0 ? 'bottom-28' : 'bottom-6'} right-4 lg:hidden animate-in slide-in-from-bottom-20`}>
+                    <div className={"fixed z-30 transition-all duration-300 " + (cart.length > 0 ? 'bottom-28' : 'bottom-6') + " right-4 lg:hidden animate-in slide-in-from-bottom-20"}>
                         <button 
                             onClick={() => setIsActiveOrdersOpen(true)}
-                            className="bg-white text-stone-900 p-3 rounded-full shadow-xl border-2 border-orange-100 hover:scale-110 transition-transform flex items-center justify-center relative group"
+                            className="bg-white text-stone-900 p-3 rounded-full shadow-xl border-2 hover:scale-110 transition-transform flex items-center justify-center relative group"
+                            style={{ borderColor: 'var(--primary-100)' }}
                         >
-                             <div className="absolute inset-0 bg-orange-500 rounded-full animate-ping opacity-20"></div>
+                             <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: 'var(--primary)' }}></div>
                              <div className="absolute -top-1 -right-1 bg-red-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm">
                                 {ongoingOrders.length}
                              </div>
-                             <ChefHat className="w-6 h-6 text-orange-600" />
+                             <ChefHat className="w-6 h-6" style={{ color: 'var(--primary-600)' }} />
                         </button>
                     </div>
 
                     <Modal isOpen={isActiveOrdersOpen} onClose={() => setIsActiveOrdersOpen(false)} title="Suivi Cuisine">
                         <div className="space-y-4">
-                             <div className="bg-orange-50 p-4 rounded-xl border border-orange-100 flex items-start gap-3 mb-4">
-                                 <Clock className="w-5 h-5 text-orange-600 mt-0.5" />
+                             <div className="p-4 rounded-xl border flex items-start gap-3 mb-4" style={{ background: 'var(--primary-50)', borderColor: 'var(--primary-100)' }}>
+                                 <Clock className="w-5 h-5 mt-0.5" style={{ color: 'var(--primary-600)' }} />
                                  <div>
-                                     <h4 className="font-bold text-orange-800 text-sm">En préparation</h4>
-                                     <p className="text-xs text-orange-600 leading-relaxed">
+                                     <h4 className="font-bold text-sm" style={{ color: 'var(--primary-900)' }}>En préparation</h4>
+                                     <p className="text-xs leading-relaxed" style={{ color: 'var(--primary-700)' }}>
                                          Vos commandes sont en train d'être cuisinées avec amour.
                                      </p>
                                  </div>
@@ -487,7 +501,7 @@ export default function DineInPage() {
                         className="w-full max-w-md mx-auto pointer-events-auto bg-stone-900 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between hover:scale-[1.02] transition-transform active:scale-95"
                     >
                         <div className="flex items-center gap-3">
-                            <div className="bg-orange-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-4 ring-stone-900">
+                            <div className="text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-4 ring-stone-900" style={{ background: 'var(--primary)' }}>
                                 {totalItems}
                             </div>
                             <span className="font-bold">Voir mon plateau</span>

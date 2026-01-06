@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useFetch } from '../../lib/useFetch';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Loader2, Calendar, TrendingUp, DollarSign, ShoppingBag, Utensils, ArrowUpRight } from 'lucide-react';
+import { Loader2, Calendar, TrendingUp, DollarSign, ShoppingBag, Utensils, ArrowUpRight, Lightbulb } from 'lucide-react';
+import { Modal } from '../../components/ui/Modal';
 
 // Utility for currency
 const formatCurrency = (amount: number) => {
@@ -24,9 +25,52 @@ export default function FinancePage() {
 
     const { data: stats, loading, refetch } = useFetch<any>(`/admin/finance/stats?startDate=${startDate}&endDate=${endDate}`);
 
+    // State for modals and expanded views
+    const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+    const dailyTableRef = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
         refetch();
     }, [startDate, endDate]);
+
+    // Generate insights based on data
+    const generateInsights = () => {
+        const insights: { type: 'success' | 'warning' | 'info'; message: string }[] = [];
+        
+        if (stats?.charts?.topItems?.[0]) {
+            const topItem = stats.charts.topItems[0];
+            insights.push({
+                type: 'success',
+                message: `🌟 "${topItem.name}" est votre best-seller avec ${topItem.quantity} ventes. Mettez-le en avant !`
+            });
+        }
+        
+        if (stats?.charts?.revenueByType) {
+            const dineIn = stats.charts.revenueByType.find((t: any) => t.type === 'Sur place');
+            const takeout = stats.charts.revenueByType.find((t: any) => t.type === 'À emporter');
+            if (dineIn && takeout) {
+                const dineInPercent = Math.round((dineIn.revenue / (dineIn.revenue + takeout.revenue)) * 100);
+                insights.push({
+                    type: 'info',
+                    message: `🍽️ ${dineInPercent}% du CA provient du service en salle. ${dineInPercent < 50 ? 'Pensez à promouvoir l\'expérience sur place.' : ''}`
+                });
+            }
+        }
+        
+        if (stats?.kpi?.avgOrder) {
+            const avg = stats.kpi.avgOrder;
+            insights.push({
+                type: avg > 5000 ? 'success' : 'warning',
+                message: `💰 Panier moyen : ${formatCurrency(avg)}. ${avg < 5000 ? 'Proposez des formules/menus pour l\'augmenter.' : 'Excellent panier moyen !'}`
+            });
+        }
+        
+        return insights;
+    };
+
+    const handleScrollToDaily = () => {
+        dailyTableRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
     if(loading && !stats) return <div className="h-96 flex items-center justify-center"><Loader2 className="animate-spin text-blue-600 w-12 h-12" /></div>;
 
@@ -64,7 +108,7 @@ export default function FinancePage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                  <KpiCard 
                     title="Chiffre d'Affaires" 
                     value={formatCurrency(stats?.kpi?.totalRevenue || 0)}
@@ -89,17 +133,26 @@ export default function FinancePage() {
                     textColor="text-purple-600"
                     bgClassName="bg-purple-50"
                  />
-                 {/* Margin Simulator Card */}
-                 <div className="bg-stone-900 p-6 rounded-xl shadow-lg border border-stone-800 flex flex-col justify-between group overflow-hidden relative">
-                    <div className="absolute top-0 right-0 p-4 opacity-10">
-                        <DollarSign className="w-24 h-24 text-white" />
+                 {/* Margin Simulator Card - Premium Dark */}
+                 <div className="relative overflow-hidden p-4 rounded-xl shadow-lg bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 border border-stone-700/50 flex flex-col justify-between group hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
+                    {/* Decorative Elements */}
+                    <div className="absolute -right-6 -top-6 w-24 h-24 rounded-full bg-amber-500/10 blur-2xl group-hover:bg-amber-500/20 transition-colors duration-500" />
+                    
+                    <div className="relative z-10 flex items-center gap-3">
+                        {/* Icon */}
+                        <div className="w-11 h-11 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center shadow-md group-hover:scale-105 transition-all duration-300">
+                            <TrendingUp className="w-5 h-5 text-white" strokeWidth={2.5} />
+                        </div>
+                        
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-amber-400/80 text-[10px] font-bold uppercase tracking-wider">Marge Estimée (70%)</p>
+                            <h3 className="text-lg font-black text-white tracking-tight truncate">{formatCurrency((stats?.kpi?.totalRevenue || 0) * 0.7)}</h3>
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-stone-400 text-sm font-bold uppercase tracking-wider mb-1">Marge Estimée (70%)</p>
-                        <h3 className="text-3xl font-black text-white">{formatCurrency((stats?.kpi?.totalRevenue || 0) * 0.7)}</h3>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-xs text-stone-500">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    
+                    <div className="relative z-10 mt-2 flex items-center gap-1.5 text-[10px] text-stone-500">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
                         Basé sur coût matière standard
                     </div>
                  </div>
@@ -110,7 +163,10 @@ export default function FinancePage() {
                 <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-gray-900">Évolution du Chiffre d'Affaires</h3>
-                        <button className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors">
+                        <button 
+                            onClick={() => setIsDetailsModalOpen(true)}
+                            className="text-sm font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-lg transition-colors"
+                        >
                             Voir détails
                         </button>
                     </div>
@@ -210,10 +266,13 @@ export default function FinancePage() {
                  </div>
 
                  {/* Detailed Daily Table (Mini) */}
-                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                 <div ref={dailyTableRef} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="text-lg font-bold text-gray-900">Détail Journalier</h3>
-                        <button className="text-xs font-bold text-gray-500 hover:text-gray-900 uppercase tracking-wider flex items-center gap-1">
+                        <button 
+                            onClick={handleScrollToDaily}
+                            className="text-xs font-bold text-gray-500 hover:text-gray-900 uppercase tracking-wider flex items-center gap-1"
+                        >
                             <ArrowUpRight className="w-3 h-3" /> Voir tout
                         </button>
                     </div>
@@ -241,19 +300,82 @@ export default function FinancePage() {
                     </div>
                  </div>
             </div>
+
+            {/* Insights Section */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-6 rounded-xl border border-amber-200">
+                <div className="flex items-center gap-2 mb-4">
+                    <Lightbulb className="w-5 h-5 text-amber-600" />
+                    <h3 className="text-lg font-bold text-amber-900">Conseils Manager</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {generateInsights().map((insight, i) => (
+                        <div 
+                            key={i} 
+                            className={`p-4 rounded-lg border ${
+                                insight.type === 'success' ? 'bg-green-50 border-green-200' :
+                                insight.type === 'warning' ? 'bg-yellow-50 border-yellow-200' :
+                                'bg-blue-50 border-blue-200'
+                            }`}
+                        >
+                            <p className={`text-sm font-medium ${
+                                insight.type === 'success' ? 'text-green-800' :
+                                insight.type === 'warning' ? 'text-yellow-800' :
+                                'text-blue-800'
+                            }`}>
+                                {insight.message}
+                            </p>
+                        </div>
+                    ))}
+                    {generateInsights().length === 0 && (
+                        <p className="text-amber-700 italic col-span-3 text-center">Pas assez de données pour générer des conseils.</p>
+                    )}
+                </div>
+            </div>
+
+            {/* Details Modal */}
+            <Modal isOpen={isDetailsModalOpen} onClose={() => setIsDetailsModalOpen(false)} title="Détail de l'évolution">
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                        <p className="text-sm text-gray-600 mb-3">Évolution jour par jour du chiffre d'affaires sur la période sélectionnée.</p>
+                    </div>
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-100 sticky top-0">
+                            <tr>
+                                <th className="px-4 py-3 text-left font-bold text-gray-600">Date</th>
+                                <th className="px-4 py-3 text-center font-bold text-gray-600">Commandes</th>
+                                <th className="px-4 py-3 text-right font-bold text-gray-600">Revenu</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {(stats?.charts?.dailyRevenue || []).slice().reverse().map((day: any) => (
+                                <tr key={day.date} className="hover:bg-blue-50">
+                                    <td className="px-4 py-3 font-medium">{new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</td>
+                                    <td className="px-4 py-3 text-center">
+                                        <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">{day.count}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-bold text-gray-900">{formatCurrency(day.revenue)}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Modal>
         </div>
     );
 }
 
-function KpiCard({ title, value, icon: Icon, textColor, bgClassName }: any) {
+function KpiCard({ title, value, icon: Icon, textColor, bgClassName, gradient }: any) {
     return (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between group hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-            <div>
-                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
-                <h3 className="text-2xl md:text-3xl font-black text-gray-900">{value}</h3>
+        <div className={`relative overflow-hidden p-4 rounded-xl shadow-md border border-gray-100 flex items-center gap-3 group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ${gradient || 'bg-white'}`}>
+            {/* Icon */}
+            <div className={`relative z-10 w-11 h-11 ${bgClassName} ${textColor} rounded-xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-all duration-300`}>
+                <Icon className="w-5 h-5" strokeWidth={2.5} />
             </div>
-            <div className={`w-14 h-14 ${bgClassName} ${textColor} rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner`}>
-                <Icon className="w-7 h-7" />
+            
+            {/* Content */}
+            <div className="relative z-10 flex-1 min-w-0">
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider">{title}</p>
+                <h3 className="text-lg font-black text-gray-900 tracking-tight truncate">{value}</h3>
             </div>
         </div>
     );
