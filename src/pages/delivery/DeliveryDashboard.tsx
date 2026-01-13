@@ -2,14 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useFetch } from '../../lib/useFetch';
 import { useAuth } from '../../context/AuthContext';
 import { useBranding } from '../../context/BrandingContext';
-import { Loader2, Navigation, Package, Car, Bike, MapPin, RefreshCw } from 'lucide-react';
+import { Loader2, Package, Car, Bike, MapPin, RefreshCw } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Button } from '../../components/ui/Button';
 import { DeliveryOrderCard } from '../../components/DeliveryOrderCard';
-import { formatCurrency } from '../../lib/utils';
 import { useDriverLocation } from '../../hooks/useDriverLocation';
 
 // Set Mapbox token
@@ -357,13 +356,6 @@ export default function DeliveryDashboard() {
         }
     };
 
-    const openNavigation = (lat?: number, lng?: number, address?: string) => {
-        if (lat && lng) {
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
-        } else if (address) {
-            window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, '_blank');
-        }
-    };
 
     // Determine current orders to display
     const currentOrders = activeTab === 'active' ? myOrders : activeTab === 'available' ? availableOrders : historyOrders;

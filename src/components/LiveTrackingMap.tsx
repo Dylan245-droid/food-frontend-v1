@@ -32,7 +32,6 @@ export function LiveTrackingMap({
     destinationLat,
     destinationLng,
     driverPosition,
-    orderId,
     onDistanceUpdate,
 }: LiveTrackingMapProps) {
     const mapContainer = useRef<HTMLDivElement>(null);

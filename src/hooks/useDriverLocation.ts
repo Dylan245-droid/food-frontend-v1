@@ -23,8 +23,7 @@ export function useDriverLocation(options: UseDriverLocationOptions = {}) {
     const [location, setLocation] = useState<DriverLocation | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const watchIdRef = useRef<number | null>(null);
-    const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Send location to backend
     const sendLocationToBackend = useCallback(async (lat: number, lng: number) => {
@@ -90,9 +89,6 @@ export function useDriverLocation(options: UseDriverLocationOptions = {}) {
         }, intervalMs);
 
         return () => {
-            if (watchIdRef.current !== null) {
-                navigator.geolocation.clearWatch(watchIdRef.current);
-            }
             if (intervalRef.current !== null) {
                 clearInterval(intervalRef.current);
             }

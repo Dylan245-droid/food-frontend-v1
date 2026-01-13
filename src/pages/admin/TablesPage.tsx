@@ -575,10 +575,7 @@ export default function TablesPage() {
                     // But our cash movements are linked to orders.
                     // Let's split the amountReceived proportionally to order totals.
                     
-                    const totalBill = paymentModalData.totalAmount;
-                    const orders = paymentModalData.unpaidOrders;
-                    let remainingReceived = amountReceived;
-                    
+                    // Aggregate Payment
 
                     
                     // Aggregate Payment
