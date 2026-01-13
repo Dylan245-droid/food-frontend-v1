@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from './AuthContext';
 
 interface NotificationContextType {
   isConnected: boolean;
@@ -10,13 +11,13 @@ const NotificationContext = createContext<NotificationContextType>({ isConnected
 export const useNotifications = () => useContext(NotificationContext);
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
   const eventSourceRef = useRef<EventSource | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize Audio
   useEffect(() => {
     audioRef.current = new Audio('/sounds/notification.mp3'); 
-    // Preload?
     audioRef.current.volume = 0.5;
   }, []);
 
@@ -27,19 +28,77 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }
   };
 
-  useEffect(() => {
-    // Determine API URL (if proxy is used, relative path works, else full URL)
-    // Assuming Vite proxy set up for /api -> backend.
+  // Helper: Check if current user should see this notification based on role
+  const shouldNotify = (eventType: string, data: any): boolean => {
+    // Client pages never see staff notifications
+    const isClientPage = window.location.pathname.startsWith('/dine-in') || 
+                         window.location.pathname.startsWith('/takeout') ||
+                         window.location.pathname.startsWith('/book') ||
+                         window.location.pathname.startsWith('/track');
+    if (isClientPage) return false;
     
-    // Polyfill or native EventSource
-    // Use env var to construct full URL, handling potential trailing slash issues
-    // Use env var to construct full URL
-    // VITE_API_URL usually is "http://localhost:3333/api"
+    // No user = no notifications
+    if (!user) return false;
+
+    const role = user.role;
+
+    switch (eventType) {
+      case 'order:new':
+        // Kitchen staff and managers see all new orders
+        // Servers only see dine-in orders
+        // Delivery drivers don't see new orders here (they get delivery:assigned)
+        if (role === 'admin' || role === 'super_admin' || role === 'salle') return true;
+        if (role === 'serveur') return data.type === 'dine_in';
+        if (role === 'livreur') return false;
+        if (role === 'comptable') return false;
+        if (role === 'caissier') return true;
+        return true;
+      
+      case 'call:new':
+        // Only servers, admins, and managers need to see server calls
+        if (role === 'serveur' || role === 'admin' || role === 'super_admin') return true;
+        return false;
+      
+      case 'order:update':
+        // Status updates are for kitchen and servers
+        if (role === 'livreur') return data.deliveryPersonId === user.id; // Livreur sees their own orders
+        if (role === 'comptable') return false;
+        return true;
+      
+      case 'delivery:assigned':
+        // Only the assigned delivery driver sees this
+        return user.id === data.deliveryPersonId;
+      
+      case 'reservation:new':
+        // Reservations are for front-of-house: servers, admins
+        if (role === 'serveur' || role === 'admin' || role === 'super_admin') return true;
+        return false;
+      
+      default:
+        return true;
+    }
+  };
+
+  // Helper: Format notification text based on order type
+  const getOrderTypeLabel = (type: string): string => {
+    switch (type) {
+      case 'takeout': return '🥡 À Emporter';
+      case 'delivery': return '🛵 Livraison';
+      case 'dine_in': return '🍽️ Sur Place';
+      default: return '📦 Commande';
+    }
+  };
+
+  const getOrderLocation = (data: any): string => {
+    if (data.type === 'dine_in' && data.tableName) return `Table ${data.tableName}`;
+    if (data.type === 'takeout' && data.clientName) return data.clientName;
+    if (data.type === 'delivery' && data.clientName) return data.clientName;
+    return '';
+  };
+
+  useEffect(() => {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3333/api';
     
-    // Ensure we don't double slash or miss /api
-    // If apiUrl ends with /api, we append /stream -> .../api/stream
-    // If apiUrl is just root, we append /api/stream
     const streamUrl = apiUrl.endsWith('/api') 
         ? `${apiUrl}/stream` 
         : `${apiUrl.replace(/\/$/, '')}/api/stream`;
@@ -54,115 +113,116 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     eventSource.onerror = (e) => {
       console.log('SSE Error', e);
-      // EventSource automatically reconnects, but sometimes we might want to manually handle
     };
 
     // --- LISTENERS ---
 
-    // 1. New Order (Kitchen)
+    // 1. New Order
     eventSource.addEventListener('order:new', (e) => {
       const data = JSON.parse(e.data);
       console.log('New Order:', data);
       
-      // Filter: Only show "New Order" notifications if we are in Admin/Staff context?
-      // Or just valid for everyone? Clients don't need to know about OTHER clients' orders.
-      // Ideally, we should filter by context.
-      // But for this simple implementation:
-      // If `type` is present, it's Kitchen relevant. 
-      // If we are on Client page, we might want to ignore global kitchen alerts?
-      // Simple Hack: Check URL or LocalStorage to guess role?
-      // Or just toast everything and verify user ignores what's not relevant?
-      
-      // Let's rely on Toast being dismissible.
-      const isClient = window.location.pathname.startsWith('/dine-in') || window.location.pathname.startsWith('/takeout');
-      
-      if (!isClient) {
-          playSound();
-          toast.success(`Nouvelle Commande #${data.dailyNumber}`, {
-              description: data.type === 'takeout' 
-                ? `🥡 À EMPORTER - ${data.clientName} (${data.totalFormatted})`
-                : `🍽️ SUR PLACE - Table ${data.tableName} (${data.totalFormatted})`,
-              duration: 10000,
-              action: {
-                  label: 'Voir',
-                  onClick: () => window.location.href = '/admin/orders'
-              }
-          });
-      }
+      if (!shouldNotify('order:new', data)) return;
+
+      playSound();
+      toast.success(`Nouvelle Commande #${data.dailyNumber}`, {
+          description: `${getOrderTypeLabel(data.type)} • ${getOrderLocation(data)} • ${data.totalFormatted}`,
+          duration: 10000,
+          action: {
+              label: 'Voir',
+              onClick: () => window.location.href = '/admin/orders'
+          }
+      });
     });
 
-    // 2. Server Call (Waiters)
+    // 2. Server Call
     eventSource.addEventListener('call:new', (e) => {
       const data = JSON.parse(e.data);
-      const isClient = window.location.pathname.startsWith('/dine-in') || window.location.pathname.startsWith('/takeout');
+      
+      if (!shouldNotify('call:new', data)) return;
 
-      if (!isClient) {
-          playSound();
-          toast.info(`Appel - ${data.tableName}`, {
-              description: data.callType === 'bill' ? "Demande d'addition 💳" : "Besoin d'aide 🔔",
-              duration: Infinity, // Sticky until clicked
-              action: {
-                  label: 'Voir',
-                  onClick: () => window.location.href = '/admin/server-calls'
-              }
-          });
-      }
+      playSound();
+      const callTypeText = data.callType === 'bill' ? "Addition demandée" : "Appel client";
+      toast.info(`🔔 ${callTypeText}`, {
+          description: `Table ${data.tableName}`,
+          duration: Infinity,
+          action: {
+              label: 'Voir',
+              onClick: () => window.location.href = '/admin/server-calls'
+          }
+      });
     });
 
-    // 3. Order Status Update (Client)
+    // 2b. Driver Location (for client-side tracking)
+    eventSource.addEventListener('driver:location', (e) => {
+      const data = JSON.parse(e.data);
+      // Emit custom event for useDriverPositionUpdates hook
+      window.dispatchEvent(new CustomEvent('sse:message', {
+        detail: { type: 'driver:location', payload: data }
+      }));
+    });
+
+    // 3. Order Status Update
     eventSource.addEventListener('order:update', (e) => {
       const data = JSON.parse(e.data);
       
-      // Check if this update concerns the current user (Client sticky session)
-      // Check if this update concerns the current user (Client sticky session)
-      // const activeCode = localStorage.getItem('activeTableCode');
-      
-      // If we are a client and this order belongs to OUR table (how do we know? We don't have table code in data yet, let's add it)
-      // I added tableName to order:update in backend.
-      // But ideally we check Order ID against our local order list.
-      // Since we don't have local order list in context, we can just say:
-      // If we are on DineInPage, we refresh orders anyway via SWR/Poll?
-      // But we want a Toast.
-      
-      // For now, let's show Toast if it matches typical client scenario
-      // Or if we are Admin, we might want to know status changed?
-      
-      // For Client:
-      // If data.status === 'delivered' -> "Votre commande est servie !"
-      
-      // We need to know if this update is for US.
-      // Let's filter loosely:
-      // If on /dine-in/:code, and data.tableName matches? Or request refresh.
-      
-      // Simpler: Just Trigger a global event or refresh signal?
-      // For the "Push Notification" request, the user likely wants "Ding! Votre plat est prêt".
-      
-      const isClient = window.location.pathname.startsWith('/dine-in') || window.location.pathname.startsWith('/takeout');
+      if (!shouldNotify('order:update', data)) return;
       
       if (data.status === 'cancelled') {
-           if (!isClient) {
-               playSound();
-               toast.error(`Commande #${data.dailyNumber} Annulée`, {
-                   description: `Table ${data.tableName || '?'}`,
-                   duration: 10000
-               });
-           }
+          playSound();
+          toast.error(`Commande #${data.dailyNumber} Annulée`, {
+              description: `${getOrderTypeLabel(data.type)} • ${getOrderLocation(data)}`,
+              duration: 10000
+          });
       } else if (data.status === 'delivered') {
-           if (!isClient) {
-               // Optional: specific sound for success?
-               playSound(); 
-               toast.success(`Commande #${data.dailyNumber} Servie !`, {
-                   description: `Table ${data.tableName || '?'}`,
-                   duration: 5000
-               });
-           }
+          playSound(); 
+          toast.success(`Commande #${data.dailyNumber} Servie`, {
+              description: `${getOrderTypeLabel(data.type)} • ${getOrderLocation(data)}`,
+              duration: 5000
+          });
       }
+    });
+
+    // 4. Delivery Assigned (Livreur Only)
+    eventSource.addEventListener('delivery:assigned', (e) => {
+        const data = JSON.parse(e.data);
+        console.log('Delivery Assigned:', data);
+        
+        if (!shouldNotify('delivery:assigned', data)) return;
+
+        playSound();
+        toast.success(`🛵 Nouvelle Course`, {
+            description: `Commande #${data.dailyNumber} • ${data.clientName} • ${data.address}`,
+            duration: Infinity,
+            action: {
+                label: 'Voir',
+                onClick: () => window.location.href = '/delivery'
+            }
+        });
+    });
+
+    // 5. New Web Reservation
+    eventSource.addEventListener('reservation:new', (e) => {
+        const data = JSON.parse(e.data);
+        console.log('New Reservation:', data);
+        
+        if (!shouldNotify('reservation:new', data)) return;
+
+        playSound();
+        toast.info(`🗓️ Nouvelle Réservation`, {
+            description: `${data.customerName} • ${data.guests} pers. • ${data.time}`,
+            duration: Infinity,
+            action: {
+                label: 'Voir',
+                onClick: () => window.location.href = '/admin/reservations'
+            }
+        });
     });
 
     return () => {
       eventSource.close();
     };
-  }, []);
+  }, [user]);
 
   return (
     <NotificationContext.Provider value={{ isConnected: true }}>

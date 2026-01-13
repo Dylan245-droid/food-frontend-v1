@@ -6,6 +6,7 @@ import api from '../../lib/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Minus, Plus, UtensilsCrossed, Bell, Receipt, CheckCircle, Clock, XCircle, ChefHat } from 'lucide-react';
 import { useBranding } from '../../context/BrandingContext';
+import { formatCurrency } from '../../lib/utils';
 
 interface MenuItem {
   id: number;
@@ -271,13 +272,13 @@ export default function DineInPage() {
            
            <div className="bg-stone-900 text-white p-4 rounded-xl flex justify-between items-center shadow-lg mt-4">
                 <span className="text-stone-400 text-xs font-medium">Total table</span>
-                <span className="font-mono text-lg font-bold">{tableGrandTotal} <span className="text-xs opacity-50">FCFA</span></span>
+                <span className="font-mono text-lg font-bold">{formatCurrency(tableGrandTotal)}</span>
            </div>
       </div>
   );
 
   return (
-    <div className="min-h-screen text-stone-800 pb-12 overflow-x-hidden relative" style={{ background: 'var(--bg-app)' }}>
+    <div className="h-screen overflow-y-auto overflow-x-hidden text-stone-800 pb-24 relative" style={{ background: 'var(--bg-app)' }}>
       
        {/* Background Decoration */}
        <div className="fixed inset-0 pointer-events-none overflow-hidden">
@@ -287,147 +288,131 @@ export default function DineInPage() {
 
        <div className="relative z-10 w-full max-w-6xl mx-auto p-4 md:p-8">
            
-           {/* Header Card - Ticket Style */}
-           <header className="bg-white p-5 rounded-2xl shadow-[0_2px_15px_rgb(0,0,0,0.03)] border border-stone-100 mb-6 relative overflow-hidden md:flex md:justify-between md:items-center">
-                <div className="absolute top-0 left-0 w-full h-1" style={{ background: 'var(--gradient-brand)' }}></div>
+           {/* Header - Modern Glass Style */}
+           <header className="bg-white/80 backdrop-blur-xl p-6 rounded-3xl shadow-sm border border-stone-100/50 mb-8 relative overflow-hidden supports-[backdrop-filter]:bg-white/60">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--primary)] to-[var(--primary-600)] opacity-20"></div>
                 
-                <div className="flex justify-between items-start w-full">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <span className="bg-stone-100 text-stone-600 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-stone-200">
-                                Zone {tableInfo?.zone || 'Principale'}
-                            </span>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-stone-900 text-white flex items-center justify-center font-black text-2xl shadow-lg shadow-stone-900/20">
+                            {tableInfo?.number}
                         </div>
-                        <h1 className="text-3xl font-black text-stone-900">{tableInfo?.name}</h1>
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="text-xs font-bold text-stone-500 uppercase tracking-widest">{tableInfo?.zone || 'Salle'}</span>
+                                <span className="w-1 h-1 rounded-full bg-stone-300"></span>
+                                <span className="text-xs font-bold text-[var(--primary-600)]">En service</span>
+                            </div>
+                            <h1 className="text-3xl font-black text-stone-900 tracking-tight">{tableInfo?.name}</h1>
+                        </div>
                     </div>
                     
-                    <button onClick={handleLeaveTable} className="text-xs text-stone-400 font-medium hover:text-red-500 transition-colors border border-dashed border-stone-200 px-3 py-1.5 rounded-lg md:ml-auto">
-                        Libérer la table
-                    </button>
-                </div>
+                    {/* Quick Actions */}
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={handleLeaveTable} 
+                            className="px-4 py-2.5 rounded-xl border border-stone-200 text-stone-500 font-bold text-xs hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-colors"
+                        >
+                            Quitter
+                        </button>
+                        <div className="h-8 w-px bg-stone-200 mx-1"></div>
+                        <button 
+                            onClick={() => handleServerCall('general')}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl transition-colors text-sm font-bold"
+                        >
+                            <Bell className="w-4 h-4" />
+                            Appeler
+                        </button>
+                        
+                        {(() => {
+                            const hasOrders = ongoingOrders.length > 0;
+                            const allDelivered = ongoingOrders.every((o: any) => o.status === 'delivered');
+                            const canAskBill = hasOrders && allDelivered;
 
-                {/* Quick Actions Grid */}
-                <div className="grid grid-cols-2 gap-3 mt-6 md:mt-0 md:ml-6 md:w-auto md:flex">
-                    <button 
-                        onClick={() => handleServerCall('general')}
-                        className="flex items-center justify-center gap-2 py-3 px-6 bg-stone-50 hover:bg-[var(--primary-50)] text-stone-600 hover:text-[var(--primary-700)] rounded-xl transition-colors text-sm font-bold border border-stone-100 md:w-auto"
-                        style={{ '--primary-50': 'var(--primary-50)', '--primary-700': 'var(--primary-700)' } as React.CSSProperties}
-                    >
-                        <Bell className="w-4 h-4" />
-                        Appeler
-                    </button>
-                    
-                    {(() => {
-                        const hasOrders = ongoingOrders.length > 0;
-                        const allDelivered = ongoingOrders.every((o: any) => o.status === 'delivered');
-                        const canAskBill = hasOrders && allDelivered;
-
-                        return (
-                            <button 
-                                onClick={() => handleServerCall('bill')}
-                                disabled={!canAskBill}
-                                className={`flex items-center justify-center gap-2 py-3 px-6 rounded-xl text-sm font-bold border transition-colors md:w-auto ${
-                                    canAskBill 
-                                    ? 'bg-stone-50 hover:bg-green-50 text-stone-600 hover:text-green-600 border-stone-100' 
-                                    : 'bg-stone-50/50 text-stone-300 border-transparent cursor-not-allowed'
-                                }`}
-                            >
-                                <Receipt className="w-4 h-4" />
-                                L'Addition
-                            </button>
-                        );
-                    })()}
+                            return canAskBill ? (
+                                <button 
+                                    onClick={() => handleServerCall('bill')}
+                                    className="flex items-center gap-2 px-5 py-2.5 bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 rounded-xl transition-colors text-sm font-bold shadow-sm"
+                                >
+                                    <Receipt className="w-4 h-4" />
+                                    L'Addition
+                                </button>
+                            ) : null;
+                        })()}
+                    </div>
                 </div>
            </header>
 
-           <div className="flex flex-col lg:flex-row gap-8 items-start">
+           <div className="flex flex-col xl:flex-row gap-8 items-start">
                {/* Menu Section */}
                <div className="flex-1 w-full">
-                   {/* Menu Categories */}
-                   <div className="sticky top-0 bg-[#FFF8F3]/95 backdrop-blur-sm pt-2 pb-6 z-20 overflow-x-auto no-scrollbar flex gap-2 -mx-4 px-4 mask-linear-fade md:mx-0 md:px-0">
+               {/* Menu Categories - Tab Style like TakeoutPage */}
+                   <div className="flex overflow-x-auto pb-0 no-scrollbar gap-2 snap-x mb-6 border-b border-stone-200">
                         {menuCategories.map(cat => (
                             <button
                                 key={cat.id}
                                 onClick={() => setActiveCategoryId(cat.id)}
-                                className={`
-                                    px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300 border
-                                    ${activeCategoryId === cat.id 
-                                        ? 'text-white shadow-md transform -translate-y-0.5 border-transparent' 
-                                        : 'bg-white text-stone-500 border-stone-200 hover:border-stone-300 hover:text-stone-700'
-                                    }
-                                `}
-                                style={activeCategoryId === cat.id ? { background: 'var(--primary-900)' } : undefined}
-
+                                className={`whitespace-nowrap pb-3 px-4 text-sm font-bold border-b-2 transition-all snap-start ${
+                                    activeCategoryId === cat.id 
+                                    ? 'border-stone-900 text-stone-900' 
+                                    : 'border-transparent text-stone-400 hover:text-stone-600'
+                                }`}
                             >
                                 {cat.name}
                             </button>
                         ))}
                    </div>
 
-                   {/* Menu Grid */}
-                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-8 duration-700 pb-6">
+                   {/* Menu List - Horizontal Card Style like TakeoutPage */}
+                   <div className="space-y-4 pb-6">
                         {activeCategory ? (
                             activeCategory.items.map(item => {
                                 const cartItem = cart.find(i => i.menuItemId === item.id);
                                 const quantity = cartItem?.quantity || 0;
                                 
                                 return (
-                                    <div 
-                                        key={item.id} 
-                                        onClick={() => addToCart(item)}
-                                        className="group bg-white rounded-3xl shadow-sm border border-stone-100 overflow-hidden cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 hover:border-orange-200 flex flex-col"
-                                    >
-                                        {/* Image Area */}
-                                        <div className="h-40 bg-stone-100 relative overflow-hidden">
+                                    <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100/50 flex gap-4 animate-in slide-in-from-bottom-2 duration-500">
+                                        {/* Image */}
+                                        <div className="h-24 w-24 bg-stone-100 rounded-xl shrink-0 overflow-hidden relative">
                                              {item.imageUrl ? (
-                                                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
                                              ) : (
-                                                <div className="absolute inset-0 flex items-center justify-center text-stone-200">
-                                                    <UtensilsCrossed className="w-12 h-12 opacity-50" />
+                                                <div className="w-full h-full flex items-center justify-center text-stone-300">
+                                                    <UtensilsCrossed className="w-8 h-8 opacity-20" />
                                                 </div>
                                              )}
-                                             {/* Dark Gradient for Text Readability if we wanted overlay, but here we keep text below */}
                                              {quantity > 0 && (
-                                                 <div className="absolute top-3 right-3 bg-orange-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg shadow-orange-900/20 animate-in zoom-in">
-                                                     {quantity} commandé(s)
+                                                 <div className="absolute top-1 right-1 bg-[var(--primary-600)] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
+                                                     {quantity}
                                                  </div>
                                              )}
                                         </div>
-
-                                        <div className="p-5 flex flex-col flex-1">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h3 className="font-bold text-stone-900 text-lg leading-tight flex-1">{item.name}</h3>
-                                                <span className="font-black text-lg whitespace-nowrap ml-3" style={{ color: 'var(--primary-600)' }}>
-                                                    {item.price} <span className="text-xs font-bold text-stone-400">FCFA</span>
-                                                </span>
+                                        
+                                        {/* Info */}
+                                        <div className="flex-1 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="font-bold text-lg text-stone-900 leading-tight">{item.name}</h3>
+                                                    <span className="font-mono font-bold text-stone-900">{formatCurrency(item.price)}</span>
+                                                </div>
+                                                <p className="text-xs text-stone-500 mt-1 line-clamp-2">{item.description || 'Délicieux plat préparé avec soin.'}</p>
                                             </div>
                                             
-                                            <p className="text-sm text-stone-500 line-clamp-2 mb-4 leading-relaxed flex-1">
-                                                {item.description || "Délicieuse préparation maison."}
-                                            </p>
-                                            
-                                            <div className="mt-auto pt-4 border-t border-dashed border-stone-100 flex items-center justify-between">
-                                                {quantity === 0 ? (
+                                            {/* Cart Actions */}
+                                            <div className="flex justify-end pt-2">
+                                                {quantity > 0 ? (
+                                                    <div className="flex items-center bg-stone-900 text-white rounded-lg p-1 shadow-lg shadow-stone-900/20">
+                                                        <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><Minus className="w-4 h-4" /></button>
+                                                        <span className="w-8 text-center font-bold text-sm">{quantity}</span>
+                                                        <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><Plus className="w-4 h-4" /></button>
+                                                    </div>
+                                                ) : (
                                                     <button 
                                                         onClick={(e) => { e.stopPropagation(); addToCart(item); }}
-                                                        className="w-full py-3 rounded-xl bg-stone-50 hover:bg-stone-900 hover:text-white text-stone-600 font-bold transition-all flex items-center justify-center gap-2"
+                                                        className="bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95"
                                                     >
-                                                        <Plus className="w-4 h-4" /> Ajouter
+                                                        Ajouter <Plus className="w-3 h-3" />
                                                     </button>
-                                                ) : (
-                                                    <div className="flex items-center gap-2 bg-stone-900 p-1.5 rounded-xl text-white w-full justify-between shadow-lg shadow-stone-900/10">
-                                                         <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} className="w-10 h-9 flex items-center justify-center bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors"><Minus className="w-4 h-4" /></button>
-                                                         <span className="font-bold text-lg">{quantity}</span>
-                                                         <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} className="w-10 h-9 flex items-center justify-center bg-stone-700 hover:bg-stone-600 rounded-lg transition-colors"><Minus className="w-4 h-4" /></button>
-                                                         <span className="font-bold text-lg">{quantity}</span>
-                                                         <button 
-                                                            onClick={(e) => { e.stopPropagation(); addToCart(item); }} 
-                                                            className="w-10 h-9 flex items-center justify-center rounded-lg transition-colors text-white"
-                                                            style={{ background: 'var(--primary)', color: 'white' }}
-                                                         >
-                                                            <Plus className="w-4 h-4" />
-                                                         </button>
-                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -435,7 +420,7 @@ export default function DineInPage() {
                                 );
                             })
                         ) : (
-                            <div className="col-span-full py-24 text-center text-stone-400">
+                            <div className="py-24 text-center text-stone-400">
                                  <UtensilsCrossed className="w-16 h-16 mx-auto mb-4 opacity-20" />
                                  <p className="text-xl font-bold opacity-50">La carte est vide.</p>
                             </div>
@@ -446,7 +431,7 @@ export default function DineInPage() {
                {/* Ongoing Orders Sidebar (Desktop) / Top block (Mobile) */}
                {/* Ongoing Orders Sidebar (Desktop Only) */}
                {ongoingOrders.length > 0 && (
-                   <div className="hidden lg:block lg:w-80 lg:sticky lg:top-6 lg:order-last animate-in slide-in-from-right-4 duration-700">
+                   <div className="hidden xl:block xl:w-80 xl:sticky xl:top-6 xl:order-last animate-in slide-in-from-right-4 duration-700">
                        <div className="bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
                            <div className="flex items-center gap-2 mb-4 px-1">
                                <Clock className="w-4 h-4 text-stone-400" />
@@ -461,7 +446,7 @@ export default function DineInPage() {
            {/* Floating Active Orders Button (Mobile/Tablet) */}
            {ongoingOrders.length > 0 && (
                 <>
-                    <div className={"fixed z-30 transition-all duration-300 " + (cart.length > 0 ? 'bottom-28' : 'bottom-6') + " right-4 lg:hidden animate-in slide-in-from-bottom-20"}>
+                    <div className={"fixed z-30 transition-all duration-300 " + (cart.length > 0 ? 'bottom-28' : 'bottom-6') + " right-4 xl:hidden animate-in slide-in-from-bottom-20"}>
                         <button 
                             onClick={() => setIsActiveOrdersOpen(true)}
                             className="bg-white text-stone-900 p-3 rounded-full shadow-xl border-2 hover:scale-110 transition-transform flex items-center justify-center relative group"
@@ -477,15 +462,36 @@ export default function DineInPage() {
 
                     <Modal isOpen={isActiveOrdersOpen} onClose={() => setIsActiveOrdersOpen(false)} title="Suivi Cuisine">
                         <div className="space-y-4">
-                             <div className="p-4 rounded-xl border flex items-start gap-3 mb-4" style={{ background: 'var(--primary-50)', borderColor: 'var(--primary-100)' }}>
-                                 <Clock className="w-5 h-5 mt-0.5" style={{ color: 'var(--primary-600)' }} />
-                                 <div>
-                                     <h4 className="font-bold text-sm" style={{ color: 'var(--primary-900)' }}>En préparation</h4>
-                                     <p className="text-xs leading-relaxed" style={{ color: 'var(--primary-700)' }}>
-                                         Vos commandes sont en train d'être cuisinées avec amour.
-                                     </p>
-                                 </div>
-                             </div>
+                            {(() => {
+                                 const hasInProgress = ongoingOrders.some((o: any) => o.status === 'in_progress');
+                                 const allDelivered = ongoingOrders.every((o: any) => o.status === 'delivered');
+
+                                 let title = "Commande reçue";
+                                 let message = "Nous avons bien reçu votre commande, elle va bientôt être préparée.";
+                                 let Icon = Clock;
+
+                                 if (hasInProgress) {
+                                     title = "En préparation";
+                                     message = "Vos plats sont en train d'être cuisinés avec amour par nos chefs.";
+                                     Icon = ChefHat;
+                                 } else if (allDelivered) {
+                                     title = "Bon appétit !";
+                                     message = "Tout est servi. Profitez bien de votre repas !";
+                                     Icon = UtensilsCrossed;
+                                 }
+
+                                 return (
+                                     <div className="p-4 rounded-xl border flex items-start gap-3 mb-4" style={{ background: 'var(--primary-50)', borderColor: 'var(--primary-100)' }}>
+                                         <Icon className="w-5 h-5 mt-0.5" style={{ color: 'var(--primary-600)' }} />
+                                         <div>
+                                             <h4 className="font-bold text-sm" style={{ color: 'var(--primary-900)' }}>{title}</h4>
+                                             <p className="text-xs leading-relaxed" style={{ color: 'var(--primary-700)' }}>
+                                                 {message}
+                                             </p>
+                                         </div>
+                                     </div>
+                                 );
+                             })()}
                              {renderOngoingOrdersList()}
                         </div>
                     </Modal>
@@ -506,7 +512,7 @@ export default function DineInPage() {
                             </div>
                             <span className="font-bold">Voir mon plateau</span>
                         </div>
-                        <span className="font-mono font-bold text-lg">{totalAmount} FCFA</span>
+                        <span className="font-mono font-bold text-lg">{formatCurrency(totalAmount)}</span>
                     </button>
                 </div>
             )}
@@ -519,7 +525,7 @@ export default function DineInPage() {
                             <div key={item.menuItemId} className="flex items-center justify-between">
                                 <div>
                                     <div className="font-bold text-stone-900">{item.name}</div>
-                                    <div className="text-sm text-stone-500">{item.price} FCFA</div>
+                                    <div className="text-sm text-stone-500">{formatCurrency(item.price)}</div>
                                 </div>
                                 <div className="flex items-center gap-3 bg-stone-50 rounded-lg p-1 border border-stone-100">
                                     <button onClick={() => removeFromCart(item.menuItemId)} className="w-8 h-8 flex items-center justify-center bg-white rounded-md shadow-sm border border-stone-200 text-stone-500"><Minus className="w-4 h-4" /></button>
@@ -533,7 +539,7 @@ export default function DineInPage() {
                     <div className="border-t-2 border-dashed border-stone-200 pt-6">
                         <div className="flex justify-between items-end mb-6">
                             <span className="text-stone-500 font-medium">Total commande</span>
-                            <span className="text-3xl font-black text-stone-900">{totalAmount} <span className="text-sm font-normal text-stone-400">FCFA</span></span>
+                            <span className="text-3xl font-black text-stone-900">{formatCurrency(totalAmount)}</span>
                         </div>
 
                         <Button onClick={handleCheckout} isLoading={submitting} className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-lg shadow-green-200">

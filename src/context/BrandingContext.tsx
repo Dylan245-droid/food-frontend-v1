@@ -11,6 +11,22 @@ export interface BrandingConfig {
   footerText: string;
   thankYouMessage: string;
   receiptFooter: string;
+  // Infos légales pour tickets/factures
+  address: string;
+  phone: string;
+  nif: string;
+  // Homepage / Public
+  openingHours: string;
+  heroImage: string;
+  // Delivery Fees
+  fee_libreville?: string;
+  fee_owendo?: string;
+  fee_akanda?: string;
+  fee_ntoum?: string;
+  delivery_commission?: string;
+  // Restaurant Location
+  restaurant_lat?: string;
+  restaurant_lng?: string;
 }
 
 // Valeurs par défaut
@@ -23,6 +39,16 @@ const defaultBranding: BrandingConfig = {
   footerText: "",
   thankYouMessage: "Merci de votre visite ! À très bientôt.",
   receiptFooter: "À bientôt !",
+  address: "",
+  phone: "",
+  nif: "",
+  openingHours: "OUVERT - 8h00 - 22h00",
+  heroImage: "",
+  fee_libreville: "1000",
+  fee_owendo: "1000",
+  fee_akanda: "1000",
+  fee_ntoum: "1000",
+  delivery_commission: "0",
 };
 
 interface BrandingContextType {

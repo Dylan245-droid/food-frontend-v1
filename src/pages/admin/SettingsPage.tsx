@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useBranding } from '../../context/BrandingContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Settings, Save, ChefHat, Palette, MessageSquare, Loader2, Upload, Image } from 'lucide-react';
+import { Settings, Save, ChefHat, Palette, MessageSquare, Loader2, Upload, Image, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 
@@ -20,10 +20,22 @@ export default function SettingsPage() {
     secondaryColor: '',
     thankYouMessage: '',
     receiptFooter: '',
+    address: '',
+    phone: '',
+    nif: '',
+    openingHours: '',
+    heroImage: '',
+    fee_libreville: '',
+    fee_owendo: '',
+    fee_akanda: '',
+    fee_ntoum: '',
+    delivery_commission: '',
+    restaurant_coords: '', // Format: "lat, lng"
   });
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [locating, setLocating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Générer automatiquement le texte de copyright
@@ -40,6 +52,19 @@ export default function SettingsPage() {
         secondaryColor: branding.secondaryColor || '',
         thankYouMessage: branding.thankYouMessage || '',
         receiptFooter: branding.receiptFooter || '',
+        address: branding.address || '',
+        phone: branding.phone || '',
+        nif: branding.nif || '',
+        openingHours: branding.openingHours || '',
+        heroImage: branding.heroImage || '',
+        fee_libreville: branding.fee_libreville || '1000',
+        fee_owendo: branding.fee_owendo || '1000',
+        fee_akanda: branding.fee_akanda || '1000',
+        fee_ntoum: branding.fee_ntoum || '1000',
+        delivery_commission: branding.delivery_commission || '100',
+        restaurant_coords: branding.restaurant_lat && branding.restaurant_lng 
+            ? `${branding.restaurant_lat}, ${branding.restaurant_lng}` 
+            : '',
       });
     }
   }, [branding]);
@@ -75,10 +100,22 @@ export default function SettingsPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      // On envoie aussi le footerText généré automatiquement
+      // Parse coords
+      let restaurant_lat: string | undefined;
+      let restaurant_lng: string | undefined;
+      if (formData.restaurant_coords) {
+        const parts = formData.restaurant_coords.split(',').map(s => s.trim());
+        if (parts.length === 2) {
+          restaurant_lat = parts[0];
+          restaurant_lng = parts[1];
+        }
+      }
+      
       await updateBranding({
         ...formData,
         footerText: generatedFooterText,
+        restaurant_lat,
+        restaurant_lng,
       });
       toast.success('Paramètres enregistrés avec succès !');
       setHasChanges(false);
@@ -204,6 +241,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
+
         {/* Appearance Section */}
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
@@ -279,6 +317,233 @@ export default function SettingsPage() {
               >
                 Gradient
               </div>
+            </div>
+          </div>
+
+          {/* Image de fond Hero */}
+          <div className="mt-6 pt-6 border-t border-stone-100">
+            <label className="block text-sm font-bold text-stone-700 mb-2">
+              Image de fond (page d'accueil)
+            </label>
+            <div className="flex gap-4 items-start">
+              <div className="w-32 h-20 rounded-xl border-2 border-dashed border-stone-300 bg-stone-100 overflow-hidden flex items-center justify-center">
+                {formData.heroImage && formData.heroImage.length > 0 ? (
+                  <img src={formData.heroImage} alt="Hero" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="text-center">
+                    <Image className="w-6 h-6 text-stone-400 mx-auto mb-1" />
+                    <span className="text-[10px] text-stone-500 font-medium">Aucune</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 space-y-2">
+                <input
+                  type="file"
+                  id="heroImageInput"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const uploadData = new FormData();
+                    uploadData.append('file', file);
+                    setUploading(true);
+                    try {
+                      const res = await api.post('/admin/upload-hero', uploadData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                      });
+                      const fullUrl = res.data.url.startsWith('http') ? res.data.url : `${BASE_URL}${res.data.url}`;
+                      handleChange('heroImage', fullUrl);
+                      toast.success('Image uploadée !');
+                    } catch (err: any) {
+                      console.error('Upload error:', err?.response?.data || err?.message || err);
+                      toast.error(err?.response?.data?.message || "Erreur lors de l'upload");
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                  accept="image/*"
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => document.getElementById('heroImageInput')?.click()}
+                  disabled={uploading}
+                  className="h-10 px-4 border-stone-200 hover:border-purple-300 hover:bg-purple-50"
+                >
+                  {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                  Choisir une image
+                </Button>
+                {formData.heroImage && (
+                  <button type="button" onClick={() => handleChange('heroImage', '')} className="text-xs text-red-500 hover:text-red-700 font-medium block">
+                    Supprimer
+                  </button>
+                )}
+                <p className="text-xs text-stone-400">Si vide, le dégradé des couleurs sera utilisé.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Infos Légales (Tickets/Factures) */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+            <Settings className="w-5 h-5 text-purple-600" />
+            <h2 className="text-lg font-bold text-stone-900">Informations légales</h2>
+          </div>
+          <p className="text-sm text-stone-500">Ces informations apparaissent sur les tickets et factures</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Adresse
+              </label>
+              <Input
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                placeholder="Quartier, Ville, Pays"
+                className="h-12"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Téléphone
+              </label>
+              <Input
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="+237 6XX XXX XXX"
+                className="h-12"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Horaires d'ouverture
+              </label>
+              <Input
+                value={formData.openingHours}
+                onChange={(e) => handleChange('openingHours', e.target.value)}
+                placeholder="Ouvert 8h - 22h"
+                className="h-12"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                NIF / RCCM
+              </label>
+              <Input
+                value={formData.nif}
+                onChange={(e) => handleChange('nif', e.target.value)}
+                placeholder="Numéro d'identification fiscale"
+                className="h-12"
+              />
+              <p className="text-xs text-stone-400 mt-1">Affiché sur les factures pro</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Frais de Livraison */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+            <Settings className="w-5 h-5 text-blue-600" />
+            <h2 className="text-lg font-bold text-stone-900">Frais de Livraison (par ville)</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Libreville</label>
+              <div className="relative">
+                <Input value={formData.fee_libreville} onChange={(e) => handleChange('fee_libreville', e.target.value)} type="number" className="h-12 pr-12" />
+                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Owendo</label>
+              <div className="relative">
+                <Input value={formData.fee_owendo} onChange={(e) => handleChange('fee_owendo', e.target.value)} type="number" className="h-12 pr-12" />
+                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Akanda</label>
+              <div className="relative">
+                <Input value={formData.fee_akanda} onChange={(e) => handleChange('fee_akanda', e.target.value)} type="number" className="h-12 pr-12" />
+                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Ntoum</label>
+              <div className="relative">
+                <Input value={formData.fee_ntoum} onChange={(e) => handleChange('fee_ntoum', e.target.value)} type="number" className="h-12 pr-12" />
+                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+              </div>
+            </div>
+            <div className="md:col-span-2 pt-4 border-t border-stone-100">
+               <label className="block text-sm font-bold text-stone-700 mb-2">Commission Livreur (%)</label>
+               <div className="relative max-w-xs">
+                 <Input 
+                   value={formData.delivery_commission} 
+                   onChange={(e) => handleChange('delivery_commission', e.target.value)} 
+                   type="number" 
+                   min="0"
+                   max="100"
+                   className="h-12 pr-12" 
+                 />
+                 <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">%</span>
+               </div>
+               <p className="text-xs text-stone-500 mt-2">Pourcentage des frais de livraison reversé au livreur (déduit du montant à rendre en caisse).</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Position GPS du Restaurant */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+            <MapPin className="w-5 h-5 text-red-600" />
+            <h2 className="text-lg font-bold text-stone-900">Position GPS du Restaurant</h2>
+          </div>
+          <p className="text-sm text-stone-500">Cette position sera affichée sur la carte du livreur. Collez les coordonnées depuis Google Maps ou utilisez votre position actuelle.</p>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">Coordonnées (latitude, longitude)</label>
+              <div className="flex gap-3">
+                <Input 
+                  value={formData.restaurant_coords} 
+                  onChange={(e) => handleChange('restaurant_coords', e.target.value)} 
+                  placeholder="0.37458607679368766, 9.458258923706834" 
+                  className="h-12 flex-1 font-mono text-sm" 
+                />
+                <Button 
+                  type="button"
+                  variant="outline"
+                  className="h-12 shrink-0"
+                  disabled={locating}
+                  onClick={() => {
+                    if (!navigator.geolocation) {
+                      toast.error("Géolocalisation non supportée");
+                      return;
+                    }
+                    setLocating(true);
+                    navigator.geolocation.getCurrentPosition(
+                      (pos) => {
+                        const coords = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+                        handleChange('restaurant_coords', coords);
+                        toast.success("Position récupérée !");
+                        setLocating(false);
+                      },
+                      (err) => {
+                        console.error(err);
+                        toast.error("Impossible de récupérer la position");
+                        setLocating(false);
+                      }
+                    );
+                  }}
+                >
+                  {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                  <span className="ml-2 hidden md:inline">Ma position</span>
+                </Button>
+              </div>
+              <p className="text-xs text-stone-400 mt-2">💡 Astuce : Sur Google Maps, cliquez droit sur le restaurant → "Copier les coordonnées" et collez ici.</p>
             </div>
           </div>
         </div>

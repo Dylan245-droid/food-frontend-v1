@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useFetch } from '../../lib/useFetch';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
+import { PaymentModal } from '../../components/ui/PaymentModal';
 import api from '../../lib/api';
 import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Armchair } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder, OrderItem } from '../../components/Receipt';
+import { useBranding } from '../../context/BrandingContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCashSession } from '../../hooks/useCashSession';
+import { toast } from 'sonner';
 
 interface AssignedServer {
   id: number;
@@ -50,13 +55,34 @@ export default function TablesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [paymentModalData, setPaymentModalData] = useState<{ id: number, totalAmount: number, unpaidOrders: any[] } | null>(null);
+  
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [formData, setFormData] = useState({ name: '', zone: 'Intérieur', capacity: 4 });
   const [assignServerId, setAssignServerId] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   
   const [receiptOrder, setReceiptOrder] = useState<ReceiptOrder | null>(null);
+  const { branding } = useBranding();
+  const { user } = useAuth();
+  const { hasActiveSession, loading: sessionLoading } = useCashSession();
+  const navigate = useNavigate();
   const baseUrl = window.location.origin;
+
+  // Helper: Check session before payment
+  const checkSessionBeforePayment = (): boolean => {
+      if (sessionLoading) return true;
+      if (!hasActiveSession) {
+          toast.error("Vous devez ouvrir une session de caisse avant d'encaisser.", {
+              action: {
+                  label: 'Ouvrir caisse',
+                  onClick: () => navigate('/admin/cash')
+              }
+          });
+          return false;
+      }
+      return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,6 +168,9 @@ export default function TablesPage() {
   const handleCollectPayment = async (table: Table) => {
       if (!table.activeOrdersCount) return;
       
+      // ** CHECK SESSION FIRST **
+      if (!checkSessionBeforePayment()) return;
+      
       try {
           const res = await api.get(`/staff/orders?table_id=${table.id}&status=pending,in_progress,delivered`);
           const orders: any[] = res.data.data;
@@ -154,15 +183,13 @@ export default function TablesPage() {
 
           const totalAmount = unpaidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
           
-          if (!confirm(`Encaisser ${totalAmount} FCFA pour ${unpaidOrders.length} commande(s) ?`)) {
-              return;
-          }
-
-          await Promise.all(unpaidOrders.map(o => api.patch(`/staff/orders/${o.id}/status`, { status: 'paid' })));
-          refetch();
-          alert('Paiement enregistré ! Vous pouvez maintenant libérer la table.');
+          setPaymentModalData({
+              id: table.id, // Using table ID as pseudo-order ID for modal, but we handle it in confirm
+              totalAmount,
+              unpaidOrders
+          });
       } catch {
-          alert('Erreur lors de l\'encaissement');
+          alert('Erreur lors de la récupération des commandes');
       }
   }
 
@@ -353,21 +380,21 @@ export default function TablesPage() {
                  {table.isOccupied ? (
                      <>
                         <Button 
-                            className="col-span-1 bg-stone-900 text-white hover:bg-black p-0 rounded-xl" 
+                            className="col-span-1 bg-stone-900 text-white hover:bg-black px-0 py-0 h-10 rounded-xl flex items-center justify-center shadow-sm" 
                             onClick={() => handlePrintBill(table)}
                             title="Imprimer"
                         >
                             <Printer className="w-4 h-4" />
                         </Button>
                         <Button 
-                            className="col-span-2 bg-green-600 text-white hover:bg-green-700 p-0 rounded-xl font-bold uppercase text-xs" 
+                            className="col-span-2 bg-green-600 text-white hover:bg-green-700 px-0 py-0 h-10 rounded-xl font-bold uppercase text-xs flex items-center justify-center shadow-lg shadow-green-200" 
                             onClick={() => handleCollectPayment(table)}
                             title="Encaisser"
                         >
                             Encaisser
                         </Button>
                         <Button 
-                            className="col-span-1 bg-white text-stone-400 border border-stone-200 hover:border-red-200 hover:text-red-500 p-0 rounded-xl" 
+                            className="col-span-1 bg-white text-stone-400 border border-stone-200 hover:border-red-200 hover:text-red-500 px-0 py-0 h-10 rounded-xl flex items-center justify-center shadow-sm" 
                             onClick={() => handleFreeTable(table.id)}
                             title="Libérer"
                         >
@@ -529,9 +556,51 @@ export default function TablesPage() {
           </form>
       </Modal>
 
+      {/* Payment Modal */}
+      {paymentModalData && (
+          <PaymentModal
+            order={paymentModalData as any}
+            title={`Encaissement Table`}
+            onClose={() => setPaymentModalData(null)}
+            onConfirm={async (amountReceived) => {
+                try {
+                    // Distribute payment amount roughly relative to order size (for recording sake) or attribute it to first order?
+                    // Better: We record separate payments for each order, but we only have ONE amountReceived from the user.
+                    // We should split the amountReceived proportionally to record proper stats? Or just record on the first order?
+                    // The backend `recordSale` takes amountReceived.
+                    
+                    // Strategy: We will update status for all orders. 
+                    // AND we will call recordSale for each order? 
+                    // Actually, if we have one big payment, we might want to record it as one transaction in cash movements?
+                    // But our cash movements are linked to orders.
+                    // Let's split the amountReceived proportionally to order totals.
+                    
+                    const totalBill = paymentModalData.totalAmount;
+                    const orders = paymentModalData.unpaidOrders;
+                    let remainingReceived = amountReceived;
+                    
+
+                    
+                    // Aggregate Payment
+                    await api.post(`/admin/tables/${paymentModalData.id}/pay`, {
+                        amountReceived: amountReceived,
+                        paymentMethod: 'cash'
+                    });
+                    
+                    setPaymentModalData(null);
+                    refetch();
+                    alert('Paiement enregistré et validé !');
+                    
+                } catch (e) {
+                    alert('Erreur lors du paiement');
+                }
+            }}
+          />
+      )}
+
       {createPortal(
         <div id="printable-receipt">
-            <Receipt order={receiptOrder} />
+            <Receipt order={receiptOrder} branding={branding} cashierName={user?.fullName} />
         </div>,
         document.body
       )}

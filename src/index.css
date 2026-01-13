@@ -115,10 +115,11 @@
 }
 
 @media print {
-  /* Hide the entire React App to prevent blank pages/overflow */
+  /* Hide the entire React App (Dashboard) to prevent interference */
   #root {
     display: none !important;
   }
+
 
   /* Ensure body doesn't add margins */
   body {
@@ -134,10 +135,11 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: auto;
+    min-height: 100vh; /* Ensure full height coverage */
     margin: 0;
     padding: 0;
     background: white;
+    z-index: 9999; /* Ensure it covers #root content */
   }
 
   /* Ensure receipt content is visible */

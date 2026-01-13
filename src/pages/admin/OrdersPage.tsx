@@ -1,13 +1,22 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useFetch } from '../../lib/useFetch';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, Search, Banknote, Flame, BellRing } from 'lucide-react';
+import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, Search, Banknote, Flame, BellRing, User, LayoutGrid, List, Plus } from 'lucide-react';
+import { toast } from 'sonner';
+import { PaymentModal } from '../../components/ui/PaymentModal';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder } from '../../components/Receipt';
+import { useBranding } from '../../context/BrandingContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCashSession } from '../../hooks/useCashSession';
+import { NoCashSessionAlert } from '../../components/NoCashSessionAlert';
+import { formatCurrency } from '../../lib/utils';
+import { NewOrderModal } from '../../components/admin/NewOrderModal';
 
 // ... (keep existing interfaces)
 interface MenuItem {
@@ -33,13 +42,14 @@ interface TableInfo {
 interface Order {
   id: number;
   status: 'pending' | 'in_progress' | 'delivered' | 'cancelled' | 'paid';
+  deliveryStatus?: 'pending' | 'assigned' | 'picked_up' | 'delivered' | 'failed';
   formattedTotal: string;
   totalAmount: number;
   table?: TableInfo; // Dine-in - relation from backend
   pickupCode?: string; // Takeout
   clientName?: string; // Takeout
   clientPhone?: string; // Takeout
-  type: 'dine_in' | 'takeout';
+  type: 'dine_in' | 'takeout' | 'delivery';
   createdAt: string;
   updatedAt: string;
   items: OrderItem[];
@@ -59,14 +69,53 @@ export default function OrdersPage() {
   
   // Printing State
   const [receiptOrder, setReceiptOrder] = useState<ReceiptOrder | null>(null);
+  const { branding } = useBranding();
+  const { user } = useAuth();
 
   // Verification State
   const [verifyingOrder, setVerifyingOrder] = useState<Order | null>(null);
   const [verifyCode, setVerifyCode] = useState('');
 
+  // Payment Modal State
+  const [paymentModalOrder, setPaymentModalOrder] = useState<Order | null>(null);
+
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState('');
+
   const [typeFilter, setTypeFilter] = useState<'all' | 'dine_in' | 'takeout'>('all');
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+
+  // New Order Modal State
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+
+  // Assignment State
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedOrderForAssignment, setSelectedOrderForAssignment] = useState<Order | null>(null);
+  const [drivers, setDrivers] = useState<any[]>([]);
+  const [selectedDriverId, setSelectedDriverId] = useState<number | string>('');
+  const [loadingDrivers, setLoadingDrivers] = useState(false);
+
+  // Cash Session Check
+  const { hasActiveSession, loading: sessionLoading } = useCashSession();
+  const navigate = useNavigate();
+
+
+
+  // Helper: Check session before payment actions
+  const checkSessionBeforePayment = (orderType: string): boolean => {
+      if (orderType === 'delivery') return true; // Delivery doesn't need session
+      if (sessionLoading) return true; // Still loading, allow for now
+      if (!hasActiveSession) {
+          toast.error("Vous devez ouvrir une session de caisse avant d'encaisser.", {
+              action: {
+                  label: 'Ouvrir caisse',
+                  onClick: () => navigate('/admin/cash')
+              }
+          });
+          return false;
+      }
+      return true;
+  };
 
   // Auto-refresh toutes les 30s
   useEffect(() => {
@@ -102,6 +151,11 @@ export default function OrdersPage() {
   };
 
   const handlePayAndPrint = async (order: Order, skipConfirm = false) => {
+      // ** CHECK SESSION FIRST ** (except for reprint of already paid orders)
+      if (order.status !== 'paid' && !checkSessionBeforePayment(order.type)) {
+          return; // Session check failed, user redirected
+      }
+
       if (order.status === 'paid') {
           const receipt: ReceiptOrder = {
              id: order.id,
@@ -113,7 +167,9 @@ export default function OrdersPage() {
              createdAt: order.createdAt,
              type: order.type,
              clientName: order.clientName,
-             table: order.table ? { name: order.table.name } : undefined
+             table: order.table ? { name: order.table.name } : undefined,
+             subtotal: Math.round(order.totalAmount / 1.18),
+             tax: order.totalAmount - Math.round(order.totalAmount / 1.18)
           };
           setReceiptOrder(receipt);
           setTimeout(() => window.print(), 500);
@@ -126,79 +182,51 @@ export default function OrdersPage() {
           return;
       }
 
-      const amountDisplay = order.formattedTotal || `${order.totalAmount} FCFA`;
-      const clientDisplay = order.clientName ? `pour ${order.clientName}` : `(Commande #${order.dailyNumber})`;
+      // Open Payment Modal instead of direct confirm
+      // Open Payment Modal logic
+      // Whether it is dine-in or confirmed takeout, we verify the payment amount
+      setPaymentModalOrder(order);
+  };
 
-      if (!skipConfirm && !confirm(`Confirmer le paiement de ${amountDisplay} ${clientDisplay} ?`)) return;
-
+  const fetchDrivers = async () => {
+      setLoadingDrivers(true);
       try {
-        await api.patch(`/staff/orders/${order.id}/status`, { status: 'paid' });
-        
-        const receipt: ReceiptOrder = {
-             id: order.id,
-             dailyNumber: order.dailyNumber,
-             pickupCode: order.pickupCode || null,
-             status: 'paid',
-             totalAmount: order.totalAmount,
-             items: order.items,
-             createdAt: order.createdAt,
-             type: order.type,
-             clientName: order.clientName,
-             table: order.table ? { name: order.table.name } : undefined
-        };
+          // Assuming /admin/users supports role filtering. If not, filter client side.
+          const res = await api.get('/admin/users?role=livreur&limit=100');
+          setDrivers(res.data.data);
+      } catch (e) {
+          console.error(e);
+          toast.error("Impossible de charger les livreurs");
+      } finally {
+          setLoadingDrivers(false);
+      }
+  };
 
-        setReceiptOrder(receipt);
-        setTimeout(() => window.print(), 500);
-        
-        setIsPickupModalOpen(false);
-        setPickupOrder(null);
-        setPickupCode('');
-        refetch();
-      } catch {
-          alert('Erreur lors du paiement');
+  const handleDeliveryHandover = (order: Order) => {
+      setSelectedOrderForAssignment(order);
+      setSelectedDriverId(''); // Reset selection
+      setIsAssignModalOpen(true);
+      fetchDrivers();
+  };
+
+  const handleAssignDriver = async () => {
+      if (!selectedOrderForAssignment || !selectedDriverId) return;
+      try {
+          await api.post('/delivery/assign', {
+              orderId: selectedOrderForAssignment.id,
+              deliveryPersonId: Number(selectedDriverId)
+          });
+          toast.success("Commande assignée au livreur !");
+          setIsAssignModalOpen(false);
+          setSelectedOrderForAssignment(null);
+          refetch();
+      } catch (e) {
+          console.error(e);
+          toast.error("Erreur lors de l'assignation");
       }
   };
   
-  const handlePrintTableBill = async (tableId: number, tableName: string) => {
-      try {
-          const res = await api.get(`/staff/orders?table_id=${tableId}&status=pending,in_progress,delivered`);
-          const orders: any[] = res.data.data;
-          
-          if (orders.length === 0) {
-              alert('Aucune commande à imprimer pour cette table.');
-              return;
-          }
 
-          let totalAmount = 0;
-          const allItems: OrderItem[] = orders.flatMap(o => {
-              if (o.status === 'cancelled') return [];
-              totalAmount += o.totalAmount;
-              return o.items.map((i: any) => ({
-                  id: i.id,
-                  quantity: i.quantity,
-                  unitPrice: i.unitPrice || i.price || 0,
-                  menuItem: i.menuItem
-              }));
-          });
-          
-          const consolidatedOrder: ReceiptOrder = {
-              id: 0, 
-              dailyNumber: null,
-              pickupCode: null,
-              status: 'delivered',
-              totalAmount: totalAmount,
-              items: allItems,
-              createdAt: new Date().toISOString(),
-              table: { name: tableName },
-              type: 'dine_in'
-          };
-          
-          setReceiptOrder(consolidatedOrder);
-          setTimeout(() => window.print(), 500);
-      } catch {
-          alert('Erreur lors de la récupération de l\'addition');
-      }
-  }
 
 
   if (loading && !data) return (
@@ -214,7 +242,14 @@ export default function OrdersPage() {
   const filterOrders = (orders: Order[]) => {
     return orders.filter(order => {
       // Type filter
-      if (typeFilter !== 'all' && order.type !== typeFilter) return false;
+      if (typeFilter !== 'all') {
+          if (typeFilter === 'takeout') {
+              // Takeout includes both pure takeout and delivery
+              if (order.type !== 'takeout' && order.type !== 'delivery') return false;
+          } else if (order.type !== typeFilter) {
+              return false;
+          }
+      }
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -238,6 +273,9 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6 h-full flex flex-col">
+      {/* Cash Session Alert */}
+      {!sessionLoading && <NoCashSessionAlert show={!hasActiveSession} />}
+      
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
         <div>
             <h1 className="text-2xl font-black text-stone-900 flex items-center gap-3 uppercase tracking-tight font-display">
@@ -264,137 +302,316 @@ export default function OrdersPage() {
         </div>
         
         <div className="flex gap-3 items-center">
-            <Button onClick={() => setIsPickupModalOpen(true)} className="bg-stone-900 text-white hover:bg-stone-800 gap-2 h-12 px-6 rounded-xl font-bold shadow-lg shadow-stone-900/10">
+            <Button onClick={() => setIsNewOrderModalOpen(true)} className="bg-gradient-to-r from-orange-500 to-red-600 text-white hover:from-orange-600 hover:to-red-700 gap-2 h-12 px-6 rounded-xl font-bold shadow-lg">
+                <Plus className="w-4 h-4" />
+                Nouvelle Commande
+            </Button>
+            <Button onClick={() => setIsPickupModalOpen(true)} variant="outline" className="gap-2 h-12 px-6 rounded-xl font-bold border-stone-300">
                 <ShoppingBag className="w-4 h-4" />
                 Retrait Client
             </Button>
         </div>
       </div>
 
-      {/* Filter Chips */}
-      <div className="flex gap-2 px-1">
-        <button 
-          onClick={() => setTypeFilter('all')}
-          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'all' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
-        >
-          Tous ({data?.data?.length || 0})
-        </button>
-        <button 
-          onClick={() => setTypeFilter('dine_in')}
-          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'dine_in' ? 'bg-orange-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
-        >
-          🍽️ Sur Place ({data?.data?.filter(o => o.type === 'dine_in').length || 0})
-        </button>
-        <button 
-          onClick={() => setTypeFilter('takeout')}
-          className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'takeout' ? 'bg-purple-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
-        >
-          👜 À Emporter ({data?.data?.filter(o => o.type === 'takeout').length || 0})
-        </button>
+      {/* Filter Chips + View Toggle */}
+      <div className="flex gap-2 px-1 justify-between items-center">
+        <div className="flex gap-2">
+          <button 
+            onClick={() => setTypeFilter('all')}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'all' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
+          >
+            Tous ({data?.data?.length || 0})
+          </button>
+          <button 
+            onClick={() => setTypeFilter('dine_in')}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'dine_in' ? 'bg-orange-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
+          >
+            🍽️ Sur Place ({data?.data?.filter(o => o.type === 'dine_in').length || 0})
+          </button>
+          <button 
+            onClick={() => setTypeFilter('takeout')}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${typeFilter === 'takeout' ? 'bg-purple-600 text-white' : 'bg-white text-stone-600 border border-stone-200 hover:bg-stone-50'}`}
+          >
+            👜 À Emporter & Livraison ({data?.data?.filter(o => o.type === 'takeout' || o.type === 'delivery').length || 0})
+          </button>
+        </div>
+
+        {/* View Toggle */}
+        <div className="flex gap-1 bg-stone-100 p-1 rounded-lg">
+          <button
+            onClick={() => setViewMode('kanban')}
+            className={`p-2 rounded-md transition-all ${viewMode === 'kanban' ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+            title="Vue Kanban"
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500 hover:text-stone-700'}`}
+            title="Vue Liste"
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 flex-1 min-h-0 overflow-x-auto pb-4">
-        {/* Colonne EN ATTENTE */}
-        <Column 
-            title="En attente" 
-            count={pendingOrders.length}
-            icon={BellRing} 
-            color="text-yellow-700" 
-            bgColor="bg-yellow-50/50"
-            borderColor="border-yellow-200"
-            headerColor="bg-yellow-100"
-            accentColor="bg-yellow-500"
-        >
-            {pendingOrders.map(order => (
-                <OrderCard 
-                    key={order.id} 
-                    order={order} 
-                    onAction={() => handleStatusChange(order.id, 'in_progress')} 
-                    actionLabel="LANCER" 
-                    variant="pending" 
-                    icon={Flame}
-                />
-            ))}
-            {pendingOrders.length === 0 && <EmptyState message="Cuisine calme" icon={Clock} />}
-        </Column>
+      {/* Kanban View */}
+      {viewMode === 'kanban' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 flex-1 min-h-0 overflow-x-auto pb-4">
+          {/* Colonne EN ATTENTE */}
+          <Column 
+              title="En attente" 
+              count={pendingOrders.length}
+              icon={BellRing} 
+              color="text-yellow-700" 
+              bgColor="bg-yellow-50/50"
+              borderColor="border-yellow-200"
+              headerColor="bg-yellow-100"
+              accentColor="bg-yellow-500"
+          >
+              {pendingOrders.map(order => (
+                  <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onAction={() => handleStatusChange(order.id, 'in_progress')} 
+                      actionLabel="LANCER" 
+                      variant="pending" 
+                      icon={Flame}
+                  />
+              ))}
+              {pendingOrders.length === 0 && <EmptyState message="Cuisine calme" icon={Clock} />}
+          </Column>
 
-        {/* Colonne EN COURS */}
-        <Column 
-            title="Au Feu" 
-            count={inProgressOrders.length}
-            icon={Flame} 
-            color="text-orange-700" 
-            bgColor="bg-orange-50/50"
-            borderColor="border-orange-200"
-            headerColor="bg-orange-100"
-            accentColor="bg-orange-500"
-        >
-            {inProgressOrders.map(order => (
-                <OrderCard 
-                    key={order.id} 
-                    order={order} 
-                    onAction={() => handleStatusChange(order.id, 'delivered')} 
-                    actionLabel="SERVIR" 
-                    variant="progress" 
-                />
-            ))}
-            {inProgressOrders.length === 0 && <EmptyState message="Rien sur le feu" icon={ChefHat} />}
-        </Column>
+          {/* Colonne EN COURS */}
+          <Column 
+              title="Au Feu" 
+              count={inProgressOrders.length}
+              icon={Flame} 
+              color="text-orange-700" 
+              bgColor="bg-orange-50/50"
+              borderColor="border-orange-200"
+              headerColor="bg-orange-100"
+              accentColor="bg-orange-500"
+          >
+              {inProgressOrders.map(order => (
+                  <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onAction={() => handleStatusChange(order.id, 'delivered')} 
+                      actionLabel="SERVIR" 
+                      variant="progress" 
+                  />
+              ))}
+              {inProgressOrders.length === 0 && <EmptyState message="Rien sur le feu" icon={ChefHat} />}
+          </Column>
 
-        {/* Colonne SERVIS */}
-        <Column 
-            title="À Servir / Servis"
-            count={deliveredOrders.length} 
-            icon={UtensilsCrossed} 
-            color="text-green-700" 
-            bgColor="bg-green-50/50"
-            borderColor="border-green-200"
-            headerColor="bg-green-100"
-            accentColor="bg-green-500"
-        >
-            {deliveredOrders.map(order => (
-                <OrderCard 
-                    key={order.id} 
-                    order={order} 
-                    onAction={() => {
-                        if (order.type === 'takeout') {
-                            handlePayAndPrint(order);
-                        } else if (order.type === 'dine_in' && order.table) {
-                            handlePrintTableBill(order.table.id, order.table.name);
-                        }
-                    }} 
-                    actionLabel={order.type === 'takeout' ? 'REMETTRE' : 'IMPRIMER'}
-                    onSecondaryAction={order.type === 'dine_in' ? () => handlePayAndPrint(order) : undefined}
-                    secondaryActionLabel="ENCAISSER"
-                    variant="delivered" 
-                />
-            ))}
-            {deliveredOrders.length === 0 && <EmptyState message="Passe vide" icon={ShoppingBag} />}
-        </Column>
+          {/* Colonne SERVIS */}
+          <Column 
+              title="À Servir / Servis"
+              count={deliveredOrders.length} 
+              icon={UtensilsCrossed} 
+              color="text-green-700" 
+              bgColor="bg-green-50/50"
+              borderColor="border-green-200"
+              headerColor="bg-green-100"
+              accentColor="bg-green-500"
+          >
+              {deliveredOrders.map(order => (
+                  <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onAction={() => {
+                          if (order.type === 'takeout') {
+                              handlePayAndPrint(order);
+                          } else if (order.type === 'delivery') {
+                               if (order.deliveryStatus !== 'picked_up') {
+                                  handleDeliveryHandover(order);
+                               } else {
+                                  toast.info("Commande déjà en course");
+                               }
+                          }
+                      }} 
+                      actionLabel={
+                          order.type === 'takeout' ? 'REMETTRE' : 
+                          order.type === 'delivery' 
+                              ? (order.deliveryStatus === 'picked_up' || order.deliveryStatus === 'assigned' ? undefined : 'CONFIER')
+                              : undefined
+                      }
+                      onSecondaryAction={undefined}
+                      secondaryActionLabel={undefined}
+                      variant={order.type === 'delivery' && (order.deliveryStatus === 'picked_up' || order.deliveryStatus === 'assigned') ? 'info' : 'delivered'}  
+                  />
+              ))}
+              {deliveredOrders.length === 0 && <EmptyState message="Passe vide" icon={ShoppingBag} />}
+          </Column>
 
-        {/* Colonne TERMINÉES */}
-        <Column 
-            title="Historique"
-            count={paidOrders.length} 
-            icon={Check} 
-            color="text-stone-500" 
-            bgColor="bg-stone-100/50"
-            borderColor="border-stone-200"
-            headerColor="bg-stone-200"
-            accentColor="bg-stone-400"
-        >
-            {paidOrders.map(order => (
-                <OrderCard 
-                    key={order.id} 
-                    order={order} 
-                    onAction={() => handlePayAndPrint(order)} 
-                    actionLabel="TICKET"
-                    variant="paid" 
-                />
-            ))}
-            {paidOrders.length === 0 && <EmptyState message="Historique vide" icon={Check} />}
-        </Column>
-      </div>
+          {/* Colonne TERMINÉES */}
+          <Column 
+              title="Historique"
+              count={paidOrders.length} 
+              icon={Check} 
+              color="text-stone-500" 
+              bgColor="bg-stone-100/50"
+              borderColor="border-stone-200"
+              headerColor="bg-stone-200"
+              accentColor="bg-stone-400"
+          >
+              {paidOrders.map(order => (
+                  <OrderCard 
+                      key={order.id} 
+                      order={order} 
+                      onAction={() => handlePayAndPrint(order)} 
+                      actionLabel={
+                          order.type === 'delivery' 
+                               ? (order.deliveryStatus === 'delivered' ? 'LIVRÉE' : 'EN COURSE')
+                               : 'TICKET'
+                      }
+                      variant="paid" 
+                  />
+              ))}
+              {paidOrders.length === 0 && <EmptyState message="Historique vide" icon={Check} />}
+          </Column>
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden flex-1">
+          <table className="w-full text-xs">
+            <thead className="bg-stone-50 border-b border-stone-200">
+              <tr>
+                <th className="text-left py-2 px-3 font-bold text-stone-600">#</th>
+                <th className="text-left py-2 px-3 font-bold text-stone-600">Type</th>
+                <th className="text-left py-2 px-3 font-bold text-stone-600">Client/Table</th>
+                <th className="text-left py-2 px-3 font-bold text-stone-600">Articles</th>
+                <th className="text-left py-2 px-3 font-bold text-stone-600">Total</th>
+                <th className="text-left py-2 px-3 font-bold text-stone-600">Statut</th>
+                <th className="text-left py-2 px-3 font-bold text-stone-600">Date</th>
+                <th className="text-right py-2 px-3 font-bold text-stone-600">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100">
+              {filterOrders(data?.data || [])
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map(order => (
+                <tr key={order.id} className="hover:bg-stone-50 transition-colors">
+                  <td className="py-2 px-3 font-bold text-stone-900">#{order.dailyNumber}</td>
+                  <td className="py-2 px-3">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      order.type === 'dine_in' ? 'bg-orange-100 text-orange-700' :
+                      order.type === 'takeout' ? 'bg-purple-100 text-purple-700' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {order.type === 'dine_in' ? '🍽️ Salle' : order.type === 'takeout' ? '🥡 Emporter' : '🛵 Livraison'}
+                    </span>
+                  </td>
+                  <td className="py-2 px-3 font-medium text-stone-700">
+                    {order.type === 'dine_in' && order.table ? order.table.name : order.clientName || '-'}
+                  </td>
+                  <td className="py-2 px-3 text-stone-500">
+                    {order.items.length} art.
+                  </td>
+                  <td className="py-2 px-3 font-bold text-stone-900">
+                    {order.formattedTotal || formatCurrency(order.totalAmount)}
+                  </td>
+                  <td className="py-2 px-3">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      order.status === 'in_progress' ? 'bg-orange-100 text-orange-700' :
+                      order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                      order.status === 'paid' ? 'bg-stone-200 text-stone-600' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {order.status === 'pending' ? 'En attente' :
+                       order.status === 'in_progress' ? 'Au feu' :
+                       order.status === 'delivered' ? 'Servi' :
+                       order.status === 'paid' ? 'Payé' : 'Annulé'}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-stone-500 text-sm whitespace-nowrap">
+                    {new Date(order.createdAt).toLocaleDateString('fr-FR', { 
+                      day: '2-digit', 
+                      month: '2-digit', 
+                      year: 'numeric',
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </td>
+                  <td className="py-2 px-3 text-right space-x-1">
+                    {order.status === 'pending' && (
+                      <>
+                        <button 
+                          onClick={() => handleStatusChange(order.id, 'in_progress')}
+                          className="bg-orange-600 text-white px-2 py-1 rounded text-[10px] font-bold hover:bg-orange-700"
+                        >
+                          Lancer
+                        </button>
+                        <button 
+                          onClick={() => handleStatusChange(order.id, 'cancelled')}
+                          className="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold hover:bg-red-200"
+                        >
+                          Annuler
+                        </button>
+                      </>
+                    )}
+                    {order.status === 'in_progress' && (
+                      <>
+                        <button 
+                          onClick={() => handleStatusChange(order.id, 'delivered')}
+                          className="bg-green-600 text-white px-2 py-1 rounded text-[10px] font-bold hover:bg-green-700"
+                        >
+                          Servir
+                        </button>
+                        <button 
+                          onClick={() => handleStatusChange(order.id, 'cancelled')}
+                          className="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-bold hover:bg-red-200"
+                        >
+                          Annuler
+                        </button>
+                      </>
+                    )}
+                    {order.status === 'delivered' && (
+                      <>
+                        {order.type === 'takeout' && (
+                          <button 
+                            onClick={() => handlePayAndPrint(order)}
+                            className="bg-stone-900 text-white px-2 py-1 rounded text-[10px] font-bold hover:bg-stone-800"
+                          >
+                            Remettre
+                          </button>
+                        )}
+                        {order.type === 'delivery' && !order.deliveryStatus?.includes('picked') && (
+                          <button 
+                            onClick={() => handleDeliveryHandover(order)}
+                            className="bg-blue-600 text-white px-2 py-1 rounded text-[10px] font-bold hover:bg-blue-700"
+                          >
+                            Confier
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {order.status === 'paid' && (
+                      <button 
+                        onClick={() => handlePayAndPrint(order)}
+                        className="bg-stone-200 text-stone-700 px-2 py-1 rounded text-[10px] font-bold hover:bg-stone-300"
+                      >
+                        Ticket
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {filterOrders(data?.data || []).length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-stone-400">
+                    Aucune commande
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Pickup Modal */}
       <Modal isOpen={isPickupModalOpen} onClose={() => setIsPickupModalOpen(false)} title="Retrait Commande">
@@ -426,14 +643,16 @@ export default function OrdersPage() {
                           <div className="flex justify-between items-start mb-6">
                               <div>
                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-bold uppercase">Pickup</span>
+                                      <span className="bg-stone-100 text-stone-600 px-2 py-1 rounded text-xs font-bold uppercase">RETRAIT</span>
                                       <span className="text-stone-400 text-xs">{new Date(pickupOrder.createdAt).toLocaleTimeString()}</span>
                                    </div>
                                    <h2 className="text-2xl font-black text-stone-900">#{pickupOrder.dailyNumber}</h2>
                                    <p className="font-medium text-stone-600">{pickupOrder.clientName || 'Client Anonyme'}</p>
                               </div>
                               <div className="text-right">
-                                  <div className="text-2xl font-black text-orange-600">{pickupOrder.formattedTotal}</div>
+                                  <div className="text-2xl font-black text-orange-600">
+                                      {pickupOrder.formattedTotal || formatCurrency(pickupOrder.totalAmount)}
+                                  </div>
                                   <div className={`text-xs font-bold uppercase px-2 py-1 rounded-full inline-block mt-1 ${
                                       pickupOrder.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
                                   }`}>
@@ -444,8 +663,9 @@ export default function OrdersPage() {
                       
                           <div className="space-y-3 py-4 border-t border-dashed border-stone-200">
                               {pickupOrder.items.map(item => (
-                                  <div key={item.id} className="flex justify-between text-base">
+                                  <div key={item.id} className="flex justify-between items-center text-base border-b border-dashed border-stone-100 py-2 last:border-0">
                                       <span className="text-stone-800"><span className="font-bold mr-2">{item.quantity}x</span> {item.menuItem.name}</span>
+                                      <span className="font-bold text-stone-900">{formatCurrency((item.unitPrice || 0) * item.quantity)}</span>
                                   </div>
                               ))}
                           </div>
@@ -456,7 +676,7 @@ export default function OrdersPage() {
                               Retour
                           </Button>
                           <Button 
-                                onClick={() => handlePayAndPrint(pickupOrder)} 
+                                onClick={() => handlePayAndPrint(pickupOrder, true)} 
                                 className="flex-1 h-14 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-200 disabled:opacity-50 disabled:shadow-none"
                                 disabled={pickupOrder.status !== 'delivered'}
                           >
@@ -472,7 +692,7 @@ export default function OrdersPage() {
       {/* Hidden Receipt for Printing */}
       {createPortal(
         <div id="printable-receipt">
-            <Receipt order={receiptOrder} />
+            <Receipt order={receiptOrder} branding={branding} cashierName={user?.fullName} />
         </div>,
         document.body
       )}
@@ -494,9 +714,122 @@ export default function OrdersPage() {
             }
         }}
       />
+
+      {/* New Order Modal */}
+      <NewOrderModal
+        isOpen={isNewOrderModalOpen}
+        onClose={() => setIsNewOrderModalOpen(false)}
+        onOrderCreated={refetch}
+      />
+
+      <PaymentModal 
+        order={paymentModalOrder}
+        onClose={() => setPaymentModalOrder(null)}
+        onConfirm={async (amountReceived) => {
+            if (!paymentModalOrder) return;
+            try {
+                // Call API with extra amountReceived param
+                await api.patch(`/staff/orders/${paymentModalOrder.id}/status`, { 
+                    status: 'paid',
+                    amountReceived // New param
+                });
+                
+                // Print Receipt
+                const receipt: ReceiptOrder = {
+                     id: paymentModalOrder.id,
+                     dailyNumber: paymentModalOrder.dailyNumber,
+                     pickupCode: paymentModalOrder.pickupCode || null,
+                     status: 'paid',
+                     totalAmount: paymentModalOrder.totalAmount,
+                     items: paymentModalOrder.items,
+                     createdAt: paymentModalOrder.createdAt,
+                     type: paymentModalOrder.type,
+                     clientName: paymentModalOrder.clientName,
+                     table: paymentModalOrder.table ? { name: paymentModalOrder.table.name } : undefined,
+                     subtotal: Math.round(paymentModalOrder.totalAmount / 1.18),
+                     tax: paymentModalOrder.totalAmount - Math.round(paymentModalOrder.totalAmount / 1.18)
+                };
+                setReceiptOrder(receipt);
+                setTimeout(() => window.print(), 500);
+
+                setPaymentModalOrder(null);
+                setIsPickupModalOpen(false); // Close Pickup Modal
+                setPickupOrder(null); // Clear Pickup Order
+                refetch();
+            } catch {
+                alert('Erreur lors du paiement');
+            }
+        }}
+      />
+
+      {/* Assignment Modal */}
+      <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} title="Assigner un livreur">
+          <div className="space-y-6">
+              <div className="text-center">
+                   <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <User className="w-8 h-8" />
+                   </div>
+                   <h3 className="font-bold text-lg">Commande #{selectedOrderForAssignment?.dailyNumber}</h3>
+                   <p className="text-stone-500 text-sm">Sélectionnez le livreur qui prend en charge cette commande.</p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto">
+                  {loadingDrivers ? (
+                      <p className="text-center text-stone-400 py-4">Chargement des livreurs...</p>
+                  ) : drivers.length === 0 ? (
+                      <p className="text-center text-stone-400 py-4">Aucun livreur disponible</p>
+                  ) : (
+                      drivers.map(driver => (
+                          <div 
+                              key={driver.id}
+                              onClick={() => setSelectedDriverId(driver.id)}
+                              className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-center justify-between ${
+                                  selectedDriverId === driver.id 
+                                  ? 'border-blue-600 bg-blue-50' 
+                                  : 'border-stone-100 hover:border-blue-200'
+                              }`}
+                          >
+                              <div className="flex items-center gap-3">
+                                  {driver.avatar ? (
+                                      <img src={driver.avatar} className="w-10 h-10 rounded-full object-cover" alt="" />
+                                  ) : (
+                                      <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center font-bold text-stone-500">
+                                          {driver.fullName.charAt(0)}
+                                      </div>
+                                  )}
+                                  <div className="text-left">
+                                      <p className="font-bold text-stone-900">{driver.fullName}</p>
+                                      <p className="text-xs text-stone-500">{driver.phone || 'Pas de numéro'}</p>
+                                  </div>
+                              </div>
+                              {selectedDriverId === driver.id && (
+                                  <div className="bg-blue-600 text-white rounded-full p-1">
+                                      <Check className="w-4 h-4" />
+                                  </div>
+                              )}
+                          </div>
+                      ))
+                  )}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                  <Button variant="ghost" onClick={() => setIsAssignModalOpen(false)} className="flex-1">Annuler</Button>
+                  <Button 
+                      onClick={handleAssignDriver}
+                      disabled={!selectedDriverId}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                  >
+                      Confier la commande
+                  </Button>
+              </div>
+          </div>
+      </Modal>
     </div>
   );
 }
+
+// Payment Modal Component
+
 
 function VerificationModal({ isOpen, onClose, order, verifyCode, setVerifyCode, onConfirm }: any) {
     const isMatch = order && order.pickupCode === verifyCode.toUpperCase();
@@ -571,7 +904,7 @@ function OrderCard({ order, onAction, actionLabel, variant, readonly = false, on
     const themes: Record<string, any> = {
         pending: { border: 'border-yellow-400', bg: 'bg-white', text: 'text-stone-900', btn: 'bg-stone-900 text-white hover:bg-stone-800' },
         progress: { border: 'border-orange-500', bg: 'bg-white', text: 'text-stone-900', btn: 'text-white hover:opacity-90 shadow-md' },
-        delivered: { border: 'border-green-500', bg: 'bg-green-50/30', text: 'text-stone-900', btn: 'bg-white text-stone-900 border border-stone-200 hover:bg-stone-50' },
+        delivered: { border: 'border-green-500', bg: 'bg-green-50/30', text: 'text-stone-900', btn: 'bg-white text-white border border-stone-200 hover:bg-stone-50' },
         paid: { border: 'border-stone-200', bg: 'bg-stone-50', text: 'text-stone-400', btn: 'text-white hover:opacity-90 shadow-md transform active:scale-95' }
     };
     const theme = themes[variant] || themes.pending;
@@ -585,9 +918,11 @@ function OrderCard({ order, onAction, actionLabel, variant, readonly = false, on
                 <div>
                      <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-black text-stone-900 bg-stone-100 px-2 py-0.5 rounded-md">#{order.dailyNumber}</span>
-                        {order.type === 'takeout' ? (
-                             <span className="text-purple-700 text-[10px] font-black uppercase bg-purple-100 px-2 py-0.5 rounded flex items-center gap-1">
-                                👜 EMPORTER
+                        {order.type === 'takeout' || order.type === 'delivery' ? (
+                             <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded flex items-center gap-1 ${
+                                 order.type === 'delivery' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                             }`}>
+                                {order.type === 'delivery' ? '🛵 LIVRAISON' : '👜 EMPORTER'}
                              </span>
                         ) : (
                             <span className="text-sm font-bold text-stone-700 bg-stone-100 px-2 rounded">{order.table?.name || '?'}</span>
@@ -625,7 +960,7 @@ function OrderCard({ order, onAction, actionLabel, variant, readonly = false, on
                 </div>
             )}
 
-            {!readonly && (
+            {!readonly && actionLabel && (
                 <div className="p-2 pl-4 bg-stone-50 border-t border-stone-100 mt-auto flex gap-2">
                     <Button
                         onClick={onAction} 

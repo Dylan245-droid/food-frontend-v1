@@ -24,7 +24,7 @@ interface Order {
     dailyNumber: number;
     tableName: string;
     clientName?: string;
-    type: 'dine_in' | 'takeout';
+    type: 'dine_in' | 'takeout' | 'delivery';
     totalFormatted: string;
     items: any[];
     createdAt: string;

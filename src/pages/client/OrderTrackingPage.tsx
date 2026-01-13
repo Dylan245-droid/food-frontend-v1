@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useFetch } from '../../lib/useFetch';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import api from '../../lib/api';
-import { Clock, CheckCircle2, ChefHat, XCircle, Search, PartyPopper, Utensils, ArrowLeft } from 'lucide-react';
+import { Clock, CheckCircle2, ChefHat, XCircle, Search, PartyPopper, Utensils, ArrowLeft, Bike, MapPin } from 'lucide-react';
+import { LiveTrackingMap } from '../../components/LiveTrackingMap';
+import { useDriverPositionUpdates } from '../../hooks/useDriverPositionUpdates';
+import { useBranding } from '../../context/BrandingContext';
 
 interface OrderDetail {
     id: number;
@@ -12,24 +15,54 @@ interface OrderDetail {
     status: string;
     clientName: string;
     totalFormatted: string;
+    totalAmount: number;
+    deliveryFee: number;
     createdAt: string;
     items: { name: string; quantity: number, formattedSubtotal?: string, unitPrice?: number }[];
+    type: 'dine_in' | 'takeout' | 'delivery';
+    deliveryStatus?: 'pending' | 'assigned' | 'picked_up' | 'delivered' | 'failed';
+    deliveryLat?: number;
+    deliveryLng?: number;
+    deliveryAddress?: string;
 }
 
 export default function OrderTrackingPage() {
     const { code } = useParams();
     const navigate = useNavigate();
     const [searchCode, setSearchCode] = useState(code || '');
+    const { branding } = useBranding();
     
     // Si code présent dans URL, on fetch, sinon on attend
     const { data: order, loading, error, refetch } = useFetch<OrderDetail>(code ? `/orders/track/${code}` : '');
     
+    // Live driver tracking for delivery orders
+    const { driverPosition } = useDriverPositionUpdates(order?.id);
+    const [deliveryEta, setDeliveryEta] = useState<{ distanceKm: number; etaMinutes: number } | null>(null);
+    
+    // Restaurant position from settings
+    const restaurantLat = parseFloat(branding?.restaurant_lat as string || '0.4162');
+    const restaurantLng = parseFloat(branding?.restaurant_lng as string || '9.4673');
+    
+    // Handle distance/ETA updates from map
+    const handleDistanceUpdate = useCallback((distanceKm: number, etaMinutes: number) => {
+        setDeliveryEta({ distanceKm, etaMinutes });
+    }, []);
+    
     // Auto-refresh si commande en cours
+    // Stop polling when: paid, cancelled, or for delivery orders when ready (status: delivered)
     useEffect(() => {
+        // Don't poll if order is finished
         if (!code || order?.status === 'paid' || order?.status === 'cancelled') return;
-        const interval = setInterval(refetch, 5000); // 5s pour plus de réactivité
+        
+        // For delivery orders: completely stop polling once status is 'delivered' (ready)
+        // SSE will handle real-time driver position updates - no need for polling
+        if (order?.type === 'delivery' && order?.status === 'delivered') {
+            return; // No polling - SSE handles updates
+        }
+        
+        const interval = setInterval(refetch, 5000); // 5s for active orders
         return () => clearInterval(interval);
-    }, [code, order?.status, refetch]);
+    }, [code, order?.status, order?.type, refetch]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -101,14 +134,39 @@ export default function OrderTrackingPage() {
         )
     }
 
+    // Determine if delivery is in transit
+    const isDeliveryInTransit = order.type === 'delivery' && order.deliveryStatus === 'picked_up';
+    const isDeliveryComplete = order.type === 'delivery' && order.deliveryStatus === 'delivered';
+
     const steps = [
         { status: 'pending', label: 'Reçue', icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50', border: 'border-yellow-100' },
         { status: 'in_progress', label: 'Au Fourneau', icon: ChefHat, color: 'text-[var(--primary-600)]', bg: 'bg-[var(--primary-50)]', border: 'border-[var(--primary-100)]' },
-        { status: 'delivered', label: 'Prête !', icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-100' },
-        { status: 'paid', label: 'Payée', icon: PartyPopper, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
+        { 
+            status: 'delivered', 
+            label: order.type === 'delivery' ? 'Prête' : 'Prête !', 
+            icon: CheckCircle2, 
+            color: 'text-green-600', 
+            bg: 'bg-green-50', 
+            border: 'border-green-100' 
+        },
+        { 
+            status: 'paid', 
+            label: order.type === 'delivery' 
+                ? (isDeliveryComplete ? 'Livrée !' : 'En route 🛵') 
+                : 'Payée', 
+            icon: order.type === 'delivery' && !isDeliveryComplete ? Bike : PartyPopper, 
+            color: 'text-purple-600', 
+            bg: 'bg-purple-50', 
+            border: 'border-purple-100' 
+        },
     ];
 
-    const currentStepIndex = steps.findIndex(s => s.status === order.status);
+    // Calculate current step index - for delivery orders, 'picked_up' means we're on the last step
+    let currentStepIndex = steps.findIndex(s => s.status === order.status);
+    if (order.type === 'delivery' && isDeliveryInTransit && order.status === 'delivered') {
+        // deliveryStatus = 'picked_up' means driver is en route, show the last step as active
+        currentStepIndex = 3; // Index of the 'paid'/'En route' step
+    }
     const isCancelled = order.status === 'cancelled';
     const isPaid = order.status === 'paid';
 
@@ -146,6 +204,7 @@ export default function OrderTrackingPage() {
                             {/* Connecting Line */}
                             <div className="absolute top-1/2 left-6 right-6 h-1 bg-stone-100 -z-10 rounded-full"></div>
                             <div 
+                                className="absolute top-1/2 left-6 h-1 -z-10 rounded-full"
                                 style={{ 
                                     width: `calc(${(Math.min(currentStepIndex, 3) / 3) * 100}% - 3rem)`,
                                     background: 'var(--gradient-brand)'
@@ -221,6 +280,48 @@ export default function OrderTrackingPage() {
                     </div>
                 )}
 
+                {/* Live Tracking Map for Delivery Orders */}
+                {order.type === 'delivery' && order.deliveryLat && order.deliveryLng && 
+                 order.deliveryStatus && ['assigned', 'picked_up'].includes(order.deliveryStatus) && (
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 mb-8">
+                        <div className="flex items-center gap-2 mb-3">
+                            <MapPin className="w-4 h-4" style={{ color: 'var(--primary-500)' }} />
+                            <h3 className="font-bold text-stone-900">Suivi en direct</h3>
+                        </div>
+                        
+                        <LiveTrackingMap
+                            restaurantLat={restaurantLat}
+                            restaurantLng={restaurantLng}
+                            destinationLat={order.deliveryLat}
+                            destinationLng={order.deliveryLng}
+                            driverPosition={driverPosition}
+                            orderId={order.id}
+                            onDistanceUpdate={handleDistanceUpdate}
+                        />
+                        
+                        {/* ETA Display */}
+                        {driverPosition && deliveryEta && (
+                            <div className="mt-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-blue-600 font-bold">🛵 Votre livreur arrive...</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-2xl font-black text-blue-700">~{deliveryEta.etaMinutes} min</span>
+                                        <p className="text-xs text-blue-500 font-medium">{deliveryEta.distanceKm.toFixed(1)} km</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        {!driverPosition && (
+                            <div className="mt-3 text-center text-sm text-stone-500">
+                                <p>🔄 En attente de la position du livreur...</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Receipt Card */}
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 relative">
                     {/* Ragged Top Edge (CSS Trick or SVG could work, simpler here) */}
@@ -246,9 +347,21 @@ export default function OrderTrackingPage() {
                         ))}
                     </div>
 
-                    <div className="flex justify-between items-center pt-4 border-t border-stone-100">
-                        <span className="text-stone-500 font-bold">Total</span>
-                        <span className="font-black text-xl text-stone-900">{order.totalFormatted}</span>
+                    <div className="pt-4 border-t border-stone-100 space-y-2">
+                         <div className="flex justify-between items-center text-stone-500 text-sm">
+                            <span>Sous-total</span>
+                            <span>{new Intl.NumberFormat('fr-FR').format((order.totalAmount || 0) - (order.deliveryFee || 0))}</span>
+                        </div>
+                        {order.deliveryFee > 0 && (
+                            <div className="flex justify-between items-center text-blue-600 text-sm font-bold bg-blue-50 px-2 py-1 rounded">
+                                <span>Frais de livraison 🛵</span>
+                                <span>+ {new Intl.NumberFormat('fr-FR').format(order.deliveryFee)}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2">
+                            <span className="text-stone-900 font-bold">Total</span>
+                            <span className="font-black text-2xl text-stone-900">{order.totalFormatted}</span>
+                        </div>
                     </div>
                 </div>
 

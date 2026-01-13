@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useFetch } from '../lib/useFetch';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { UtensilsCrossed, ShoppingBag, Download, ArrowRight, MapPin, ChefHat } from 'lucide-react';
+import { UtensilsCrossed, ShoppingBag, Download, ArrowRight, MapPin, ChefHat, Clock, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Modal } from '../components/ui/Modal';
 import { useBranding } from '../context/BrandingContext';
@@ -13,6 +13,7 @@ export default function HomePage() {
   const { data: tablesData, loading } = useFetch<{ data: any[] }>('/tables/available');
   const [tableCode, setTableCode] = useState('');
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isDineInModalOpen, setIsDineInModalOpen] = useState(false);
   const navigate = useNavigate();
 
   // Base URL for QR codes
@@ -56,183 +57,210 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen text-stone-800 font-sans overflow-x-hidden" style={{ background: 'var(--bg-app)' }}>
-      {/* Decorative Background Blobs - Warm & Organic */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] -right-[10%] w-[70vw] h-[70vw] bg-orange-200/20 rounded-full blur-[100px] mix-blend-multiply"></div>
-        <div className="absolute top-[40%] -left-[20%] w-[60vw] h-[60vw] bg-red-200/20 rounded-full blur-[100px] mix-blend-multiply"></div>
-        <div className="absolute bottom-0 right-0 w-[50vw] h-[50vw] bg-yellow-200/20 rounded-full blur-[80px] mix-blend-multiply"></div>
-      </div>
-
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto min-h-screen flex flex-col p-6 md:p-12">
-        
-        {/* Header / Hero Section - Compact Mobile, Bold Desktop */}
-        <header className="pt-4 pb-6 md:pb-12 md:text-center md:pt-16">
-          <div className="flex items-center gap-2 mb-2 md:mb-4 md:justify-center">
-            <span className="bg-red-100 text-red-800 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-xs font-bold tracking-wider uppercase border border-red-200 shadow-sm">
-              Ouvert
-            </span>
-            <span className="text-stone-400 text-xs md:text-sm italic">Le plaisir de manger</span>
+    <div className="min-h-screen text-stone-800 font-sans overflow-x-hidden bg-stone-50">
+      
+      {/* Hero Section with Background */}
+      <div 
+        className="relative bg-cover bg-center min-h-[50vh] md:min-h-[60vh] flex items-center"
+        style={{ 
+          backgroundImage: branding.heroImage 
+            ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${branding.heroImage})`
+            : `linear-gradient(135deg, ${branding.primaryColor || '#f97316'}, ${branding.secondaryColor || '#dc2626'})`,
+          backgroundColor: branding.primaryColor || '#8B4513'
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 py-12 md:py-20 w-full">
+          <div className="max-w-xl">
+            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
+              {branding.name.split(' ')[0]}{' '}
+              <span className="italic font-serif text-orange-300">{branding.name.split(' ').slice(1).join(' ') || 'Restaurant'}.</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 font-medium mb-2">
+              {branding.tagline || 'Commandez. Savourez. Profitez.'}
+            </p>
+            <p className="text-white/70 mb-8 text-sm md:text-base">
+              Cuisine authentique, service rapide, plaisir garanti.
+            </p>
+            <Link to="/takeout">
+              <button 
+                className="text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                style={{ background: 'var(--primary-gradient)' }}
+              >
+                Commander maintenant
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </Link>
           </div>
-          <h1 className="text-4xl md:text-7xl font-black text-stone-900 leading-[0.9] tracking-tight mb-2 md:mb-6">
-            {branding.name.split(' ')[0]} <br className="md:hidden" />
-            <span className="italic font-serif pr-2" style={{ color: 'var(--primary)' }}>{branding.name.split(' ').slice(1).join(' ') || ''}.</span>
-          </h1>
-          <p className="text-sm md:text-lg text-stone-600 font-medium max-w-[90%] md:max-w-xl md:mx-auto leading-relaxed border-l-2 md:border-l-0 md:border-t-4 border-orange-300 pl-3 md:pl-0 md:pt-4 mt-3 md:mt-6">
-            L'authenticité dans chaque assiette. Pas de chichis, juste du goût.
-          </p>
-        </header>
-
-        {/* Main Actions - Stacked Vertical Layout */}
-        <main className="flex-1 flex flex-col gap-8 md:gap-12 max-w-4xl mx-auto w-full">
-          
-          {/* Card 1: Takeout - Express Mobile Layout */}
-          <section className="relative group w-full">
-            <div 
-              className="absolute inset-0 rounded-2xl md:rounded-3xl transform rotate-0 md:rotate-1 group-hover:rotate-2 transition-transform duration-300 shadow-xl"
-              style={{ background: 'var(--gradient-brand)' }}
-            ></div>
-            <div className="relative bg-[#1A1A1A] rounded-2xl md:rounded-2xl p-5 md:p-8 text-white overflow-hidden shadow-inner border border-white/5 flex flex-col justify-between">
-              
-              {/* Abstract pattern overlay */}
-              <div className="absolute top-0 right-0 w-32 h-32 md:w-32 md:h-32 bg-white/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-              
-              <div className="flex justify-between items-start mb-6 md:mb-6 relative z-10">
-                <div className="max-w-[75%] md:max-w-[70%]">
-                   <h2 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2 flex items-center gap-2">
-                    <ShoppingBag className="w-6 h-6 md:w-8 md:h-8 text-orange-400 flex-shrink-0" />
-                    À Emporter
-                   </h2>
-                   <p className="text-stone-400 text-xs md:text-base leading-tight">Pas le temps ? On prépare tout.</p>
-                </div>
-                {/* QR Trigger - Top Right for easy reach or visual balance */}
-                <div 
-                  className="bg-white/10 p-2 md:p-2 rounded-xl backdrop-blur-md border border-white/10 cursor-pointer hover:bg-white/20 transition-colors flex-shrink-0 active:scale-95 duration-200"
-                  onClick={() => setIsQrModalOpen(true)}
-                >
-                  <QRCodeSVG value={takeoutUrl} size={32} fgColor="#FFFFFF" bgColor="transparent" className="md:w-[56px] md:h-[56px]" />
-                </div>
-              </div>
-
-              <Link to="/takeout" className="mt-auto relative z-10">
-                <button 
-                  className="w-full text-white font-bold py-3.5 md:py-4 rounded-xl flex items-center justify-between px-5 md:px-6 transition-all shadow-lg group-hover:translate-x-1 text-base md:text-base active:scale-[0.98]"
-                  style={{ background: 'var(--primary-gradient)' }}
-                >
-                  <span>Commander maintenant</span>
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </Link>
-            </div>
-          </section>
-
-          {/* Card 2: Dine-in - Compact Input & Grid */}
-          <section className="relative w-full">
-            {/* Ticket/Paper texture effect */}
-            <div className="bg-white rounded-2xl md:rounded-t-2xl md:rounded-b-lg p-1 md:p-1 shadow-[0_4px_20px_rgb(0,0,0,0.06)] border border-stone-100 flex flex-col">
-               <div className="border border-dashed border-stone-200 rounded-xl md:rounded-xl p-5 md:p-8 bg-stone-50/50 flex-1 flex flex-col">
-                <div className="flex items-center gap-3 md:gap-3 mb-5 md:mb-6">
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-600 flex-shrink-0">
-                    <UtensilsCrossed className="w-5 h-5 md:w-6 md:h-6" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-stone-800">Sur Place</h2>
-                    <p className="text-[10px] md:text-sm text-stone-500 font-bold uppercase tracking-wide">Service en salle</p>
-                  </div>
-                </div>
-
-                <div className="space-y-5 md:space-y-6 flex-1">
-                  <div className="relative">
-                     <label className="absolute -top-2 md:-top-2.5 left-3 md:left-3 bg-stone-50 px-1 md:px-2 text-[10px] md:text-xs font-bold text-stone-400 uppercase tracking-wider">
-                       Votre Table
-                     </label>
-                     <div className="flex gap-2 md:gap-2">
-                       <Input 
-                          placeholder="A1..." 
-                          value={tableCode} 
-                          onChange={e => setTableCode(e.target.value.toUpperCase())} 
-                          className="h-14 md:h-16 text-xl md:text-xl font-mono tracking-widest bg-white border-stone-200 shadow-sm focus:border-red-400 focus:ring-red-100 pl-4 md:pl-4 rounded-lg md:rounded-lg"
-                        />
-                        <Button 
-                          onClick={handleGo} 
-                          disabled={!tableCode}
-                          variant="ghost"
-                          className="h-14 md:h-16 px-6 md:px-8 bg-stone-800 text-white hover:bg-stone-700 font-bold rounded-lg md:rounded-lg shadow-md md:shadow-md disabled:bg-stone-200 disabled:text-stone-400 text-lg md:text-lg"
-                        >
-                          GO
-                        </Button>
-                     </div>
-                  </div>
-
-                  {/* Available Tables - Organic Tags but Compact */}
-                  {loading ? (
-                       <div className="h-8 md:h-8 w-1/2 bg-stone-200/50 rounded animate-pulse"></div>
-                  ) : (
-                    <div className="grid grid-cols-3 md:flex md:flex-wrap gap-2 md:gap-2 mt-4 md:mt-4">
-                        {tablesData?.data.map((table, idx) => (
-                          <button 
-                              key={table.id}
-                              onClick={() => setTableCode(table.code)}
-                              className={`
-                                text-sm md:text-sm font-bold py-2 md:px-4 md:py-2 rounded-lg md:rounded-md border transition-all duration-200 shadow-sm
-                                ${idx % 2 === 0 ? 'bg-white text-green-700 border-green-100 md:rotate-1 hover:border-green-300' : 'bg-white text-blue-700 border-blue-100 md:-rotate-1 hover:border-blue-300'}
-                                active:scale-95 hover:md:scale-105 hover:shadow-md hover:z-10
-                              `}
-                          >
-                              {table.name}
-                          </button>
-                        ))}
-                         {tablesData?.data?.length === 0 && (
-                            <span className="text-xs md:text-xs text-stone-400 italic">Tout est complet...</span>
-                        )}
-                    </div>
-                  )}
-                </div>
-               </div>
-            </div>
-            {/* Ragged edge effect at bottom (simulated) */}
-             <div className="h-4 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-stone-100/0 via-stone-200/20 to-stone-100/0 mx-2 -mt-1 rounded-full blur-[2px]"></div>
-          </section>
-
-        </main>
-
-        <footer className="py-8 text-center opacity-60">
-           <div className="flex justify-center gap-6 mb-4">
-              <div className="flex flex-col items-center gap-1">
-                 <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                    <ChefHat className="w-4 h-4" />
-                 </div>
-                 <span className="text-[10px] font-bold tracking-wider uppercase">Frais</span>
-              </div>
-               <div className="flex flex-col items-center gap-1">
-                 <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                    <MapPin className="w-4 h-4" />
-                 </div>
-                 <span className="text-[10px] font-bold tracking-wider uppercase">Local</span>
-              </div>
-           </div>
-           <p className="text-xs font-medium text-stone-400">{branding.footerText}</p>
-        </footer>
+        </div>
       </div>
 
-       {/* QR Modal - Clean & Functional */}
-       <Modal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="Scanner pour Emporter">
-         <div className="text-center space-y-6 py-2">
-           <div className="bg-white p-4 rounded-xl inline-block border-2 border-dashed border-stone-200">
-             <QRCodeSVG 
-               id="takeout-qr-code"
-               value={takeoutUrl}
-               size={180}
-               level="H"
-               includeMargin={true}
-             />
-           </div>
-           <Button onClick={downloadQrCode} variant="outline" className="w-full border-stone-200 hover:bg-stone-50 text-stone-600">
-             <Download className="w-4 h-4 mr-2" />
-             Sauvegarder
-           </Button>
-         </div>
-       </Modal>
+      {/* Service Cards Section */}
+      <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          
+          {/* Card: À Emporter */}
+          <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6 hover:shadow-xl transition-shadow">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center flex-shrink-0">
+                <ShoppingBag className="w-7 h-7 text-orange-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-stone-900">À Emporter</h3>
+                <p className="text-sm text-stone-500 flex items-center gap-1 mt-1">
+                  <Clock className="w-3.5 h-3.5" /> Prêt en 15-20 min
+                </p>
+              </div>
+            </div>
+            <Link to="/takeout" className="block">
+              <button className="w-full py-3 rounded-xl border-2 border-orange-500 text-orange-600 font-bold hover:bg-orange-50 transition-colors flex items-center justify-center gap-2">
+                Commander <ArrowRight className="w-4 h-4" />
+              </button>
+            </Link>
+          </div>
+
+          {/* Card: Sur Place */}
+          <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6 hover:shadow-xl transition-shadow">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center flex-shrink-0">
+                <UtensilsCrossed className="w-7 h-7 text-stone-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-stone-900">Sur Place</h3>
+                <p className="text-sm text-stone-500 flex items-center gap-1 mt-1">
+                  <QrCode className="w-3.5 h-3.5" /> Choisissez votre table
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setIsDineInModalOpen(true)}
+              className="w-full py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-bold hover:bg-stone-50 transition-colors flex items-center justify-center gap-2"
+            >
+              Scanner / Commander <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Why Order Here Section */}
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <h2 className="text-2xl font-bold text-center text-stone-900 mb-8">Pourquoi commander ici ?</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-orange-100 flex items-center justify-center">
+              <ShoppingBag className="w-6 h-6 text-orange-600" />
+            </div>
+            <p className="text-sm font-medium text-stone-700">Commande rapide & sans attente</p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 flex items-center justify-center">
+              <ChefHat className="w-6 h-6 text-green-600" />
+            </div>
+            <p className="text-sm font-medium text-stone-700">Cuisine fraîche & locale</p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 flex items-center justify-center">
+              <Clock className="w-6 h-6 text-blue-600" />
+            </div>
+            <p className="text-sm font-medium text-stone-700">Suivi en temps réel</p>
+          </div>
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
+              <MapPin className="w-6 h-6 text-red-600" />
+            </div>
+            <p className="text-sm font-medium text-stone-700">Retrait sur place</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-stone-900 text-white py-8">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
+              <Clock className="w-4 h-4 text-orange-400" />
+              <span>{branding.openingHours || 'OUVERT - 8h00 - 22h00'}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <MapPin className="w-4 h-4 text-orange-400" />
+              <span>{branding.address || 'Adresse du restaurant'}</span>
+            </div>
+            <div className="flex items-center justify-center md:justify-end gap-2 text-sm">
+              <span>{branding.phone || '+XXX XXX XXX XXX'}</span>
+            </div>
+          </div>
+          <div className="text-center mt-6 pt-6 border-t border-stone-800">
+            <p className="text-xs text-stone-500">{branding.footerText || `© ${new Date().getFullYear()} ${branding.name}`}</p>
+          </div>
+        </div>
+      </footer>
+
+      {/* QR Modal for Takeout */}
+      <Modal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} title="Scanner pour Emporter">
+        <div className="text-center space-y-6 py-2">
+          <div className="bg-white p-4 rounded-xl inline-block border-2 border-dashed border-stone-200">
+            <QRCodeSVG 
+              id="takeout-qr-code"
+              value={takeoutUrl}
+              size={180}
+              level="H"
+              includeMargin={true}
+            />
+          </div>
+          <Button onClick={downloadQrCode} variant="outline" className="w-full border-stone-200 hover:bg-stone-50 text-stone-600">
+            <Download className="w-4 h-4 mr-2" />
+            Sauvegarder
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Dine-In Modal with Table Selection */}
+      <Modal isOpen={isDineInModalOpen} onClose={() => setIsDineInModalOpen(false)} title="Choisir une Table">
+        <div className="space-y-6">
+          <div className="relative">
+            <label className="block text-sm font-bold text-stone-600 mb-2">
+              Entrez le numéro de table
+            </label>
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Ex: A1, T5..." 
+                value={tableCode} 
+                onChange={e => setTableCode(e.target.value.toUpperCase())} 
+                className="h-14 text-xl font-mono tracking-widest"
+                autoFocus
+              />
+              <Button 
+                onClick={handleGo} 
+                disabled={!tableCode}
+                className="h-14 px-8 text-lg font-bold"
+              >
+                GO
+              </Button>
+            </div>
+          </div>
+
+          {!loading && tablesData?.data && tablesData.data.length > 0 && (
+            <div>
+              <p className="text-sm text-stone-500 mb-3">Ou choisissez une table disponible :</p>
+              <div className="grid grid-cols-4 gap-2">
+                {tablesData.data.map((table) => (
+                  <button 
+                    key={table.id}
+                    onClick={() => { setTableCode(table.code); handleGo(); }}
+                    className="py-3 px-2 rounded-lg bg-green-50 border border-green-200 text-green-700 font-bold text-sm hover:bg-green-100 transition-colors"
+                  >
+                    {table.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tablesData?.data?.length === 0 && (
+            <p className="text-center text-stone-400 italic py-4">Toutes les tables sont occupées</p>
+          )}
+        </div>
+      </Modal>
     </div>
   )
 }

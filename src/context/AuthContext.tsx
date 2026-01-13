@@ -5,7 +5,7 @@ interface User {
   id: number;
   email: string;
   fullName: string;
-  role: 'super_admin' | 'admin' | 'salle' | 'serveur';
+  role: 'super_admin' | 'admin' | 'salle' | 'serveur' | 'caissier' | 'livreur' | 'comptable';
 }
 
 interface AuthContextType {

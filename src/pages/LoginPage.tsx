@@ -18,7 +18,11 @@ export default function LoginPage() {
     try {
       const res = await api.post('/auth/login', { email, password });
       login(res.data.token, res.data.user);
-      navigate('/admin');
+      if (res.data.user.role === 'livreur') {
+        navigate('/delivery');
+      } else {
+        navigate('/admin');
+      }
     } catch (err: any) {
       setError('Identifiants invalides');
     }

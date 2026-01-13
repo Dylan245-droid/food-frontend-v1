@@ -32,6 +32,14 @@ export default function PublicLayout() {
           </Link>
           <div className="flex items-center gap-4">
             <Link 
+              to="/book" 
+              className="text-sm font-bold flex items-center gap-1 transition-colors px-3 py-1.5 rounded-lg"
+              style={{ color: 'white', background: 'var(--primary-gradient)' }}
+            >
+                <ChefHat className="w-4 h-4" />
+                <span className="hidden sm:inline">Réserver</span>
+            </Link>
+            <Link 
               to="/track" 
               className="text-sm font-medium flex items-center gap-1 transition-colors"
               style={{ color: 'var(--primary-600)' }}

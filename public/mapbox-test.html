@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Test Mapbox</title>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet" />
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // REMPLACE CETTE LIGNE AVEC TA CLÉ API
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZHlsYW5vbmRvIiwiYSI6ImNta2NqODZoNjAxOXUzaHMzb3RhNGZ5b3QifQ.B6DOpSatkuZ_Bbg79YdK_w';
+        
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [9.4673, 0.4162], // Libreville
+            zoom: 12
+        });
+
+        map.on('load', () => {
+            console.log('Map loaded!');
+            new mapboxgl.Marker({ color: '#EF4444' })
+                .setLngLat([9.4673, 0.4162])
+                .addTo(map);
+        });
+
+        map.on('error', (e) => {
+            console.error('Mapbox error:', e);
+        });
+    </script>
+</body>
+</html>

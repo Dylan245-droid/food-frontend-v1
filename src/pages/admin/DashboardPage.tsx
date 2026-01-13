@@ -2,6 +2,7 @@ import { useFetch } from '../../lib/useFetch';
 import { useBranding } from '../../context/BrandingContext';
 import { Loader2, TrendingUp, ShoppingBag } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatCurrency } from '../../lib/utils';
 
 export default function DashboardPage() {
   const { data: stats, loading, error } = useFetch<any>('/staff/orders/stats');
@@ -84,7 +85,7 @@ export default function DashboardPage() {
                         </div>
                         <h3 className="text-stone-400 text-xs font-bold uppercase tracking-wider">Chiffre d'Affaires</h3>
                    </div>
-                   <p className="text-4xl font-black text-white mt-1 font-display tracking-tight">{stats?.totalRevenueFormatted || '0 FCFA'}</p>
+                   <p className="text-4xl font-black text-white mt-1 font-display tracking-tight">{formatCurrency(stats?.totalRevenue || 0)}</p>
                 </div>
                 <div className="text-xs text-stone-300 font-medium relative z-10 flex items-center gap-2">
                     <div className="w-1.5 h-1.5 bg-green-400 rounded-full shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
