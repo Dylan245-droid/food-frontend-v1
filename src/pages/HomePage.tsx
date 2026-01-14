@@ -69,7 +69,7 @@ export default function HomePage() {
           backgroundColor: branding.primaryColor || '#8B4513'
         }}
       >
-        <div className="max-w-6xl mx-auto px-6 py-12 md:py-20 w-full">
+        <div className="max-w-6xl mx-auto px-6 pt-12 pb-32 md:py-20 w-full">
           <div className="max-w-xl">
             <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
               {branding.name.split(' ')[0]}{' '}

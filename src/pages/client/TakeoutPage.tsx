@@ -259,10 +259,13 @@ export default function TakeoutPage() {
 
        {/* Floating Cart Button */}
        {cart.length > 0 && (
-         <div className="fixed bottom-6 left-6 right-6 z-40 animate-in slide-in-from-bottom-4">
+         <div className="fixed bottom-6 left-6 right-6 md:w-[400px] md:left-1/2 md:-translate-x-1/2 z-40 animate-in slide-in-from-bottom-4">
              <button 
                 onClick={() => setIsCartOpen(true)}
-                className="w-full bg-[var(--primary-gradient)] text-white p-4 rounded-2xl shadow-xl shadow-[var(--primary-500)]/30 flex justify-between items-center hover:scale-[1.02] transition-transform"
+                style={{ 
+                    background: branding?.primaryColor ? `linear-gradient(135deg, ${branding.primaryColor}, ${branding.secondaryColor || branding.primaryColor})` : 'var(--primary-gradient)' 
+                }}
+                className="w-full text-white p-4 rounded-2xl shadow-xl shadow-[var(--primary-500)]/30 flex justify-between items-center hover:scale-[1.02] transition-transform"
              >
                  <div className="flex items-center gap-3">
                      <div className="bg-white/20 p-2 rounded-xl backdrop-blur-sm">
