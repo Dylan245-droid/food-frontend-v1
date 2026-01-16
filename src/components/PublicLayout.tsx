@@ -6,10 +6,10 @@ export default function PublicLayout() {
   const { branding } = useBranding();
   
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header Mobile-First */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="w-full max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <Link to="/" className="flex items-center gap-3 font-bold text-xl">
             {branding.logo ? (
               <img 
@@ -56,7 +56,7 @@ export default function PublicLayout() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto p-4">
+      <main className="flex-1 w-full mx-auto">
         <Outlet />
       </main>
     </div>

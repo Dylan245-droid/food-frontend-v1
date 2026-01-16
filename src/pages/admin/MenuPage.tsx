@@ -25,10 +25,16 @@ interface MenuCategory {
 
 export default function MenuPage() {
   const { data: menuData, loading, refetch } = useFetch<{ data: MenuItem[] }>('/admin/menu/items');
-  const { data: categoriesData } = useFetch<{ data: MenuCategory[] }>('/admin/menu/categories');
+  const { data: categoriesData, refetch: refetchCategories } = useFetch<{ data: MenuCategory[] }>('/admin/menu/categories');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({ id: 0, name: '', price: 0, categoryId: 0, description: '', imageUrl: '' });
+  
+  // Category Modal State
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
+
   const [activeCategory, setActiveCategory] = useState<number | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,9 +61,7 @@ export default function MenuPage() {
         const res = await api.post('/admin/upload', uploadData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
-        // Assuming dev env port 9015 for backend, or derive from existing URL
         const fullUrl = res.data.url.startsWith('http') ? res.data.url : `${BASE_URL}${res.data.url}`;
-        
         setFormData(prev => ({ ...prev, imageUrl: fullUrl }));
     } catch (err) {
         alert("Erreur lors de l'upload de l'image");
@@ -87,6 +91,13 @@ export default function MenuPage() {
     });
     setIsModalOpen(true);
   }
+
+  const handleEditCategory = (e: React.MouseEvent, category: MenuCategory) => {
+    e.stopPropagation();
+    setEditingCategory(category);
+    setNewCategoryName(category.name);
+    setIsCategoryModalOpen(true);
+  };
 
   const filteredItems = items.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.categoryId === activeCategory;
@@ -133,7 +144,6 @@ export default function MenuPage() {
             await api.patch(`/admin/menu/items/${formData.id}`, payload);
         }
         setIsModalOpen(false);
-        // Reset form without opening modal
         setFormData({
             id: 0,
             name: '',
@@ -146,6 +156,26 @@ export default function MenuPage() {
     } catch (e) {
         alert('Erreur lors de l\'enregistrement');
     }
+  };
+
+  const handleCategorySubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if(!newCategoryName.trim()) return;
+      try {
+          if (editingCategory) {
+              await api.patch(`/admin/menu/categories/${editingCategory.id}`, { name: newCategoryName });
+              alert('Catégorie mise à jour !');
+          } else {
+              await api.post('/admin/menu/categories', { name: newCategoryName });
+              alert('Catégorie ajoutée !');
+          }
+          await refetchCategories();
+          setIsCategoryModalOpen(false);
+          setNewCategoryName('');
+          setEditingCategory(null);
+      } catch(e) {
+          alert('Erreur lors de l\'opération');
+      }
   };
 
   if (loading && !menuData) return (
@@ -162,7 +192,6 @@ export default function MenuPage() {
   const BASE_URL = API_URL.replace('/api', ''); // remove /api suffix if present to get root
 
   // Helper to resolve image URL
-  // If it's a full URL, return it. If it's a relative path, prepend backend base URL.
   const getImageUrl = (url: string) => {
       if (!url) return '';
       if (url.startsWith('http')) return url;
@@ -199,7 +228,7 @@ export default function MenuPage() {
       </div>
 
       {/* Categories Tabs - Organic Style */}
-      <div className="flex flex-wrap gap-3 overflow-x-auto pb-4 no-scrollbar border-b border-stone-100">
+      <div className="flex flex-wrap gap-3 overflow-x-auto pb-4 no-scrollbar border-b border-stone-100 items-center">
         <button
             onClick={() => { setActiveCategory('all'); setCurrentPage(1); }}
             className={`px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-wide transition-all ${
@@ -214,15 +243,32 @@ export default function MenuPage() {
             <button
                 key={cat.id}
                 onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); }}
-                className={`px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-wide transition-all ${
+                className={`px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-wide transition-all flex items-center gap-2 group ${
                     activeCategory === cat.id 
                     ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105 rotate-1' 
                     : 'bg-white text-stone-400 hover:bg-orange-50 hover:text-orange-500 border border-stone-100'
                 }`}
             >
                 {cat.name}
+                {activeCategory === cat.id && (
+                    <span 
+                        onClick={(e) => handleEditCategory(e, cat)}
+                        className="p-1 rounded-full bg-orange-600 hover:bg-stone-900 text-white transition-colors"
+                        title="Modifier le nom"
+                    >
+                        <PenTool className="w-3 h-3" />
+                    </span>
+                )}
             </button>
         ))}
+        <button 
+            onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsCategoryModalOpen(true); }}
+            className="w-10 h-10 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-colors border border-stone-200 ml-2"
+            title="Ajouter une catégorie"
+            type="button"
+        >
+            <Plus className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Items Grid */}
@@ -411,7 +457,6 @@ export default function MenuPage() {
                             </div>
                         )}
                         
-                        {/* Fallback URL Input (keep logic but make it discreet) */}
                          <div className="mt-2 text-xs text-right opacity-50 hover:opacity-100 transition-opacity">
                             <input 
                                 type="text"
@@ -427,6 +472,30 @@ export default function MenuPage() {
                 <div className="pt-4 flex gap-3">
                      <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 h-12 rounded-xl">Annuler</Button>
                      <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg">{formData.id === 0 ? 'Créer le plat' : 'Enregistrer'}</Button>
+                </div>
+            </form>
+       </Modal>
+
+       {/* Category Creation/Edit Modal */}
+       <Modal isOpen={isCategoryModalOpen} onClose={() => { setIsCategoryModalOpen(false); setEditingCategory(null); setNewCategoryName(''); }} title={editingCategory ? "Modifier la catégorie" : "Nouvelle Catégorie"}>
+            <form onSubmit={handleCategorySubmit} className="space-y-6">
+                 <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100 text-center mb-4">
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm text-stone-500">
+                         <BookOpen className="w-6 h-6" />
+                    </div>
+                    <p className="text-stone-500 text-sm font-medium">{editingCategory ? "Modifier le nom de la section" : "Ajouter une section au menu"}</p>
+                </div>
+                <Input 
+                    label="Nom de la catégorie" 
+                    placeholder="Ex: Entrées, Desserts..." 
+                    value={newCategoryName} 
+                    onChange={e => setNewCategoryName(e.target.value)} 
+                    required 
+                    autoFocus
+                />
+                <div className="pt-2 flex gap-3">
+                     <Button type="button" variant="secondary" onClick={() => { setIsCategoryModalOpen(false); setEditingCategory(null); setNewCategoryName(''); }} className="flex-1 h-12 rounded-xl">Annuler</Button>
+                     <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg">{editingCategory ? "Mettre à jour" : "Créer"}</Button>
                 </div>
             </form>
        </Modal>

@@ -57,7 +57,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen text-stone-800 font-sans overflow-x-hidden bg-stone-50">
+    <div className="text-stone-800 font-sans overflow-x-hidden bg-stone-50 flex-1 flex flex-col">
       
       {/* Hero Section with Background */}
       <div 
@@ -69,8 +69,8 @@ export default function HomePage() {
           backgroundColor: branding.primaryColor || '#8B4513'
         }}
       >
-        <div className="max-w-6xl mx-auto px-6 pt-12 pb-32 md:py-20 w-full">
-          <div className="max-w-xl">
+        <div className="max-w-7xl mx-auto px-6 pt-12 pb-32 md:pt-20 md:pb-40 w-full">
+          <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
             <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
               {branding.name.split(' ')[0]}{' '}
               <span className="italic font-serif text-orange-300">{branding.name.split(' ').slice(1).join(' ') || 'Restaurant'}.</span>
@@ -95,7 +95,7 @@ export default function HomePage() {
       </div>
 
       {/* Service Cards Section */}
-      <div className="max-w-6xl mx-auto px-6 -mt-16 relative z-10 mb-16">
+      <div className="max-w-7xl mx-auto px-6 -mt-16 relative z-10 mb-16 w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           
           {/* Card: À Emporter */}
@@ -143,7 +143,7 @@ export default function HomePage() {
       </div>
 
       {/* Why Order Here Section */}
-      <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 py-12 w-full flex-grow">
         <h2 className="text-2xl font-bold text-center text-stone-900 mb-8">Pourquoi commander ici ?</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center">
@@ -174,8 +174,8 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="bg-stone-900 text-white py-8">
-        <div className="max-w-6xl mx-auto px-6">
+      <footer className="bg-stone-900 text-white py-8 mt-auto">
+        <div className="max-w-7xl mx-auto px-6 w-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2 text-sm">
               <Clock className="w-4 h-4 text-orange-400" />

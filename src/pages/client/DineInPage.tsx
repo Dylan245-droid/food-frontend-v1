@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Minus, Plus, UtensilsCrossed, Bell, Receipt, CheckCircle, Clock, XCircle, ChefHat } from 'lucide-react';
 import { useBranding } from '../../context/BrandingContext';
 import { formatCurrency } from '../../lib/utils';
+import { MenuItemCard } from '../../components/MenuItemCard';
 
 interface MenuItem {
   id: number;
@@ -345,82 +346,42 @@ export default function DineInPage() {
 
            <div className="flex flex-col xl:flex-row gap-8 items-start">
                {/* Menu Section */}
-               <div className="flex-1 w-full">
-               {/* Menu Categories - Tab Style like TakeoutPage */}
-                   <div className="flex overflow-x-auto pb-0 no-scrollbar gap-2 snap-x mb-6 border-b border-stone-200">
-                        {menuCategories.map(cat => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setActiveCategoryId(cat.id)}
-                                className={`whitespace-nowrap pb-3 px-4 text-sm font-bold border-b-2 transition-all snap-start ${
-                                    activeCategoryId === cat.id 
-                                    ? 'border-stone-900 text-stone-900' 
-                                    : 'border-transparent text-stone-400 hover:text-stone-600'
-                                }`}
-                            >
-                                {cat.name}
-                            </button>
-                        ))}
-                   </div>
+                <div className="flex-1 w-full">
+                {/* Menu Categories - Tab Style like TakeoutPage */}
+                    <div className="bg-white/90 backdrop-blur-md sticky top-[20px] z-20 rounded-2xl shadow-sm border border-stone-200 mb-6 p-2">
+                         <div className="flex overflow-x-auto no-scrollbar gap-2 snap-x">
+                             {menuCategories.map(cat => (
+                                 <button
+                                     key={cat.id}
+                                     onClick={() => setActiveCategoryId(cat.id)}
+                                     className={`whitespace-nowrap py-2 px-4 rounded-full text-sm font-bold transition-all snap-start ${
+                                         activeCategoryId === cat.id 
+                                         ? 'bg-stone-900 text-white shadow-lg shadow-stone-900/20' 
+                                         : 'bg-transparent text-stone-500 hover:bg-stone-100'
+                                     }`}
+                                 >
+                                     {cat.name}
+                                 </button>
+                             ))}
+                         </div>
+                    </div>
 
                    {/* Menu List - Horizontal Card Style like TakeoutPage */}
-                   <div className="space-y-4 pb-6">
+                   {/* Menu List - Grid Style like TakeoutPage */}
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
                         {activeCategory ? (
-                            activeCategory.items.map(item => {
-                                const cartItem = cart.find(i => i.menuItemId === item.id);
-                                const quantity = cartItem?.quantity || 0;
-                                
-                                return (
-                                    <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100/50 flex gap-4 animate-in slide-in-from-bottom-2 duration-500">
-                                        {/* Image */}
-                                        <div className="h-24 w-24 bg-stone-100 rounded-xl shrink-0 overflow-hidden relative">
-                                             {item.imageUrl ? (
-                                                 <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-stone-300">
-                                                    <UtensilsCrossed className="w-8 h-8 opacity-20" />
-                                                </div>
-                                             )}
-                                             {quantity > 0 && (
-                                                 <div className="absolute top-1 right-1 bg-[var(--primary-600)] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full">
-                                                     {quantity}
-                                                 </div>
-                                             )}
-                                        </div>
-                                        
-                                        {/* Info */}
-                                        <div className="flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <div className="flex justify-between items-start">
-                                                    <h3 className="font-bold text-lg text-stone-900 leading-tight">{item.name}</h3>
-                                                    <span className="font-mono font-bold text-stone-900">{formatCurrency(item.price)}</span>
-                                                </div>
-                                                <p className="text-xs text-stone-500 mt-1 line-clamp-2">{item.description || 'Délicieux plat préparé avec soin.'}</p>
-                                            </div>
-                                            
-                                            {/* Cart Actions */}
-                                            <div className="flex justify-end pt-2">
-                                                {quantity > 0 ? (
-                                                    <div className="flex items-center bg-stone-900 text-white rounded-lg p-1 shadow-lg shadow-stone-900/20">
-                                                        <button onClick={(e) => { e.stopPropagation(); removeFromCart(item.id); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><Minus className="w-4 h-4" /></button>
-                                                        <span className="w-8 text-center font-bold text-sm">{quantity}</span>
-                                                        <button onClick={(e) => { e.stopPropagation(); addToCart(item); }} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><Plus className="w-4 h-4" /></button>
-                                                    </div>
-                                                ) : (
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); addToCart(item); }}
-                                                        className="bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95"
-                                                    >
-                                                        Ajouter <Plus className="w-3 h-3" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })
+                            activeCategory.items.map(item => (
+                                <div key={item.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                    <MenuItemCard 
+                                        item={item} 
+                                        inCart={cart.find(i => i.menuItemId === item.id)} 
+                                        onAdd={addToCart} 
+                                        onRemove={removeFromCart} 
+                                    />
+                                </div>
+                            ))
                         ) : (
-                            <div className="py-24 text-center text-stone-400">
+                            <div className="col-span-full py-24 text-center text-stone-400">
                                  <UtensilsCrossed className="w-16 h-16 mx-auto mb-4 opacity-20" />
                                  <p className="text-xl font-bold opacity-50">La carte est vide.</p>
                             </div>

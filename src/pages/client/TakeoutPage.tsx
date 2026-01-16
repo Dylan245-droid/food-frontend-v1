@@ -10,6 +10,7 @@ import { useBranding } from '../../context/BrandingContext';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { formatCurrency } from '../../lib/utils';
+import { MenuItemCard } from '../../components/MenuItemCard';
 
 const CITIES = ['Libreville', 'Akanda', 'Owendo', 'Ntoum'];
 
@@ -175,86 +176,42 @@ export default function TakeoutPage() {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-stone-50"><div className="animate-pulse flex flex-col items-center"><ChefHat className="w-12 h-12 text-stone-300 mb-4" /><div className="h-2 w-32 bg-stone-200 rounded"></div></div></div>;
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-32">
-       {/* Header with Categories - Mobile Horizontal Scroll */}
-       <div className="bg-white sticky top-0 z-10 shadow-sm border-b border-stone-200">
-           <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                  <div className="bg-stone-900 text-white p-2 rounded-xl">
-                      <ChefHat className="w-6 h-6" />
-                  </div>
-                  <div>
-                      <h1 className="font-black text-xl text-stone-900 leading-none tracking-tight">Chez Alice</h1>
-                      <p className="text-xs text-stone-500 font-medium mt-1">La carte gourmande</p>
-                  </div>
-              </div>
-              <button onClick={() => setIsCartOpen(true)} className="relative p-2 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors">
-                  <ShoppingBag className="w-6 h-6 text-stone-800" />
-                  {cart.length > 0 && <span className="absolute -top-1 -right-1 bg-[var(--primary-500)] text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white">{totalItems}</span>}
-              </button>
-           </div>
-           
-           <div className="flex overflow-x-auto px-4 pb-0 no-scrollbar gap-2 snap-x">
-               {menuData?.map(cat => (
-                   <button
-                        key={cat.id}
-                        onClick={() => setActiveCategoryId(cat.id)}
-                        className={`whitespace-nowrap pb-3 px-1 text-sm font-bold border-b-2 transition-all snap-start ${
-                            activeCategoryId === cat.id 
-                            ? 'border-stone-900 text-stone-900' 
-                            : 'border-transparent text-stone-400 hover:text-stone-600'
-                        }`}
-                   >
-                       {cat.name}
-                   </button>
-               ))}
+    <div className="bg-stone-50 pb-32 w-full">
+       {/* Category Navigation - Sticky */}
+       <div className="bg-white sticky top-[72px] z-30 shadow-sm border-b border-stone-200">
+           <div className="max-w-7xl mx-auto px-6 py-4">
+               <div className="flex overflow-x-auto pb-1 no-scrollbar gap-3 snap-x">
+                   {menuData?.map(cat => (
+                       <button
+                            key={cat.id}
+                            onClick={() => setActiveCategoryId(cat.id)}
+                            className={`whitespace-nowrap py-2 px-4 rounded-full text-sm font-bold transition-all snap-start ${
+                                activeCategoryId === cat.id 
+                                ? 'bg-stone-900 text-white shadow-lg shadow-stone-900/20' 
+                                : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
+                            }`}
+                       >
+                           {cat.name}
+                       </button>
+                   ))}
+               </div>
            </div>
        </div>
 
-       {/* Content */}
-       <div className="p-4 space-y-4">
-            {activeCategory?.items.map(item => { // Corrected: activeCategory?.items
-                const inCart = cart.find(i => i.menuItemId === item.id);
-                return (
-                    <div key={item.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100/50 flex gap-4 animate-in slide-in-from-bottom-2 duration-500">
-                        <div className="h-24 w-24 bg-stone-100 rounded-xl shrink-0 overflow-hidden relative">
-                             {item.imageUrl ? (
-                                 <img src={item.imageUrl} className="w-full h-full object-cover" alt={item.name} />
-                             ) : (
-                                 <div className="w-full h-full flex items-center justify-center text-stone-300">
-                                     <ChefHat className="w-8 h-8 opacity-20" />
-                                 </div>
-                             )}
-                        </div>
-                        <div className="flex-1 flex flex-col justify-between">
-                            <div>
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-lg text-stone-900 leading-tight">{item.name}</h3>
-                                    <span className="font-mono font-bold text-stone-900">{formatCurrency(item.price)}</span>
-                                </div>
-                                <p className="text-xs text-stone-500 mt-1 line-clamp-2">{item.description || 'Délicieux plat préparé avec soin.'}</p>
-                            </div>
-                            
-                            <div className="flex justify-end pt-2">
-                                {inCart ? (
-                                    <div className="flex items-center bg-stone-900 text-white rounded-lg p-1 shadow-lg shadow-stone-900/20">
-                                        <button onClick={() => removeFromCart(item.id)} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><Minus className="w-4 h-4" /></button>
-                                        <span className="w-8 text-center font-bold text-sm">{inCart.quantity}</span>
-                                        <button onClick={() => addToCart(item)} className="p-1.5 hover:bg-white/20 rounded-md transition-colors"><Plus className="w-4 h-4" /></button>
-                                    </div>
-                                ) : (
-                                    <button 
-                                        onClick={() => addToCart(item)}
-                                        className="bg-stone-100 hover:bg-stone-200 text-stone-900 font-bold text-xs py-2 px-4 rounded-lg flex items-center gap-2 transition-all active:scale-95"
-                                    >
-                                        Ajouter <Plus className="w-3 h-3" />
-                                    </button>
-                                )}
-                            </div>
-                        </div>
+       {/* Content Grid */}
+       <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {activeCategory?.items.map(item => (
+                    <div key={item.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <MenuItemCard 
+                            item={item} 
+                            inCart={cart.find(i => i.menuItemId === item.id)} 
+                            onAdd={addToCart} 
+                            onRemove={removeFromCart} 
+                        />
                     </div>
-                );
-            })}
+                ))}
+            </div>
        </div>
 
        {/* Floating Cart Button */}
