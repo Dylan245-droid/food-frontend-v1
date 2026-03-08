@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useBranding } from '../../context/BrandingContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Settings, Save, ChefHat, Palette, MessageSquare, Loader2, Upload, Image, MapPin, Gift, Info } from 'lucide-react';
+import { Settings, ChefHat, Palette, MessageSquare, Loader2, Upload, Image, MapPin, Gift, Info, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 
@@ -40,7 +40,6 @@ export default function SettingsPage() {
     heroStyle: '',
   });
   const [saving, setSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [locating, setLocating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,9 +72,9 @@ export default function SettingsPage() {
         loyalty_rate_dine_in: branding.loyalty_rate_dine_in || '10',
         loyalty_rate_takeout: branding.loyalty_rate_takeout || '5',
         loyalty_rate_delivery: branding.loyalty_rate_delivery || '2',
-        restaurant_coords: branding.restaurant_lat && branding.restaurant_lng 
-            ? `${branding.restaurant_lat}, ${branding.restaurant_lng}` 
-            : '',
+        restaurant_coords: branding.restaurant_lat && branding.restaurant_lng
+          ? `${branding.restaurant_lat}, ${branding.restaurant_lng}`
+          : '',
         font: branding.font || 'Stack Sans Notch',
         borderRadius: branding.borderRadius || '1rem',
         heroStyle: branding.heroStyle || 'classic',
@@ -85,7 +84,6 @@ export default function SettingsPage() {
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setHasChanges(true);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,7 +106,7 @@ export default function SettingsPage() {
       console.error('Upload Logo Error:', err);
       toast.error(err?.response?.data?.message || "Erreur lors de l'upload du logo");
       if (err?.response?.data?.errors) {
-        console.error('Validation errors:', err.response.data.errors); 
+        console.error('Validation errors:', err.response.data.errors);
       }
     } finally {
       setUploading(false);
@@ -129,7 +127,7 @@ export default function SettingsPage() {
           restaurant_lng = parts[1];
         }
       }
-      
+
       await updateBranding({
         ...formData,
         footerText: generatedFooterText,
@@ -138,7 +136,6 @@ export default function SettingsPage() {
         heroStyle: formData.heroStyle as any, // Cast to match literal type
       });
       toast.success('Paramètres enregistrés avec succès !');
-      setHasChanges(false);
     } catch (error) {
       toast.error('Erreur lors de la sauvegarde');
     } finally {
@@ -155,31 +152,42 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
-            <Settings className="w-7 h-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-stone-900">Paramètres du Restaurant</h1>
-            <p className="text-stone-500">Personnalisez l'identité de votre établissement</p>
-          </div>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-stone-50/50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+
+        <div className="relative z-10">
+          <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-3 md:gap-4 font-display">
+            <div className="bg-stone-900 p-2 md:p-2.5 rounded-2xl text-white shadow-lg">
+              <Settings2 className="w-5 h-5 md:w-7 md:h-7" />
+            </div>
+            Configuration <span className="text-stone-300 font-light hidden xs:inline">Globale</span>
+          </h1>
+          <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-2 ml-1">Identité, logistique et paramètres système</p>
+        </div>
+
+        <div className="flex gap-2 relative z-10">
+          <Button
+            onClick={(e) => handleSubmit(e)}
+            disabled={saving}
+            className="bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-100 h-12 px-8 rounded-2xl font-black uppercase tracking-wider text-xs active:scale-95 transition-all w-full lg:w-auto"
+          >
+            {saving ? 'Enregistrement...' : 'Enregistrer'}
+          </Button>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Identity Section */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+        <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
           <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
             <ChefHat className="w-5 h-5 text-orange-600" />
-            <h2 className="text-lg font-bold text-stone-900">Identité</h2>
+            <h2 className="text-base md:text-lg font-bold text-stone-900">Identité</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Nom du restaurant
               </label>
               <Input
@@ -190,7 +198,7 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Type de commerce
               </label>
               <select
@@ -208,7 +216,7 @@ export default function SettingsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Slogan
               </label>
               <Input
@@ -218,19 +226,19 @@ export default function SettingsPage() {
                 className="h-12"
               />
             </div>
-            
+
             {/* Logo Upload */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Logo du restaurant
               </label>
               <div className="flex gap-4 items-start">
                 {/* Aperçu du logo */}
                 <div className="w-24 h-24 rounded-2xl border-2 border-dashed border-stone-300 bg-stone-100 overflow-hidden flex items-center justify-center">
                   {formData.logo && formData.logo.length > 0 ? (
-                    <img 
-                      src={formData.logo} 
-                      alt="Logo" 
+                    <img
+                      src={formData.logo}
+                      alt="Logo"
                       className="w-full h-full object-contain"
                       onError={(e) => {
                         // Replace with placeholder on error
@@ -248,7 +256,7 @@ export default function SettingsPage() {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Bouton d'upload */}
                 <div className="flex-1 space-y-2">
                   <input
@@ -263,7 +271,7 @@ export default function SettingsPage() {
                     variant="secondary"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="h-12 px-6 border-stone-200 hover:border-orange-300 hover:bg-orange-50"
+                    className="h-10 md:h-12 px-4 md:px-6 text-xs md:text-sm border-stone-200 hover:border-orange-300 hover:bg-orange-50 w-full xs:w-auto"
                   >
                     {uploading ? (
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -286,11 +294,11 @@ export default function SettingsPage() {
             <Palette className="w-5 h-5 text-purple-600" />
             <h2 className="text-lg font-bold text-stone-900">Apparence</h2>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Couleur principale */}
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Couleur principale
               </label>
               <div className="flex gap-3 items-center">
@@ -311,7 +319,7 @@ export default function SettingsPage() {
 
             {/* Couleur secondaire */}
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Couleur secondaire
               </label>
               <div className="flex gap-3 items-center">
@@ -333,24 +341,24 @@ export default function SettingsPage() {
 
           {/* Aperçu des couleurs et gradient */}
           <div className="mt-4">
-            <label className="block text-sm font-bold text-stone-700 mb-2">
+            <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
               Aperçu du thème
             </label>
             <div className="grid grid-cols-3 gap-4">
-              <div 
-                className="h-16 rounded-xl flex items-center justify-center text-white font-bold shadow-md"
+              <div
+                className="h-14 md:h-16 rounded-xl flex items-center justify-center text-white font-bold shadow-md text-[10px] md:text-sm"
                 style={{ backgroundColor: formData.primaryColor }}
               >
                 Principale
               </div>
-              <div 
-                className="h-16 rounded-xl flex items-center justify-center text-white font-bold shadow-md"
+              <div
+                className="h-14 md:h-16 rounded-xl flex items-center justify-center text-white font-bold shadow-md text-[10px] md:text-sm"
                 style={{ backgroundColor: formData.secondaryColor }}
               >
                 Secondaire
               </div>
-              <div 
-                className="h-16 rounded-xl flex items-center justify-center text-white font-bold shadow-md"
+              <div
+                className="h-14 md:h-16 rounded-xl flex items-center justify-center text-white font-bold shadow-md text-[10px] md:text-sm"
                 style={{ background: `linear-gradient(135deg, ${formData.primaryColor}, ${formData.secondaryColor})` }}
               >
                 Gradient
@@ -362,7 +370,7 @@ export default function SettingsPage() {
           <div className="pt-6 border-t border-stone-100 grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Font Selector */}
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Police d'écriture
               </label>
               <select
@@ -383,66 +391,64 @@ export default function SettingsPage() {
 
             {/* Border Radius Selector */}
             <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
+              <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
                 Arrondi des boutons
               </label>
               <div className="flex bg-stone-100 p-1 rounded-xl">
-                 {[
-                   { label: 'Carré', value: '0px' },
-                   { label: 'S', value: '0.5rem' },
-                   { label: 'M', value: '1rem' },
-                   { label: 'L', value: '1.5rem' },
-                   { label: 'Rond', value: '9999px' }
-                 ].map((opt) => (
-                   <button
-                     key={opt.value}
-                     type="button"
-                     onClick={() => handleChange('borderRadius', opt.value)}
-                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                       formData.borderRadius === opt.value 
-                         ? 'bg-white text-orange-600 shadow-sm' 
-                         : 'text-stone-500 hover:text-stone-700'
-                     }`}
-                   >
-                     {opt.label}
-                   </button>
-                 ))}
+                {[
+                  { label: 'Carré', value: '0px' },
+                  { label: 'S', value: '0.5rem' },
+                  { label: 'M', value: '1rem' },
+                  { label: 'L', value: '1.5rem' },
+                  { label: 'Rond', value: '9999px' }
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => handleChange('borderRadius', opt.value)}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${formData.borderRadius === opt.value
+                      ? 'bg-white text-orange-600 shadow-sm'
+                      : 'text-stone-500 hover:text-stone-700'
+                      }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-           {/* Hero Style Selector -> Renamed to Themes */}
-           <div className="pt-6 border-t border-stone-100">
-             <label className="block text-sm font-bold text-stone-700 mb-4">
-               Thème du Restaurant
-             </label>
-             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-               {[
-                 { id: 'classic', label: 'Classique', desc: 'Efficace & Familier. Idéal pour tout type de restauration.' },
-                 { id: 'split', label: 'Moderne Split', desc: 'Tendance. Met en avant votre message et vos visuels.' },
-                 { id: 'minimal', label: 'Boutique (Minimal)', desc: 'Épuré & Chic. Pour une ambiance haut de gamme.' },
-                 { id: 'immersive', label: 'Immersif', desc: 'Visuel fort. Expérience plein écran captivante.' }
-               ].map((style) => (
-                 <button
-                   key={style.id}
-                   type="button"
-                   onClick={() => handleChange('heroStyle', style.id)}
-                   className={`p-4 rounded-xl border-2 text-left transition-all ${
-                     formData.heroStyle === style.id
-                       ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-500'
-                       : 'border-stone-200 hover:border-orange-200 hover:bg-stone-50'
-                   }`}
-                 >
-                   <div className="font-bold text-stone-900 mb-1">{style.label}</div>
-                   <div className="text-xs text-stone-500">{style.desc}</div>
-                 </button>
-               ))}
-             </div>
-           </div>
+          {/* Hero Style Selector -> Renamed to Themes */}
+          <div className="pt-6 border-t border-stone-100">
+            <label className="block text-sm font-bold text-stone-700 mb-4">
+              Thème du Restaurant
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                { id: 'classic', label: 'Classique', desc: 'Efficace & Familier. Idéal pour tout type de restauration.' },
+                { id: 'split', label: 'Moderne Split', desc: 'Tendance. Met en avant votre message et vos visuels.' },
+                { id: 'minimal', label: 'Boutique (Minimal)', desc: 'Épuré & Chic. Pour une ambiance haut de gamme.' },
+                { id: 'immersive', label: 'Immersif', desc: 'Visuel fort. Expérience plein écran captivante.' }
+              ].map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  onClick={() => handleChange('heroStyle', style.id)}
+                  className={`p-4 rounded-xl border-2 text-left transition-all ${formData.heroStyle === style.id
+                    ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-500'
+                    : 'border-stone-200 hover:border-orange-200 hover:bg-stone-50'
+                    }`}
+                >
+                  <div className="font-bold text-stone-900 mb-1">{style.label}</div>
+                  <div className="text-xs text-stone-500">{style.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Image de fond Hero */}
           <div className="mt-6 pt-6 border-t border-stone-100">
-            <label className="block text-sm font-bold text-stone-700 mb-2">
+            <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
               Image de fond (page d'accueil)
             </label>
             <div className="flex gap-4 items-start">
@@ -488,7 +494,7 @@ export default function SettingsPage() {
                   variant="secondary"
                   onClick={() => document.getElementById('heroImageInput')?.click()}
                   disabled={uploading}
-                  className="h-10 px-4 border-stone-200 hover:border-purple-300 hover:bg-purple-50"
+                  className="h-10 md:h-12 px-4 md:px-6 text-xs md:text-sm border-stone-200 hover:border-purple-300 hover:bg-purple-50 w-full xs:w-auto"
                 >
                   {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
                   Choisir une image
@@ -502,312 +508,288 @@ export default function SettingsPage() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Infos Légales (Tickets/Factures) */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-            <Settings className="w-5 h-5 text-purple-600" />
-            <h2 className="text-lg font-bold text-stone-900">Informations légales</h2>
-          </div>
-          <p className="text-sm text-stone-500">Ces informations apparaissent sur les tickets et factures</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-bold text-stone-700 mb-2">
-                Adresse
-              </label>
-              <Input
-                value={formData.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-                placeholder="Quartier, Ville, Pays"
-                className="h-12"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
-                Téléphone
-              </label>
-              <Input
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="+237 6XX XXX XXX"
-                className="h-12"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
-                Horaires d'ouverture
-              </label>
-              <Input
-                value={formData.openingHours}
-                onChange={(e) => handleChange('openingHours', e.target.value)}
-                placeholder="Ouvert 8h - 22h"
-                className="h-12"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
-                NIF / RCCM
-              </label>
-              <Input
-                value={formData.nif}
-                onChange={(e) => handleChange('nif', e.target.value)}
-                placeholder="Numéro d'identification fiscale"
-                className="h-12"
-              />
-              <p className="text-xs text-stone-400 mt-1">Affiché sur les factures pro</p>
-            </div>
-          </div>
-        </div>
+          <div className="space-y-8">
+            {/* Infos Légales (Tickets/Factures) */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+                <Settings className="w-5 h-5 text-purple-600" />
+                <h2 className="text-lg font-bold text-stone-900">Informations légales</h2>
+              </div>
+              <p className="text-sm text-stone-500">Ces informations apparaissent sur les tickets et factures</p>
 
-        {/* Frais de Livraison */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-            <Settings className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-bold text-stone-900">Frais de Livraison (par ville)</h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Libreville</label>
-              <div className="relative">
-                <Input value={formData.fee_libreville} onChange={(e) => handleChange('fee_libreville', e.target.value)} type="number" className="h-12 pr-12" />
-                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Owendo</label>
-              <div className="relative">
-                <Input value={formData.fee_owendo} onChange={(e) => handleChange('fee_owendo', e.target.value)} type="number" className="h-12 pr-12" />
-                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Akanda</label>
-              <div className="relative">
-                <Input value={formData.fee_akanda} onChange={(e) => handleChange('fee_akanda', e.target.value)} type="number" className="h-12 pr-12" />
-                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Ntoum</label>
-              <div className="relative">
-                <Input value={formData.fee_ntoum} onChange={(e) => handleChange('fee_ntoum', e.target.value)} type="number" className="h-12 pr-12" />
-                <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
-              </div>
-            </div>
-            <div className="md:col-span-2 pt-4 border-t border-stone-100">
-               <label className="block text-sm font-bold text-stone-700 mb-2">Commission Livreur (%)</label>
-               <div className="relative max-w-xs">
-                 <Input 
-                   value={formData.delivery_commission} 
-                   onChange={(e) => handleChange('delivery_commission', e.target.value)} 
-                   type="number" 
-                   min="0"
-                   max="100"
-                   className="h-12 pr-12" 
-                 />
-                 <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">%</span>
-               </div>
-               <p className="text-xs text-stone-500 mt-2">Pourcentage des frais de livraison reversé au livreur (déduit du montant à rendre en caisse).</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Programme de Fidélité */}
-        <div className="bg-white rounded-3xl p-8 border border-stone-100 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5">
-            <Gift className="w-32 h-32 text-purple-900" />
-          </div>
-          
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
-              <Gift className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-xl font-black text-stone-800">Programme de Fidélité</h2>
-              <p className="text-stone-500 font-medium">Récompensez vos clients fidèles</p>
-            </div>
-          </div>
-
-          <div className="bg-purple-50 rounded-2xl p-6 mb-8 border border-purple-100">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-purple-600 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-purple-900">Comment ça marche ?</h4>
-                <p className="text-sm text-purple-700 leading-relaxed mt-1">
-                  Définissez combien de points un client gagne pour chaque tranche de <span className="font-bold">1000 FCFA</span> dépensés, selon le type de commande.
-                  <br/>
-                  Exemple: Si vous mettez <span className="font-bold">10 points</span> pour "Sur Place", une commande de 5000 FCFA rapporte 50 points.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">🍽️ Sur Place</label>
-              <div className="relative">
-                <Input 
-                  value={formData.loyalty_rate_dine_in} 
-                  onChange={(e) => handleChange('loyalty_rate_dine_in', e.target.value)} 
-                  type="number" 
-                  className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500" 
-                />
-                <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">🛍️ À Emporter</label>
-              <div className="relative">
-                <Input 
-                  value={formData.loyalty_rate_takeout} 
-                  onChange={(e) => handleChange('loyalty_rate_takeout', e.target.value)} 
-                  type="number" 
-                  className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500" 
-                />
-                <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
+                    Adresse
+                  </label>
+                  <Input
+                    value={formData.address}
+                    onChange={(e) => handleChange('address', e.target.value)}
+                    placeholder="Quartier, Ville, Pays"
+                    className="h-12"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
+                    Téléphone
+                  </label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
+                    placeholder="+237 6XX XXX XXX"
+                    className="h-12"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
+                    Horaires d'ouverture
+                  </label>
+                  <Input
+                    value={formData.openingHours}
+                    onChange={(e) => handleChange('openingHours', e.target.value)}
+                    placeholder="Ouvert 8h - 22h"
+                    className="h-12"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
+                    NIF / RCCM
+                  </label>
+                  <Input
+                    value={formData.nif}
+                    onChange={(e) => handleChange('nif', e.target.value)}
+                    placeholder="Numéro d'identification fiscale"
+                    className="h-12"
+                  />
+                  <p className="text-xs text-stone-400 mt-1">Affiché sur les factures pro</p>
+                </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">🛵 Livraison</label>
-              <div className="relative">
-                <Input 
-                  value={formData.loyalty_rate_delivery} 
-                  onChange={(e) => handleChange('loyalty_rate_delivery', e.target.value)} 
-                  type="number" 
-                  className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500" 
-                />
-                <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+            {/* Frais de Livraison */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+                <Settings className="w-5 h-5 text-blue-600" />
+                <h2 className="text-lg font-bold text-stone-900">Frais de Livraison (par ville)</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">Libreville</label>
+                  <div className="relative">
+                    <Input value={formData.fee_libreville} onChange={(e) => handleChange('fee_libreville', e.target.value)} type="number" className="h-12 pr-12" />
+                    <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">Owendo</label>
+                  <div className="relative">
+                    <Input value={formData.fee_owendo} onChange={(e) => handleChange('fee_owendo', e.target.value)} type="number" className="h-12 pr-12" />
+                    <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">Akanda</label>
+                  <div className="relative">
+                    <Input value={formData.fee_akanda} onChange={(e) => handleChange('fee_akanda', e.target.value)} type="number" className="h-12 pr-12" />
+                    <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">Ntoum</label>
+                  <div className="relative">
+                    <Input value={formData.fee_ntoum} onChange={(e) => handleChange('fee_ntoum', e.target.value)} type="number" className="h-12 pr-12" />
+                    <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">FCFA</span>
+                  </div>
+                </div>
+                <div className="md:col-span-2 pt-4 border-t border-stone-100">
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">Commission Livreur (%)</label>
+                  <div className="relative max-w-xs">
+                    <Input
+                      value={formData.delivery_commission}
+                      onChange={(e) => handleChange('delivery_commission', e.target.value)}
+                      type="number"
+                      min="0"
+                      max="100"
+                      className="h-12 pr-12"
+                    />
+                    <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">%</span>
+                  </div>
+                  <p className="text-xs text-stone-500 mt-2">Pourcentage des frais de livraison reversé au livreur (déduit du montant à rendre en caisse).</p>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Position GPS du Restaurant */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-            <MapPin className="w-5 h-5 text-red-600" />
-            <h2 className="text-lg font-bold text-stone-900">Position GPS du Restaurant</h2>
-          </div>
-          <p className="text-sm text-stone-500">Cette position sera affichée sur la carte du livreur. Collez les coordonnées depuis Google Maps ou utilisez votre position actuelle.</p>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">Coordonnées (latitude, longitude)</label>
-              <div className="flex gap-3">
-                <Input 
-                  value={formData.restaurant_coords} 
-                  onChange={(e) => handleChange('restaurant_coords', e.target.value)} 
-                  placeholder="0.37458607679368766, 9.458258923706834" 
-                  className="h-12 flex-1 font-mono text-sm" 
-                />
-                <Button 
-                  type="button"
-                  variant="outline"
-                  className="h-12 shrink-0"
-                  disabled={locating}
-                  onClick={() => {
-                    if (!navigator.geolocation) {
-                      toast.error("Géolocalisation non supportée");
-                      return;
-                    }
-                    setLocating(true);
-                    navigator.geolocation.getCurrentPosition(
-                      (pos) => {
-                        const coords = `${pos.coords.latitude}, ${pos.coords.longitude}`;
-                        handleChange('restaurant_coords', coords);
-                        toast.success("Position récupérée !");
-                        setLocating(false);
-                      },
-                      (err) => {
-                        console.error(err);
-                        toast.error("Impossible de récupérer la position");
-                        setLocating(false);
-                      }
-                    );
-                  }}
-                >
-                  {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
-                  <span className="ml-2 hidden md:inline">Ma position</span>
-                </Button>
+            {/* Programme de Fidélité */}
+            <div className="bg-white rounded-3xl p-8 border border-stone-100 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                <Gift className="w-32 h-32 text-purple-900" />
               </div>
-              <p className="text-xs text-stone-400 mt-2">💡 Astuce : Sur Google Maps, cliquez droit sur le restaurant → "Copier les coordonnées" et collez ici.</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Messages Section */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-            <MessageSquare className="w-5 h-5 text-green-600" />
-            <h2 className="text-lg font-bold text-stone-900">Messages</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
-                Message de remerciement (client)
-              </label>
-              <Input
-                value={formData.thankYouMessage}
-                onChange={(e) => handleChange('thankYouMessage', e.target.value)}
-                placeholder="Merci de votre visite ! À très bientôt."
-                className="h-12"
-              />
-              <p className="text-xs text-stone-400 mt-1">Affiché après la commande sur place</p>
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-stone-700 mb-2">
-                Pied de ticket
-              </label>
-              <Input
-                value={formData.receiptFooter}
-                onChange={(e) => handleChange('receiptFooter', e.target.value)}
-                placeholder="À bientôt !"
-                className="h-12"
-              />
-              <p className="text-xs text-stone-400 mt-1">Affiché en bas du ticket de caisse</p>
-            </div>
-          </div>
-        </div>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
+                  <Gift className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-stone-800">Programme de Fidélité</h2>
+                  <p className="text-stone-500 font-medium">Récompensez vos clients fidèles</p>
+                </div>
+              </div>
 
-        {/* Copyright Preview - Auto-generated */}
-        <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 rounded-3xl border border-stone-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-stone-700 mb-1">Pied de page (auto-généré)</h3>
-              <p className="text-stone-500 text-sm">{generatedFooterText}</p>
-            </div>
-            <div className="bg-white px-4 py-2 rounded-lg border border-stone-200 text-xs text-stone-500">
-              Année + Nom du restaurant
-            </div>
-          </div>
-        </div>
+              <div className="bg-purple-50 rounded-2xl p-6 mb-8 border border-purple-100">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-purple-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-bold text-purple-900">Comment ça marche ?</h4>
+                    <p className="text-sm text-purple-700 leading-relaxed mt-1">
+                      Définissez combien de points un client gagne pour chaque tranche de <span className="font-bold">1000 FCFA</span> dépensés, selon le type de commande.
+                      <br />
+                      Exemple: Si vous mettez <span className="font-bold">10 points</span> pour "Sur Place", une commande de 5000 FCFA rapporte 50 points.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-        {/* Save Button */}
-        <div className="flex justify-end gap-4">
-          {hasChanges && (
-            <span className="text-sm text-orange-600 font-medium flex items-center gap-2">
-              <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-              Modifications non enregistrées
-            </span>
-          )}
-          <Button 
-            type="submit" 
-            disabled={saving || !hasChanges}
-            className="h-12 px-8 bg-gradient-to-r from-orange-500 to-red-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
-          >
-            {saving ? (
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
-            ) : (
-              <Save className="w-5 h-5 mr-2" />
-            )}
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
-          </Button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">🍽️ Sur Place</label>
+                  <div className="relative">
+                    <Input
+                      value={formData.loyalty_rate_dine_in}
+                      onChange={(e) => handleChange('loyalty_rate_dine_in', e.target.value)}
+                      type="number"
+                      className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    />
+                    <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">🛍️ À Emporter</label>
+                  <div className="relative">
+                    <Input
+                      value={formData.loyalty_rate_takeout}
+                      onChange={(e) => handleChange('loyalty_rate_takeout', e.target.value)}
+                      type="number"
+                      className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    />
+                    <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">🛵 Livraison</label>
+                  <div className="relative">
+                    <Input
+                      value={formData.loyalty_rate_delivery}
+                      onChange={(e) => handleChange('loyalty_rate_delivery', e.target.value)}
+                      type="number"
+                      className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500"
+                    />
+                    <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Position GPS du Restaurant */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+                <MapPin className="w-5 h-5 text-red-600" />
+                <h2 className="text-lg font-bold text-stone-900">Position GPS du Restaurant</h2>
+              </div>
+              <p className="text-sm text-stone-500">Cette position sera affichée sur la carte du livreur. Collez les coordonnées depuis Google Maps ou utilisez votre position actuelle.</p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">Coordonnées (latitude, longitude)</label>
+                  <div className="flex gap-3">
+                    <Input
+                      value={formData.restaurant_coords}
+                      onChange={(e) => handleChange('restaurant_coords', e.target.value)}
+                      placeholder="0.37458607679368766, 9.458258923706834"
+                      className="h-12 flex-1 font-mono text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="h-10 md:h-12 px-4 md:px-6 text-xs md:text-sm shrink-0"
+                      disabled={locating}
+                      onClick={() => {
+                        if (!navigator.geolocation) {
+                          toast.error("Géolocalisation non supportée");
+                          return;
+                        }
+                        setLocating(true);
+                        navigator.geolocation.getCurrentPosition(
+                          (pos) => {
+                            const coords = `${pos.coords.latitude}, ${pos.coords.longitude}`;
+                            handleChange('restaurant_coords', coords);
+                            toast.success("Position récupérée !");
+                            setLocating(false);
+                          }
+                        );
+                      }}
+                    >
+                      {locating ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                      <span className="ml-2 hidden md:inline">Ma position</span>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-stone-400 mt-2">💡 Astuce : Sur Google Maps, cliquez droit sur le restaurant → "Copier les coordonnées" et collez ici.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages Section */}
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
+              <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
+                <MessageSquare className="w-5 h-5 text-green-600" />
+                <h2 className="text-lg font-bold text-stone-900">Messages</h2>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
+                    Message de remerciement (client)
+                  </label>
+                  <Input
+                    value={formData.thankYouMessage}
+                    onChange={(e) => handleChange('thankYouMessage', e.target.value)}
+                    placeholder="Merci de votre visite ! À très bientôt."
+                    className="h-12"
+                  />
+                  <p className="text-xs text-stone-400 mt-1">Affiché après la commande sur place</p>
+                </div>
+                <div>
+                  <label className="block text-xs md:text-sm font-bold text-stone-700 mb-2">
+                    Pied de ticket
+                  </label>
+                  <Input
+                    value={formData.receiptFooter}
+                    onChange={(e) => handleChange('receiptFooter', e.target.value)}
+                    placeholder="À bientôt !"
+                    className="h-12"
+                  />
+                  <p className="text-xs text-stone-400 mt-1">Affiché en bas du ticket de caisse</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Copyright Preview - Auto-generated */}
+            <div className="bg-gradient-to-r from-stone-50 to-stone-100 p-6 rounded-3xl border border-stone-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-stone-700 mb-1">Pied de page (auto-généré)</h3>
+                  <p className="text-stone-500 text-sm">{generatedFooterText}</p>
+                </div>
+                <div className="bg-white px-4 py-2 rounded-lg border border-stone-200 text-xs text-stone-500">
+                  Année + Nom du restaurant
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </form>
     </div>

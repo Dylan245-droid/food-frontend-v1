@@ -28,7 +28,7 @@ interface User {
 export default function DispatchPage() {
     // 1. Fetch Pending Orders (only ready ones from backend)
     const { data: orders, loading: loadingOrders, refetch } = useFetch<Order[]>('/delivery/pending');
-    
+
     // 2. Fetch Drivers
     const { data: usersData } = useFetch<{ data: User[] }>('/admin/users');
     const drivers = usersData?.data.filter(u => u.role === 'livreur') || [];
@@ -68,16 +68,16 @@ export default function DispatchPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center bg-white p-4 md:p-0 md:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none border border-stone-100 md:border-none">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                        <Bike className="w-8 h-8 text-blue-600" />
+                    <h1 className="text-xl md:text-2xl font-black text-gray-900 flex items-center gap-2">
+                        <Bike className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
                         Dispatch Livraison
                     </h1>
-                    <p className="text-gray-500">Assignez les commandes <strong>prêtes</strong> aux livreurs disponibles.</p>
+                    <p className="text-xs md:text-sm text-gray-500">Assignez les commandes <strong className="text-blue-600">prêtes</strong></p>
                 </div>
-                <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg font-bold">
-                    {readyOrders.length} prêtes
+                <div className="bg-blue-50 text-blue-700 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-bold text-xs md:text-base border border-blue-100 shadow-sm">
+                    {readyOrders.length} <span className="hidden xs:inline">prêtes</span>
                 </div>
             </div>
 
@@ -95,7 +95,7 @@ export default function DispatchPage() {
                             order={order}
                             actions={
                                 <>
-                                    <select 
+                                    <select
                                         className="flex-1 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
                                         value={driverSelections[order.id] || ''}
                                         onChange={(e) => handleDriverSelect(order.id, Number(e.target.value) || '')}
@@ -105,7 +105,7 @@ export default function DispatchPage() {
                                             <option key={d.id} value={d.id}>{d.fullName}</option>
                                         ))}
                                     </select>
-                                    <Button 
+                                    <Button
                                         onClick={() => handleAssign(order.id)}
                                         isLoading={assigningId === order.id}
                                         disabled={!driverSelections[order.id]}

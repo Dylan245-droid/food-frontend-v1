@@ -40,45 +40,44 @@ export function DeliveryOrderCard({ order, actions, onClick, isSelected, restaur
         : null;
 
     return (
-        <div 
+        <div
             onClick={onClick}
-            className={`bg-white p-6 rounded-xl border shadow-sm flex flex-col gap-4 transition-all ${
-                onClick ? 'cursor-pointer hover:border-[var(--primary-400)]' : ''
-            } ${isSelected ? 'ring-2 ring-[var(--primary-500)] border-[var(--primary-500)]' : 'border-gray-200'}`}
+            className={`bg-white p-4 md:p-6 rounded-xl border shadow-sm flex flex-col gap-4 transition-all ${onClick ? 'cursor-pointer hover:border-[var(--primary-400)]' : ''
+                } ${isSelected ? 'ring-2 ring-[var(--primary-500)] border-[var(--primary-500)]' : 'border-gray-200'}`}
         >
             {/* Header */}
             <div className="flex justify-between items-start">
                 <div>
-                    <h3 className="font-bold text-lg">Commande #{order.dailyNumber}</h3>
-                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
-                        <Clock className="w-3 h-3" /> {new Date(order.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    <h3 className="font-bold text-base md:text-lg">Commande #{order.dailyNumber}</h3>
+                    <p className="text-[10px] md:text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <Clock className="w-3 h-3" /> {new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
                 </div>
                 <div className="text-right">
-                    <div className="text-xs text-gray-500 mb-0.5">
-                        <span className="font-medium">{formatCurrency((order.totalAmount || 0) - (order.deliveryFee || 0)).replace(' FCFA','')}</span>
+                    <div className="text-[10px] md:text-xs text-gray-500 mb-0.5">
+                        <span className="font-medium">{formatCurrency((order.totalAmount || 0) - (order.deliveryFee || 0)).replace(' FCFA', '')}</span>
                         <span className="mx-1">+</span>
-                        <span className="font-bold text-blue-600">{formatCurrency(order.deliveryFee || 0).replace(' FCFA','')} Liv.</span>
+                        <span className="font-bold text-blue-600">{formatCurrency(order.deliveryFee || 0).replace(' FCFA', '')} Liv.</span>
                     </div>
-                    <span className="font-black text-xl text-gray-900 leading-tight block">
+                    <span className="font-black text-lg md:text-xl text-gray-900 leading-tight block">
                         {formatCurrency(order.totalAmount)}
                     </span>
                 </div>
             </div>
 
             {/* Client Info & Address */}
-            <div className="bg-gray-50 p-3 rounded-lg text-sm space-y-2">
+            <div className="bg-gray-50 p-2 md:p-3 rounded-lg text-sm space-y-2">
                 <div className="space-y-1 pb-2 border-b border-gray-100">
-                    <p className="font-bold text-gray-900 flex items-center gap-2">
+                    <p className="font-bold text-gray-900 flex items-center gap-2 text-xs md:text-sm">
                         <User className="w-4 h-4 text-gray-400" /> {order.clientName}
                     </p>
-                    <p className="text-gray-500 pl-6 text-xs flex items-center gap-1">
+                    <p className="text-gray-500 pl-6 text-[10px] md:text-xs flex items-center gap-1">
                         <Phone className="w-3 h-3" /> {order.clientPhone}
                     </p>
                 </div>
-                
-                <p className="text-gray-600 flex items-start gap-2">
-                    <MapPin className="w-4 h-4 text-red-500 mt-0.5 shrink-0" /> 
+
+                <p className="text-gray-600 flex items-start gap-2 text-xs md:text-sm">
+                    <MapPin className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                     <span>{order.deliveryAddress || 'Adresse non spécifiée'}</span>
                 </p>
 
@@ -86,29 +85,29 @@ export function DeliveryOrderCard({ order, actions, onClick, isSelected, restaur
                 {distance !== null && (
                     <div className="flex items-center gap-2 mt-1 pl-6">
                         <Navigation2 className="w-3 h-3 text-blue-500" />
-                        <span className="text-xs font-medium text-blue-600">
+                        <span className="text-[10px] md:text-xs font-medium text-blue-600">
                             ~{formatDistance(distance)} du restau
                         </span>
-                        <span className="text-xs text-gray-400" title={getConfidenceLabel(order.geocodeConfidence || null)}>
+                        <span className="text-[10px] md:text-xs text-gray-400" title={getConfidenceLabel(order.geocodeConfidence || null)}>
                             {getConfidenceIcon(order.geocodeConfidence || null)}
                         </span>
                     </div>
                 )}
 
                 {order.notes && (
-                    <div className="bg-yellow-50 text-yellow-800 p-2 rounded border border-yellow-100 text-xs italic">
+                    <div className="bg-yellow-50 text-yellow-800 p-2 rounded border border-yellow-100 text-[10px] md:text-xs italic">
                         "{order.notes}"
                     </div>
                 )}
 
                 {/* Items */}
                 <div className="pt-2">
-                    <p className="font-bold text-xs text-gray-500 uppercase mb-1">Articles ({order.items.length})</p>
-                    <ul className="text-sm space-y-1">
+                    <p className="font-bold text-[10px] md:text-xs text-gray-500 uppercase mb-1">Articles ({order.items.length})</p>
+                    <ul className="text-xs md:text-sm space-y-1">
                         {order.items.map((item, idx) => (
-                           <li key={idx} className="flex justify-between">
-                               <span>{item.quantity}x {item.menuItem?.name || item.name || 'Article'}</span>
-                           </li> 
+                            <li key={idx} className="flex justify-between">
+                                <span>{item.quantity}x {item.menuItem?.name || item.name || 'Article'}</span>
+                            </li>
                         ))}
                     </ul>
                 </div>

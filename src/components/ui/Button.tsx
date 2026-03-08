@@ -15,7 +15,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, isLoadin
       case 'primary':
         return {
           className: 'text-white focus:ring-2',
-          style: { 
+          style: {
             background: 'var(--primary-gradient)',
             '--tw-ring-color': 'var(--primary-400)'
           } as React.CSSProperties
@@ -23,7 +23,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, isLoadin
       case 'secondary':
         return {
           className: 'text-white focus:ring-2',
-          style: { 
+          style: {
             background: 'var(--secondary-gradient)',
             '--tw-ring-color': 'var(--secondary-400)'
           } as React.CSSProperties
@@ -31,7 +31,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, isLoadin
       case 'gradient':
         return {
           className: 'text-white focus:ring-2',
-          style: { 
+          style: {
             background: 'var(--gradient-brand)',
             '--tw-ring-color': 'var(--primary-400)'
           } as React.CSSProperties
@@ -44,14 +44,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, isLoadin
       case 'ghost':
         return {
           className: 'bg-transparent hover:bg-opacity-10',
-          style: { 
+          style: {
             color: 'var(--primary-600)'
           } as React.CSSProperties
         };
       case 'outline':
         return {
           className: 'bg-transparent border focus:ring-2',
-          style: { 
+          style: {
             borderColor: 'var(--primary-300)',
             color: 'var(--primary-700)',
             '--tw-ring-color': 'var(--primary-400)'
@@ -63,9 +63,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, isLoadin
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs rounded-lg',
-    md: 'px-4 py-2.5 text-sm rounded-xl',
-    lg: 'px-6 py-3 text-base rounded-xl'
+    sm: 'px-2.5 py-1.5 text-[10px] md:px-3 md:text-xs rounded-lg',
+    md: 'px-3 py-2 text-xs md:px-4 md:py-2.5 md:text-sm rounded-xl',
+    lg: 'px-4 py-2.5 text-sm md:px-6 md:py-3 md:text-base rounded-xl'
   };
 
   const variantStyles = getVariantStyles();

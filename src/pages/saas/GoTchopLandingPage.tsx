@@ -79,12 +79,18 @@ const Showcase = () => {
     return (
         <Section className="py-20 overflow-hidden relative z-10 flex flex-col justify-start">
             {/* Header - Strictly separated from Marquee */}
-            <div className="max-w-7xl mx-auto px-6 mb-24 relative text-center z-20">
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="max-w-7xl mx-auto px-6 mb-24 relative text-center z-20"
+            >
                 <h2 className="text-5xl font-black text-white mb-6 drop-shadow-2xl">L'Élite du Goût.</h2>
                 <p className="text-gray-400 max-w-lg mx-auto text-lg drop-shadow-md">
                     Rejoignez les meilleurs restaurateurs de la ville.
                 </p>
-            </div>
+            </motion.div>
 
             {/* Classic Marquee Container */}
             <div className="w-full relative group">
@@ -98,7 +104,13 @@ const Showcase = () => {
                     }
                 `}</style>
 
-                <div className="marquee-container w-full py-4">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1 }}
+                    className="marquee-container w-full py-4"
+                >
                     <div
                         className="marquee-track flex gap-8 w-max px-6"
                         style={{
@@ -133,7 +145,7 @@ const Showcase = () => {
                             );
                         })}
                     </div>
-                </div>
+                </motion.div>
             </div>
         </Section>
     );
@@ -158,10 +170,10 @@ const FloatingFood = () => {
     }, [scrollYProgress]);
 
     // Smooth physics-based movement - Slightly softer on mobile to reduce jank
-    const y = useSpring(useTransform(scrollYProgress, [0, 1], [-50, 600]), { stiffness: 35, damping: 25 });
-    const rotate = useSpring(useTransform(scrollYProgress, [0, 1], [0, 180]), { stiffness: 35, damping: 40 });
-    const x = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8, 1], ["40%", "10%", "-30%", "20%", "0%"]), { stiffness: 40, damping: 25 });
-    const scale = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8], [0.9, 1.05, 0.85, 1.1]), { stiffness: 40, damping: 25 });
+    const y = useSpring(useTransform(scrollYProgress, [0, 1], [-50, 600]), { stiffness: 45, damping: 30 });
+    const rotate = useSpring(useTransform(scrollYProgress, [0, 1], [0, 180]), { stiffness: 35, damping: 45 });
+    const x = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8, 1], ["40%", "10%", "-30%", "20%", "0%"]), { stiffness: 50, damping: 30 });
+    const scale = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8], [0.9, 1.05, 0.85, 1.1]), { stiffness: 50, damping: 30 });
 
     const images = [
         "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80", // Burger
@@ -177,18 +189,15 @@ const FloatingFood = () => {
                 style={{ x, y, rotate, scale }}
                 className="relative w-[30vh] h-[30vh] md:w-[50vh] md:h-[50vh] opacity-90 will-change-transform"
             >
-                {/* Glow behind - Disabled on simple mobile to save GPU */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-orange-600 to-red-600 rounded-full blur-[40px] md:blur-[80px] opacity-30 md:opacity-40 md:animate-pulse" />
+                {/* Glow behind - Disabled on mobile to save GPU */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-orange-600 to-red-600 rounded-full blur-[20px] md:blur-[80px] opacity-20 md:opacity-40" />
 
                 <AnimatePresence mode='wait'>
                     <motion.img
                         key={currentStep}
                         src={images[currentStep]}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 1.1 }}
                         transition={{ duration: 0.4 }}
-                        className="w-full h-full object-cover rounded-full shadow-2xl border-4 border-white/5"
+                        className="w-full h-full object-cover rounded-full shadow-2xl border-4 border-white/5 will-change-transform"
                         alt="Dish"
                         style={{ transform: 'translateZ(0)' }} // Force GPU
                     />
@@ -206,7 +215,7 @@ const Navbar = () => {
 
     return (
         <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4" style={{ transform: 'translateZ(0)' }}>
-            <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full py-3 px-4 md:px-6 flex items-center gap-4 md:gap-8 shadow-2xl">
+            <div className="bg-black/80 backdrop-blur-lg border border-white/10 rounded-full py-2.5 px-4 md:px-6 flex items-center gap-4 md:gap-8 shadow-2xl">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
                     <img src="/logo_dark.png" alt="GoTchop" className="h-10 md:h-14" />
                 </div>
@@ -238,11 +247,11 @@ const Section = ({ children, className = "" }: { children: React.ReactNode, clas
 
 const BentoCard = ({ children, title, sub, className = "", delay = 0 }: any) => (
     <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-50px" }}
-        transition={{ delay, duration: 0.8 }}
-        className={`bg-black/40 backdrop-blur-2xl border border-white/10 p-6 md:p-8 rounded-[2rem] overflow-hidden relative group hover:border-orange-500/30 transition-colors ${className}`}
+        transition={{ delay, duration: 0.4 }}
+        className={`bg-black/60 backdrop-blur-lg border border-white/10 p-6 md:p-8 rounded-[2rem] overflow-hidden relative group hover:border-orange-500/30 transition-colors ${className}`}
     >
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         <div className="relative z-10 h-full flex flex-col">
@@ -260,42 +269,27 @@ const Hero = () => {
     return (
         <Section className="justify-center text-center overflow-hidden pt-40">
             <div className="max-w-[90vw] relative z-10">
-                {/* Warmer, softer background glow */}
+                {/* Softer background glow */}
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 1.5 }}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-orange-500/10 via-red-500/10 to-yellow-500/10 rounded-full blur-[100px] pointer-events-none"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-orange-500/20 rounded-full blur-[80px] md:blur-[120px] pointer-events-none"
                 />
 
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-medium text-xs md:text-sm mb-6 md:mb-8 backdrop-blur-sm"
-                >
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-medium text-xs md:text-sm mb-6 md:mb-8 backdrop-blur-sm">
                     <Star className="w-3 h-3 md:w-4 md:h-4 fill-orange-400" />
                     <span>La plateforme préférée des restaurateurs</span>
-                </motion.div>
+                </div>
 
-                <motion.h1
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
-                    className="text-5xl md:text-8xl font-black text-white leading-tight mb-8 tracking-tight drop-shadow-2xl"
-                >
+                <h1 className="text-5xl md:text-8xl font-black text-white leading-tight mb-8 tracking-tight drop-shadow-2xl">
                     Petit ou Grand,<br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-orange-600 animate-gradient-x">
                         Vous êtes le Chef.
                     </span>
-                </motion.h1>
+                </h1>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2, duration: 0.8 }}
-                    className="flex flex-col items-center"
-                >
+                <div className="flex flex-col items-center">
                     <p className="text-lg md:text-3xl text-gray-200 font-light max-w-4xl mx-auto mb-10 md:mb-12 leading-relaxed drop-shadow-lg">
                         Tenir un restaurant est un défi quotidien. <br className="hidden md:block" />
                         <span className="text-white font-medium">GoTchop</span> est l'allié qui s'adapte à votre réalité, pour que vous puissiez vous concentrer sur ce qui compte : <span className="text-orange-400 italic font-serif">vos clients.</span>
@@ -320,7 +314,7 @@ const Hero = () => {
                             <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
                         </button>
                     </div>
-                </motion.div>
+                </div>
             </div>
         </Section>
     );
@@ -346,22 +340,34 @@ const ValueProposition = () => {
                 </BentoCard>
 
                 <div className="space-y-12">
-                    <div className="relative pl-8 border-l-2 border-orange-500/30">
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                        className="relative pl-8 border-l-2 border-orange-500/30"
+                    >
                         <Heart className="w-8 h-8 text-red-500 mb-4 fill-red-500" />
                         <h3 className="text-3xl font-bold text-white mb-4">Clients Fidèles</h3>
                         <p className="text-gray-400 text-lg">
                             Le compte client devient un <strong className="text-white">privilège VIP</strong>.
                             Offrez des points, des promos et un statut à vos meilleurs clients.
                         </p>
-                    </div>
-                    <div className="relative pl-8 border-l-2 border-orange-500/30">
+                    </motion.div>
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="relative pl-8 border-l-2 border-orange-500/30"
+                    >
                         <Users className="w-8 h-8 text-orange-500 mb-4" />
                         <h3 className="text-3xl font-bold text-white mb-4">Adapté au Réel</h3>
                         <p className="text-gray-400 text-lg">
                             Coupure d'électricité ? Internet lent ? Rush hour ?
                             GoTchop continue de fonctionner. Robuste comme nous.
                         </p>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </Section>
@@ -372,10 +378,16 @@ const FeaturesGrid = () => {
     return (
         <Section>
             <div className="max-w-7xl mx-auto px-6 w-full">
-                <div className="text-center mb-16">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-16"
+                >
                     <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Pilotage Intégral.</h2>
                     <p className="text-gray-400 max-w-2xl mx-auto">De la prise de commande à la gestion des stocks, tout est là.</p>
-                </div>
+                </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 grid-rows-2 gap-6 h-auto md:h-auto">
                     <BentoCard title="Cuisine Connectée" sub="Système KDS" className="md:col-span-2 md:row-span-2 min-h-[400px]" delay={0.1}>
@@ -440,7 +452,13 @@ const Pricing = () => {
 
                 <div className="grid md:grid-cols-3 gap-8 items-start">
                     {/* ESSENTIEL */}
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col hover:border-orange-500/30 transition-colors">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5 }}
+                        className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col hover:border-orange-500/30 transition-colors"
+                    >
                         <div className="mb-6">
                             <h3 className="text-xl font-bold text-white">Essentiel</h3>
                             <p className="text-gray-500 text-sm">Maquis, Fast-Food, Boulangerie, Dark Kitchen</p>
@@ -458,10 +476,16 @@ const Pricing = () => {
                             ))}
                         </div>
                         <button className="w-full py-4 rounded-xl border border-white/20 text-white font-bold hover:bg-white hover:text-black transition-colors">Choisir Essentiel</button>
-                    </div>
+                    </motion.div>
 
                     {/* PRO */}
-                    <div className="bg-gradient-to-b from-orange-900/40 to-black/60 border border-orange-500 rounded-3xl p-8 flex flex-col relative transform md:scale-110 shadow-[0_0_60px_rgba(234,88,12,0.2)] z-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.1 }}
+                        className="bg-gradient-to-b from-orange-900/40 to-black/60 border border-orange-500 rounded-3xl p-8 flex flex-col relative transform md:scale-110 shadow-[0_0_60px_rgba(234,88,12,0.2)] z-10"
+                    >
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-600 text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Recommandé</div>
                         <div className="mb-6">
                             <h3 className="text-xl font-bold text-orange-500 flex items-center gap-2">
@@ -485,10 +509,16 @@ const Pricing = () => {
                             ))}
                         </div>
                         <button className="w-full py-4 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-500 transition-colors shadow-lg hover:shadow-orange-500/25">Prendre le Pro</button>
-                    </div>
+                    </motion.div>
 
                     {/* ÉLITE */}
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col hover:border-orange-500/30 transition-colors">
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col hover:border-orange-500/30 transition-colors"
+                    >
                         <div className="mb-6">
                             <h3 className="text-xl font-bold text-white">Élite</h3>
                             <p className="text-gray-500 text-sm">Hôtels, Chaînes, Franchises, Food Courts</p>
@@ -506,7 +536,7 @@ const Pricing = () => {
                             ))}
                         </div>
                         <button className="w-full py-4 rounded-xl border border-white/20 text-white font-bold hover:bg-white hover:text-black transition-colors">Contacter Ventes</button>
-                    </div>
+                    </motion.div>
                 </div>
             </div>
         </Section>

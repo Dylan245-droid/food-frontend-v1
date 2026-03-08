@@ -5,7 +5,7 @@ import { ServerCallsNotification } from './ServerCallsNotification';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../context/BrandingContext';
 import { useSubscription } from '../hooks/useSubscription';
-import { LayoutDashboard, ShoppingBag, Users, FileText, LogOut, Coffee, Bell, TrendingUp, X, ChefHat, Settings, Banknote, ArrowRightLeft, ExternalLink, CreditCard } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, FileText, LogOut, Coffee, Bell, TrendingUp, X, ChefHat, Settings, Banknote, ArrowRightLeft, ExternalLink, CreditCard, Menu } from 'lucide-react';
 import { cn } from '../lib/utils';
 import UpgradeModal from './UpgradeModal';
 
@@ -121,11 +121,34 @@ export default function AdminLayout() {
   });
 
   return (
-    <div className="min-h-screen text-stone-800 flex flex-col md:flex-row" style={{ background: 'var(--bg-app)' }}>
+    <div className="min-h-screen text-stone-800 flex flex-col lg:flex-row" style={{ background: 'var(--bg-app)' }}>
+      {/* Mobile Header */}
+      <div className="lg:hidden flex items-center justify-between p-4 bg-white/80 backdrop-blur-xl border-b border-stone-100 sticky top-0 z-40">
+        <div className="flex items-center gap-2 text-lg font-black tracking-tighter text-stone-900">
+          <div
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-white shadow-lg shadow-orange-500/20"
+            style={{ backgroundColor: branding.primaryColor }}
+          >
+            {branding.logo ? (
+              <img src={branding.logo} alt="Logo" className="w-full h-full object-cover rounded-lg" />
+            ) : (
+              <ChefHat className="w-4 h-4" />
+            )}
+          </div>
+          <span>{branding.name}</span>
+        </div>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 rounded-xl bg-stone-50 text-stone-600 hover:bg-stone-100 transition-colors"
+        >
+          <LayoutDashboard className="w-6 h-6" />
+        </button>
+      </div>
+
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-in fade-in"
+          className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[60] lg:hidden animate-in fade-in duration-300"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -133,7 +156,7 @@ export default function AdminLayout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed md:sticky top-0 h-screen bg-white/80 backdrop-blur-xl border-r border-stone-100 w-72 flex flex-col z-50 transition-transform duration-300 ease-in-out md:translate-x-0 shadow-2xl md:shadow-none",
+          "fixed lg:sticky top-0 h-screen bg-white lg:bg-white/80 lg:backdrop-blur-xl border-r border-stone-100 w-72 flex flex-col z-[70] transition-transform duration-500 ease-in-out lg:translate-x-0 shadow-2xl lg:shadow-none",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -153,12 +176,12 @@ export default function AdminLayout() {
             <span>{branding.name}</span>
           </div>
 
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-1 rounded-lg hover:bg-stone-100">
-            <X className="w-6 h-6" />
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 rounded-xl bg-stone-50 hover:bg-stone-100 transition-all">
+            <X className="w-6 h-6 text-stone-600" />
           </button>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto no-scrollbar">
           {allowedMenuItems.map((item) => {
             const isActive = location.pathname === item.path || (location.pathname !== '/admin' && location.pathname + location.search === item.path);
 
@@ -206,26 +229,26 @@ export default function AdminLayout() {
                   }
                 }}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 group relative",
+                  "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 group relative mb-1",
                   isActive
-                    ? "shadow-sm"
+                    ? "shadow-sm border border-stone-100/50"
                     : "text-stone-500 hover:bg-stone-50 hover:text-stone-900",
                   isLocked && "opacity-60 grayscale cursor-not-allowed hover:bg-transparent"
                 )}
                 style={isActive ? {
-                  backgroundColor: `${branding.primaryColor}15`,
+                  backgroundColor: `${branding.primaryColor}10`,
                   color: branding.primaryColor
                 } : undefined}
               >
                 {isActive && (
                   <div
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 rounded-r-full"
                     style={{ backgroundColor: branding.primaryColor }}
                   />
                 )}
                 <div className="relative">
                   <item.icon
-                    className={cn("w-5 h-5 transition-colors", !isActive && "text-stone-400 group-hover:text-stone-600")}
+                    className={cn("w-5 h-5 transition-transform duration-300 group-hover:scale-110", !isActive && "text-stone-400 group-hover:text-stone-600")}
                     style={isActive ? { color: branding.primaryColor } : undefined}
                   />
                   {isLocked && (
@@ -242,24 +265,20 @@ export default function AdminLayout() {
         </nav>
 
         <div
-          className="p-4 mt-auto m-4 rounded-2xl"
-          style={{
-            background: 'var(--primary-50)',
-            borderColor: 'var(--border-light)'
-          }}
+          className="p-5 mt-auto m-4 rounded-[2rem] border border-stone-100/50 bg-stone-50/50"
         >
-          <div className="flex items-center gap-3 mb-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-md ${user?.role === 'super_admin' ? 'bg-purple-600' : 'bg-stone-900'}`}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-white ${user?.role === 'super_admin' ? 'bg-indigo-600' : 'bg-stone-900'}`}>
               {user?.fullName?.charAt(0) || 'U'}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-bold text-stone-900 truncate">{user?.fullName}</p>
-              <p className="text-xs text-stone-500 capitalize font-medium">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-sm font-black text-stone-900 truncate">{user?.fullName}</p>
+              <p className="text-[10px] text-stone-400 uppercase tracking-widest font-bold">{user?.role?.replace('_', ' ')}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 w-full text-sm font-bold text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-colors border border-transparent hover:border-red-100"
+            className="flex items-center justify-center gap-2 px-4 py-3 w-full text-xs font-black uppercase tracking-wider text-red-500 hover:bg-red-50 hover:text-red-600 rounded-2xl transition-all border border-transparent hover:border-red-100 active:scale-95"
           >
             <LogOut className="w-4 h-4" />
             Déconnexion
@@ -268,15 +287,15 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 md:p-8 animate-in fade-in duration-500 w-full overflow-x-hidden relative">
+      <main className="flex-1 p-4 lg:p-10 animate-in fade-in slide-in-from-right-4 duration-700 w-full overflow-x-hidden relative min-h-screen">
         {/* Background blobs for admin too */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-          <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-orange-100/20 rounded-full blur-[80px] mix-blend-multiply"></div>
-          <div className="absolute bottom-0 left-20 w-[30vw] h-[30vw] bg-yellow-100/20 rounded-full blur-[60px] mix-blend-multiply"></div>
+          <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-orange-100/20 rounded-full blur-[100px] mix-blend-multiply"></div>
+          <div className="absolute bottom-0 left-20 w-[30vw] h-[30vw] bg-yellow-100/20 rounded-full blur-[80px] mix-blend-multiply"></div>
         </div>
 
         {['admin', 'super_admin', 'serveur', 'salle', 'caissier'].includes(user?.role || '') && (
-          <div className="fixed bottom-8 right-8 z-50">
+          <div className="fixed bottom-6 right-6 z-50 lg:bottom-10 lg:right-10">
             <ServerCallsNotification />
           </div>
         )}

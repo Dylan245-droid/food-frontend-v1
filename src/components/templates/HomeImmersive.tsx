@@ -14,7 +14,7 @@ export function HomeImmersive({ branding, onDineInClick, onTakeoutClick }: HomeI
     <div className="flex flex-col flex-1 bg-black">
       {/* Immersive Hero */}
       <div
-        className="relative h-screen w-full bg-cover bg-center flex flex-col justify-end pb-24 md:pb-32 px-6 md:px-20"
+        className="relative h-screen w-full bg-cover bg-center flex flex-col justify-end pb-60 md:pb-32 px-6 md:px-20"
         style={{
           backgroundImage: branding.heroImage
             ? `linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.2), rgba(0,0,0,0.1)), url(${branding.heroImage})`

@@ -118,8 +118,8 @@ export default function SubscriptionPage() {
 
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-stone-900 mb-2 font-display">Mon Abonnement</h1>
-                    <p className="text-stone-500">Gérez votre offre et votre facturation.</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-stone-900 mb-1 md:mb-2 font-display">Mon Abonnement</h1>
+                    <p className="text-xs md:text-sm text-stone-500">Gérez votre offre et votre facturation.</p>
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
@@ -155,15 +155,15 @@ export default function SubscriptionPage() {
             {subscription?.status === 'TRIAL' && subscription?.daysLeft > 0 && (
                 <div className="bg-gradient-to-r from-stone-900 to-stone-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl">
                     <div className="absolute right-0 top-0 w-64 h-64 bg-orange-500/10 rounded-full blur-[80px] pointer-events-none" />
-                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                         <div>
-                            <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
-                                <AlertCircle className="text-orange-500" />
-                                Votre période d'essai se termine bientôt
+                            <h2 className="text-lg md:text-2xl font-bold mb-1 md:mb-2 flex items-center gap-2">
+                                <AlertCircle className="text-orange-500 w-5 h-5 md:w-6 md:h-6" />
+                                Période d'essai bientôt finie
                             </h2>
-                            <p className="text-stone-400 max-w-xl">
-                                Profitez de toutes les fonctionnalités Premium gratuitement pendant encore {subscription?.daysLeft} jours.
-                                Abonnez-vous maintenant pour ne pas perdre l'accès à vos données.
+                            <p className="text-xs md:text-base text-stone-400 max-w-xl">
+                                Il vous reste {subscription?.daysLeft} jours.
+                                Abonnez-vous pour ne pas perdre l'accès.
                             </p>
                         </div>
                     </div>
@@ -240,13 +240,13 @@ export default function SubscriptionPage() {
                     isCurrent('ESSENTIAL') ? "border-green-500 ring-2 ring-green-500/20" : "border-stone-200 hover:border-orange-200"
                 )}>
                     {isCurrent('ESSENTIAL') && <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">ACTUEL</div>}
-                    <div className="mb-6">
-                        <h3 className="text-xl font-bold text-stone-900">Essentiel</h3>
-                        <p className="text-stone-500 text-sm">Maquis, Fast-Food, Boulangerie, Dark Kitchen</p>
+                    <div className="mb-4 md:mb-6">
+                        <h3 className="text-lg md:text-xl font-bold text-stone-900">Essentiel</h3>
+                        <p className="text-[10px] md:text-sm text-stone-500">Maquis, Dark Kitchen...</p>
                     </div>
-                    <div className="mb-6">
-                        <span className="text-4xl font-black text-stone-900">{formatCurrency(billingCycle === 'YEARLY' ? 35000 * 12 * 0.85 : 35000)}</span>
-                        <span className="text-sm font-medium text-stone-400"> / {billingCycle === 'YEARLY' ? 'an' : 'mois'}</span>
+                    <div className="mb-4 md:mb-6">
+                        <span className="text-3xl md:text-4xl font-black text-stone-900">{formatCurrency(billingCycle === 'YEARLY' ? 35000 * 12 * 0.85 : 35000)}</span>
+                        <span className="text-xs md:text-sm font-medium text-stone-400"> / {billingCycle === 'YEARLY' ? 'an' : 'mois'}</span>
                     </div>
 
                     <div className="space-y-4 mb-8 flex-1">
