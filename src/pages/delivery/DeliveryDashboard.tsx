@@ -30,6 +30,7 @@ interface Order {
     items: any[];
     notes?: string;
     createdAt: string;
+    pickupCode?: string;
 }
 
 interface DirectionsData {
@@ -54,6 +55,12 @@ export default function DeliveryDashboard() {
     const [directions, setDirections] = useState<DirectionsData | null>(null);
     const [loadingDirections, setLoadingDirections] = useState(false);
     const [isTrackingActive, setIsTrackingActive] = useState(false); // Live tracking mode
+    
+    // Code verification modal state
+    const [showCodeModal, setShowCodeModal] = useState(false);
+    const [orderToDeliver, setOrderToDeliver] = useState<Order | null>(null);
+    const [codeInput, setCodeInput] = useState('');
+    const [codeError, setCodeError] = useState('');
     
     // Map refs
     const mapContainer = useRef<HTMLDivElement>(null);
@@ -113,7 +120,7 @@ export default function DeliveryDashboard() {
                 console.log('Creating Mapbox map...');
                 map.current = new mapboxgl.Map({
                     container: mapContainer.current,
-                    style: 'mapbox://styles/mapbox/streets-v12',
+                    style: 'mapbox://styles/mapbox/satellite-streets-v12',
                     center: [restaurantLng, restaurantLat],
                     zoom: 12,
                 });
@@ -356,6 +363,38 @@ export default function DeliveryDashboard() {
         }
     };
 
+    // Open code verification modal
+    const openCodeVerificationModal = (order: Order) => {
+        setOrderToDeliver(order);
+        setCodeInput('');
+        setCodeError('');
+        setShowCodeModal(true);
+    };
+
+    // Verify code and complete delivery
+    const verifyCodeAndDeliver = async () => {
+        if (!orderToDeliver) return;
+        
+        const expectedCode = orderToDeliver.pickupCode?.toUpperCase().trim();
+        const enteredCode = codeInput.toUpperCase().trim();
+        
+        if (!enteredCode) {
+            setCodeError('Veuillez entrer le code');
+            return;
+        }
+        
+        if (enteredCode !== expectedCode) {
+            setCodeError('Code incorrect. Demandez le code au client.');
+            return;
+        }
+        
+        // Code matches - proceed with delivery
+        setShowCodeModal(false);
+        await handleStatusUpdate(orderToDeliver.id, 'delivered');
+        setOrderToDeliver(null);
+        setCodeInput('');
+    };
+
 
     // Determine current orders to display
     const currentOrders = activeTab === 'active' ? myOrders : activeTab === 'available' ? availableOrders : historyOrders;
@@ -455,7 +494,7 @@ export default function DeliveryDashboard() {
                                                 )}
                                                 <Button 
                                                     className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs"
-                                                    onClick={(e) => { e.stopPropagation(); handleStatusUpdate(order.id, 'delivered'); }}
+                                                    onClick={(e) => { e.stopPropagation(); openCodeVerificationModal(order); }}
                                                 >
                                                     Livré & Encaissé ✅
                                                 </Button>
@@ -536,6 +575,51 @@ export default function DeliveryDashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Code Verification Modal */}
+            {showCodeModal && orderToDeliver && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+                        <h2 className="text-lg font-bold text-center mb-4">🔐 Vérification du Code</h2>
+                        
+                        <p className="text-sm text-gray-600 text-center mb-4">
+                            Demandez au client le code de sa commande <strong>#{orderToDeliver.dailyNumber}</strong>
+                        </p>
+                        
+                        <input
+                            type="text"
+                            value={codeInput}
+                            onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); setCodeError(''); }}
+                            placeholder="Entrez le code (ex: JJKEXT)"
+                            className={`w-full text-center text-2xl font-mono font-bold tracking-widest p-4 border-2 rounded-xl mb-2 uppercase ${
+                                codeError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-green-500'
+                            }`}
+                            autoFocus
+                            maxLength={10}
+                        />
+                        
+                        {codeError && (
+                            <p className="text-red-600 text-sm text-center mb-4">{codeError}</p>
+                        )}
+                        
+                        <div className="flex gap-3 mt-4">
+                            <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => { setShowCodeModal(false); setOrderToDeliver(null); }}
+                            >
+                                Annuler
+                            </Button>
+                            <Button
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                onClick={verifyCodeAndDeliver}
+                            >
+                                Confirmer ✅
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

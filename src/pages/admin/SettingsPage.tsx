@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useBranding } from '../../context/BrandingContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Settings, Save, ChefHat, Palette, MessageSquare, Loader2, Upload, Image, MapPin } from 'lucide-react';
+import { Settings, Save, ChefHat, Palette, MessageSquare, Loader2, Upload, Image, MapPin, Gift, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 
@@ -14,6 +14,7 @@ export default function SettingsPage() {
   const { branding, updateBranding, loading: brandingLoading } = useBranding();
   const [formData, setFormData] = useState({
     name: '',
+    businessType: '',
     tagline: '',
     logo: '',
     primaryColor: '',
@@ -30,7 +31,13 @@ export default function SettingsPage() {
     fee_akanda: '',
     fee_ntoum: '',
     delivery_commission: '',
+    loyalty_rate_dine_in: '',
+    loyalty_rate_takeout: '',
+    loyalty_rate_delivery: '',
     restaurant_coords: '', // Format: "lat, lng"
+    font: '',
+    borderRadius: '',
+    heroStyle: '',
   });
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -46,6 +53,7 @@ export default function SettingsPage() {
     if (branding) {
       setFormData({
         name: branding.name || '',
+        businessType: branding.businessType || 'Restaurant',
         tagline: branding.tagline || '',
         logo: branding.logo || '',
         primaryColor: branding.primaryColor || '',
@@ -62,9 +70,15 @@ export default function SettingsPage() {
         fee_akanda: branding.fee_akanda || '1000',
         fee_ntoum: branding.fee_ntoum || '1000',
         delivery_commission: branding.delivery_commission || '100',
+        loyalty_rate_dine_in: branding.loyalty_rate_dine_in || '10',
+        loyalty_rate_takeout: branding.loyalty_rate_takeout || '5',
+        loyalty_rate_delivery: branding.loyalty_rate_delivery || '2',
         restaurant_coords: branding.restaurant_lat && branding.restaurant_lng 
             ? `${branding.restaurant_lat}, ${branding.restaurant_lng}` 
             : '',
+        font: branding.font || 'Stack Sans Notch',
+        borderRadius: branding.borderRadius || '1rem',
+        heroStyle: branding.heroStyle || 'classic',
       });
     }
   }, [branding]);
@@ -87,10 +101,15 @@ export default function SettingsPage() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       const fullUrl = res.data.url.startsWith('http') ? res.data.url : `${BASE_URL}${res.data.url}`;
-      handleChange('logo', fullUrl);
+      // Append timestamp to force reload image
+      handleChange('logo', `${fullUrl}?t=${Date.now()}`);
       toast.success('Logo uploadé avec succès !');
-    } catch (err) {
-      toast.error("Erreur lors de l'upload du logo");
+    } catch (err: any) {
+      console.error('Upload Logo Error:', err);
+      toast.error(err?.response?.data?.message || "Erreur lors de l'upload du logo");
+      if (err?.response?.data?.errors) {
+        console.error('Validation errors:', err.response.data.errors); 
+      }
     } finally {
       setUploading(false);
     }
@@ -116,6 +135,7 @@ export default function SettingsPage() {
         footerText: generatedFooterText,
         restaurant_lat,
         restaurant_lng,
+        heroStyle: formData.heroStyle as any, // Cast to match literal type
       });
       toast.success('Paramètres enregistrés avec succès !');
       setHasChanges(false);
@@ -168,6 +188,24 @@ export default function SettingsPage() {
                 placeholder="Mon Restaurant"
                 className="h-12"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Type de commerce
+              </label>
+              <select
+                value={formData.businessType}
+                onChange={(e) => handleChange('businessType', e.target.value)}
+                className="h-12 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="Restaurant">Restaurant Traditionnel</option>
+                <option value="Fast-Food">Fast-Food / Snack</option>
+                <option value="Boulangerie">Boulangerie / Pâtisserie</option>
+                <option value="Pizzeria">Pizzeria</option>
+                <option value="Cafe">Café / Salon de Thé</option>
+                <option value="Dark Kitchen">Dark Kitchen (livraison uniquement)</option>
+                <option value="Food Truck">Food Truck</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-bold text-stone-700 mb-2">
@@ -320,6 +358,88 @@ export default function SettingsPage() {
             </div>
           </div>
 
+          {/* Typography & Shapes */}
+          <div className="pt-6 border-t border-stone-100 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Font Selector */}
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Police d'écriture
+              </label>
+              <select
+                value={formData.font}
+                onChange={(e) => handleChange('font', e.target.value)}
+                className="h-12 w-full rounded-xl border border-stone-200 bg-white px-4 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+              >
+                <option value="Inter">Inter (Moderne & Net)</option>
+                <option value="Lato">Lato (Rond & Amical)</option>
+                <option value="Montserrat">Montserrat (Géométrique)</option>
+                <option value="Playfair Display">Playfair Display (Élégant / Serrif)</option>
+                <option value="Oswald">Oswald (Compact & Fort)</option>
+                <option value="Raleway">Raleway (Fin & Artistique)</option>
+                <option value="Open Sans">Open Sans (Standard)</option>
+                <option value="Stack Sans Notch">Par Défaut</option>
+              </select>
+            </div>
+
+            {/* Border Radius Selector */}
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">
+                Arrondi des boutons
+              </label>
+              <div className="flex bg-stone-100 p-1 rounded-xl">
+                 {[
+                   { label: 'Carré', value: '0px' },
+                   { label: 'S', value: '0.5rem' },
+                   { label: 'M', value: '1rem' },
+                   { label: 'L', value: '1.5rem' },
+                   { label: 'Rond', value: '9999px' }
+                 ].map((opt) => (
+                   <button
+                     key={opt.value}
+                     type="button"
+                     onClick={() => handleChange('borderRadius', opt.value)}
+                     className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                       formData.borderRadius === opt.value 
+                         ? 'bg-white text-orange-600 shadow-sm' 
+                         : 'text-stone-500 hover:text-stone-700'
+                     }`}
+                   >
+                     {opt.label}
+                   </button>
+                 ))}
+              </div>
+            </div>
+          </div>
+
+           {/* Hero Style Selector -> Renamed to Themes */}
+           <div className="pt-6 border-t border-stone-100">
+             <label className="block text-sm font-bold text-stone-700 mb-4">
+               Thème du Restaurant
+             </label>
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+               {[
+                 { id: 'classic', label: 'Classique', desc: 'Efficace & Familier. Idéal pour tout type de restauration.' },
+                 { id: 'split', label: 'Moderne Split', desc: 'Tendance. Met en avant votre message et vos visuels.' },
+                 { id: 'minimal', label: 'Boutique (Minimal)', desc: 'Épuré & Chic. Pour une ambiance haut de gamme.' },
+                 { id: 'immersive', label: 'Immersif', desc: 'Visuel fort. Expérience plein écran captivante.' }
+               ].map((style) => (
+                 <button
+                   key={style.id}
+                   type="button"
+                   onClick={() => handleChange('heroStyle', style.id)}
+                   className={`p-4 rounded-xl border-2 text-left transition-all ${
+                     formData.heroStyle === style.id
+                       ? 'border-orange-500 bg-orange-50 ring-1 ring-orange-500'
+                       : 'border-stone-200 hover:border-orange-200 hover:bg-stone-50'
+                   }`}
+                 >
+                   <div className="font-bold text-stone-900 mb-1">{style.label}</div>
+                   <div className="text-xs text-stone-500">{style.desc}</div>
+                 </button>
+               ))}
+             </div>
+           </div>
+
           {/* Image de fond Hero */}
           <div className="mt-6 pt-6 border-t border-stone-100">
             <label className="block text-sm font-bold text-stone-700 mb-2">
@@ -351,7 +471,7 @@ export default function SettingsPage() {
                         headers: { 'Content-Type': 'multipart/form-data' }
                       });
                       const fullUrl = res.data.url.startsWith('http') ? res.data.url : `${BASE_URL}${res.data.url}`;
-                      handleChange('heroImage', fullUrl);
+                      handleChange('heroImage', `${fullUrl}?t=${Date.now()}`);
                       toast.success('Image uploadée !');
                     } catch (err: any) {
                       console.error('Upload error:', err?.response?.data || err?.message || err);
@@ -491,6 +611,78 @@ export default function SettingsPage() {
                  <span className="absolute right-4 top-3.5 text-stone-400 text-sm font-bold">%</span>
                </div>
                <p className="text-xs text-stone-500 mt-2">Pourcentage des frais de livraison reversé au livreur (déduit du montant à rendre en caisse).</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Programme de Fidélité */}
+        <div className="bg-white rounded-3xl p-8 border border-stone-100 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-8 opacity-5">
+            <Gift className="w-32 h-32 text-purple-900" />
+          </div>
+          
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600">
+              <Gift className="w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-stone-800">Programme de Fidélité</h2>
+              <p className="text-stone-500 font-medium">Récompensez vos clients fidèles</p>
+            </div>
+          </div>
+
+          <div className="bg-purple-50 rounded-2xl p-6 mb-8 border border-purple-100">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-purple-600 mt-0.5" />
+              <div>
+                <h4 className="font-bold text-purple-900">Comment ça marche ?</h4>
+                <p className="text-sm text-purple-700 leading-relaxed mt-1">
+                  Définissez combien de points un client gagne pour chaque tranche de <span className="font-bold">1000 FCFA</span> dépensés, selon le type de commande.
+                  <br/>
+                  Exemple: Si vous mettez <span className="font-bold">10 points</span> pour "Sur Place", une commande de 5000 FCFA rapporte 50 points.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">🍽️ Sur Place</label>
+              <div className="relative">
+                <Input 
+                  value={formData.loyalty_rate_dine_in} 
+                  onChange={(e) => handleChange('loyalty_rate_dine_in', e.target.value)} 
+                  type="number" 
+                  className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500" 
+                />
+                <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">🛍️ À Emporter</label>
+              <div className="relative">
+                <Input 
+                  value={formData.loyalty_rate_takeout} 
+                  onChange={(e) => handleChange('loyalty_rate_takeout', e.target.value)} 
+                  type="number" 
+                  className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500" 
+                />
+                <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-stone-700 mb-2">🛵 Livraison</label>
+              <div className="relative">
+                <Input 
+                  value={formData.loyalty_rate_delivery} 
+                  onChange={(e) => handleChange('loyalty_rate_delivery', e.target.value)} 
+                  type="number" 
+                  className="h-12 pr-20 border-purple-200 focus:border-purple-500 focus:ring-purple-500" 
+                />
+                <span className="absolute right-4 top-3.5 text-purple-400 text-xs font-bold">pts / 1000F</span>
+              </div>
             </div>
           </div>
         </div>

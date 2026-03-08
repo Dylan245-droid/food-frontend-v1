@@ -6,7 +6,7 @@ interface CashSession {
     cashRegisterId: number;
     openedBy: number;
     status: 'open' | 'closed';
-    cashRegister?: { name: string };
+    cashRegister?: { name: string; type: string };
 }
 
 /**
@@ -18,8 +18,12 @@ export function useCashSession() {
     // Fetch current open sessions (for the user)
     const { data, loading, refetch } = useFetch<{ data: CashSession[] }>('/admin/cash/sessions/current');
 
-    // Find the session opened by the current user
-    const mySession = data?.data?.find(s => s.openedBy === user?.id && s.status === 'open') || null;
+    // Find the session opened by the current user ONLY for SALES registers
+    const mySession = data?.data?.find(s =>
+        s.openedBy === user?.id &&
+        s.status === 'open' &&
+        s.cashRegister?.type === 'sales'
+    ) || null;
 
     return {
         hasActiveSession: !!mySession,

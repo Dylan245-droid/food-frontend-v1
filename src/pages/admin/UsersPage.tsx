@@ -17,9 +17,13 @@ interface User {
   avatar?: string;
 }
 
+import { useSubscription } from '../../hooks/useSubscription';
+import UpgradeModal from '../../components/UpgradeModal';
+
 export default function UsersPage() {
   const { data: usersData, loading, refetch } = useFetch<{ meta: any, data: User[] }>('/admin/users');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<Partial<User> | null>(null);
   
   const [formData, setFormData] = useState({ email: '', fullName: '', password: '', role: 'serveur', phone: '' });
@@ -28,6 +32,10 @@ export default function UsersPage() {
   
   const [submitting, setSubmitting] = useState(false);
   const { user: authUser } = useAuth();
+  const { isStaffLimitReached, maxStaff, planName } = useSubscription();
+
+  const currentCount = usersData?.data?.length || 0;
+  const isLimitReached = isStaffLimitReached(currentCount);
 
   // Helper to get image URL
   const getImageUrl = (path?: string) => {
@@ -75,8 +83,8 @@ export default function UsersPage() {
       }
       setIsModalOpen(false);
       refetch();
-    } catch (error) {
-      alert('Erreur lors de l\'enregistrement');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Erreur lors de l\'enregistrement');
     } finally {
       setSubmitting(false);
     }
@@ -105,6 +113,10 @@ export default function UsersPage() {
       setPreviewUrl(getImageUrl(user.avatar));
       setAvatarFile(null);
     } else {
+      if (isLimitReached) {
+          setUpgradeModalOpen(true);
+          return;
+      }
       setCurrentUser(null);
       setFormData({ email: '', fullName: '', password: '', role: 'serveur', phone: '' });
       setPreviewUrl(null);
@@ -122,9 +134,18 @@ export default function UsersPage() {
           <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
             Gestion de l'équipe
           </h1>
-          <p className="text-gray-500">Gérez les membres du personnel et leurs accès.</p>
+          <p className="text-gray-500">
+              Gérez les membres du personnel et leurs accès.
+              <span className={`ml-2 text-xs font-bold px-2 py-0.5 rounded ${isLimitReached ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                  {currentCount} / {maxStaff} Utilisés
+              </span>
+          </p>
         </div>
-        <Button onClick={() => openModal()} className="shadow-lg shadow-purple-200">
+        <Button 
+            onClick={() => openModal()} 
+            className={`shadow-lg ${isLimitReached ? 'opacity-50 cursor-not-allowed bg-gray-400 shadow-none hover:bg-gray-400' : 'shadow-purple-200'}`}
+            title={isLimitReached ? "Limite atteinte" : "Ajouter"}
+        >
           <Plus className="w-5 h-5 mr-2" />
           Ajouter un membre
         </Button>
@@ -277,6 +298,14 @@ export default function UsersPage() {
           </div>
         </form>
       </Modal>
+
+
+      <UpgradeModal 
+        open={upgradeModalOpen} 
+        onClose={() => setUpgradeModalOpen(false)} 
+        featureName="Staff Illimité" 
+        description={`Votre plan actuel (${planName}) est limité à ${maxStaff} membres d'équipe.`}
+      />
     </div>
   );
 }

@@ -1,35 +1,75 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useFetch } from '../lib/useFetch';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { UtensilsCrossed, ShoppingBag, Download, ArrowRight, MapPin, ChefHat, Clock, QrCode } from 'lucide-react';
+import { Download, Clock, MapPin } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Modal } from '../components/ui/Modal';
 import { useBranding } from '../context/BrandingContext';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
+import { HomeClassic } from '../components/templates/HomeClassic';
+import { HomeSplit } from '../components/templates/HomeSplit';
+import { HomeMinimal } from '../components/templates/HomeMinimal';
+import { HomeImmersive } from '../components/templates/HomeImmersive';
+
 
 export default function HomePage() {
   const { branding } = useBranding();
+  const { user } = useAuth(); // Import user
   const { data: tablesData, loading } = useFetch<{ data: any[] }>('/tables/available');
   const [tableCode, setTableCode] = useState('');
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isDineInModalOpen, setIsDineInModalOpen] = useState(false);
   const navigate = useNavigate();
 
+  const isStaff = user && ['admin', 'super_admin', 'serveur', 'caissier', 'cuisine'].includes(user.role);
+
+  const blockStaffAction = () => {
+      toast.error("Action impossible pour le staff", {
+          description: "Veuillez passer par le Dashboard pour prendre une commande."
+      });
+  };
+
+  const handleDineInClick = () => {
+      if (isStaff) {
+          blockStaffAction();
+          return;
+      }
+      setIsDineInModalOpen(true);
+  };
+
+  const handleTakeoutClick = (e?: React.MouseEvent) => {
+      if (isStaff) {
+          e?.preventDefault();
+          blockStaffAction();
+          return;
+      }
+      navigate(`${tenantPath}/takeout`);
+  };
+
   // Base URL for QR codes
   const baseUrl = window.location.origin;
-  const takeoutUrl = `${baseUrl}/takeout`;
+
+  // Multi-tenant path handling
+  const path = window.location.pathname;
+  const match = path.match(/^\/r\/([^\/]+)/);
+  const tenantSlug = match ? match[1] : null;
+  const tenantPath = tenantSlug ? `/r/${tenantSlug}` : '';
+  const takeoutUrl = `${baseUrl}${tenantPath}/takeout`;
 
   // Sticky Session Check
   useEffect(() => {
     const activeCode = localStorage.getItem('activeTableCode');
     if (activeCode) {
-        navigate(`/dine-in/${activeCode}`);
+        navigate(`${tenantPath}/dine-in/${activeCode}`);
     }
-  }, [navigate]);
+  }, [navigate, tenantPath]);
 
-  const handleGo = () => {
-    if(tableCode) navigate(`/dine-in/${tableCode}`);
+  const handleGo = (code?: string) => {
+    const targetCode = code || tableCode;
+    if(targetCode) navigate(`${tenantPath}/dine-in/${targetCode}`);
   };
 
   const downloadQrCode = () => {
@@ -60,118 +100,30 @@ export default function HomePage() {
     <div className="text-stone-800 font-sans overflow-x-hidden bg-stone-50 flex-1 flex flex-col">
       
       {/* Hero Section with Background */}
-      <div 
-        className="relative bg-cover bg-center min-h-[50vh] md:min-h-[60vh] flex items-center"
-        style={{ 
-          backgroundImage: branding.heroImage 
-            ? `linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.5)), url(${branding.heroImage})`
-            : `linear-gradient(135deg, ${branding.primaryColor || '#f97316'}, ${branding.secondaryColor || '#dc2626'})`,
-          backgroundColor: branding.primaryColor || '#8B4513'
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-6 pt-12 pb-32 md:pt-20 md:pb-40 w-full">
-          <div className="max-w-4xl mx-auto text-center flex flex-col items-center">
-            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-4">
-              {branding.name.split(' ')[0]}{' '}
-              <span className="italic font-serif text-orange-300">{branding.name.split(' ').slice(1).join(' ') || 'Restaurant'}.</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-white/90 font-medium mb-2">
-              {branding.tagline || 'Commandez. Savourez. Profitez.'}
-            </p>
-            <p className="text-white/70 mb-8 text-sm md:text-base">
-              Cuisine authentique, service rapide, plaisir garanti.
-            </p>
-            <Link to="/takeout">
-              <button 
-                className="text-white font-bold py-3 px-8 rounded-full flex items-center gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-105"
-                style={{ background: 'var(--primary-gradient)' }}
-              >
-                Commander maintenant
-                <ArrowRight className="w-5 h-5" />
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      {/* Template Dispatcher */}
+      {(() => {
+        const style = branding.heroStyle || 'classic';
+        // Pass handleTakeoutClick explicitly
+        const props = { 
+            branding, 
+            onDineInClick: handleDineInClick,
+            onTakeoutClick: handleTakeoutClick, // New prop
+            tenantPath 
+        };
 
-      {/* Service Cards Section */}
-      <div className="max-w-7xl mx-auto px-6 -mt-16 relative z-10 mb-16 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          
-          {/* Card: À Emporter */}
-          <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center flex-shrink-0">
-                <ShoppingBag className="w-7 h-7 text-orange-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-stone-900">À Emporter</h3>
-                <p className="text-sm text-stone-500 flex items-center gap-1 mt-1">
-                  <Clock className="w-3.5 h-3.5" /> Prêt en 15-20 min
-                </p>
-              </div>
-            </div>
-            <Link to="/takeout" className="block">
-              <button className="w-full py-3 rounded-xl border-2 border-orange-500 text-orange-600 font-bold hover:bg-orange-50 transition-colors flex items-center justify-center gap-2">
-                Commander <ArrowRight className="w-4 h-4" />
-              </button>
-            </Link>
-          </div>
+        switch (style) {
+          case 'split':
+            return <HomeSplit {...props} />;
+          case 'minimal':
+            return <HomeMinimal {...props} />;
+          case 'immersive':
+            return <HomeImmersive {...props} />;
 
-          {/* Card: Sur Place */}
-          <div className="bg-white rounded-2xl shadow-lg border border-stone-100 p-6 hover:shadow-xl transition-shadow">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="w-14 h-14 rounded-2xl bg-stone-100 flex items-center justify-center flex-shrink-0">
-                <UtensilsCrossed className="w-7 h-7 text-stone-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-stone-900">Sur Place</h3>
-                <p className="text-sm text-stone-500 flex items-center gap-1 mt-1">
-                  <QrCode className="w-3.5 h-3.5" /> Choisissez votre table
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={() => setIsDineInModalOpen(true)}
-              className="w-full py-3 rounded-xl border-2 border-stone-300 text-stone-700 font-bold hover:bg-stone-50 transition-colors flex items-center justify-center gap-2"
-            >
-              Scanner / Commander <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Why Order Here Section */}
-      <div className="max-w-7xl mx-auto px-6 py-12 w-full flex-grow">
-        <h2 className="text-2xl font-bold text-center text-stone-900 mb-8">Pourquoi commander ici ?</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-orange-100 flex items-center justify-center">
-              <ShoppingBag className="w-6 h-6 text-orange-600" />
-            </div>
-            <p className="text-sm font-medium text-stone-700">Commande rapide & sans attente</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-green-100 flex items-center justify-center">
-              <ChefHat className="w-6 h-6 text-green-600" />
-            </div>
-            <p className="text-sm font-medium text-stone-700">Cuisine fraîche & locale</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-blue-100 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-blue-600" />
-            </div>
-            <p className="text-sm font-medium text-stone-700">Suivi en temps réel</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-red-100 flex items-center justify-center">
-              <MapPin className="w-6 h-6 text-red-600" />
-            </div>
-            <p className="text-sm font-medium text-stone-700">Retrait sur place</p>
-          </div>
-        </div>
-      </div>
+          case 'classic':
+          default:
+            return <HomeClassic {...props} />;
+        }
+      })()}
 
       {/* Footer */}
       <footer className="bg-stone-900 text-white py-8 mt-auto">
@@ -226,16 +178,10 @@ export default function HomePage() {
                 placeholder="Ex: A1, T5..." 
                 value={tableCode} 
                 onChange={e => setTableCode(e.target.value.toUpperCase())} 
-                className="h-14 text-xl font-mono tracking-widest"
+                onKeyDown={(e) => e.key === 'Enter' && handleGo()}
+                className="h-14 text-xl font-mono tracking-widest w-full"
                 autoFocus
               />
-              <Button 
-                onClick={handleGo} 
-                disabled={!tableCode}
-                className="h-14 px-8 text-lg font-bold"
-              >
-                GO
-              </Button>
             </div>
           </div>
 
@@ -246,7 +192,7 @@ export default function HomePage() {
                 {tablesData.data.map((table) => (
                   <button 
                     key={table.id}
-                    onClick={() => { setTableCode(table.code); handleGo(); }}
+                    onClick={() => { setTableCode(table.code); handleGo(table.code); }}
                     className="py-3 px-2 rounded-lg bg-green-50 border border-green-200 text-green-700 font-bold text-sm hover:bg-green-100 transition-colors"
                   >
                     {table.name}

@@ -23,72 +23,111 @@ import AccountingPage from './pages/admin/AccountingPage';
 import ReservationsPage from './pages/admin/ReservationsPage';
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 import DispatchPage from './pages/admin/DispatchPage';
+
+import GoTchopLandingPage from './pages/saas/GoTchopLandingPage';
+import RestaurantRegistrationPage from './pages/saas/RestaurantRegistrationPage';
+import SuperAdminLayout from './pages/super-admin/SuperAdminLayout';
+import TenantsPage from './pages/super-admin/TenantsPage';
+import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard';
+import SuperAdminInvoicesPage from './pages/super-admin/InvoicesPage';
+import SubscriptionPage from './pages/admin/SubscriptionPage';
 import { useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  
+
   if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
   if (!user) return <Navigate to="/login" />;
-  
+
   return <>{children}</>;
 }
 
 import { Toaster } from 'sonner';
 import { NotificationProvider } from './context/NotificationContext';
 import { BrandingProvider } from './context/BrandingContext';
+import FeaturesPage from './pages/saas/FeaturesPage';
+import ContactPage from './pages/saas/ContactPage';
+import GuidePage from './pages/saas/GuidePage';
+import { LegalMentionsPage, PrivacyPage, TermsPage } from './pages/saas/LegalPages';
 
 export default function App() {
   return (
     <BrandingProvider>
-    <NotificationProvider>
-      <Toaster position="top-right" richColors closeButton />
-      <Routes>
-      {/* Public Routes */}
-      <Route element={<PublicLayout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/takeout" element={<TakeoutPage />} />
-        <Route path="/dine-in/:code" element={<DineInPage />} />
-        <Route path="/t/:code" element={<DineInPage />} /> {/* Short URL for QR codes */}
-        <Route path="/track" element={<OrderTrackingPage />} />
-        <Route path="/track/:code" element={<OrderTrackingPage />} />
-        <Route path="/book" element={<BookingPage />} />
-      </Route>
+      <NotificationProvider>
+        <Toaster position="top-right" richColors closeButton />
+        <Routes>
+          {/* SAAS Public Routes */}
+          <Route path="/" element={<GoTchopLandingPage />} />
+          <Route path="/register" element={<RestaurantRegistrationPage />} />
+          <Route path="/features" element={<FeaturesPage />} />
+          <Route path="/guide" element={<GuidePage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/legal/terms" element={<TermsPage />} />
+          <Route path="/legal/privacy" element={<PrivacyPage />} />
+          <Route path="/legal/mentions" element={<LegalMentionsPage />} />
 
-      <Route path="/login" element={<LoginPage />} />
+          {/* Tenant Public Service Routes (Scoped by Slug) */}
+          <Route path="/r/:slug" element={<PublicLayout />}>
+            <Route index element={<HomePage />} /> {/* Defaults to Menu/Home */}
+            <Route path="menu" element={<HomePage />} />
+            <Route path="takeout" element={<TakeoutPage />} />
+            <Route path="book" element={<BookingPage />} />
+            <Route path="track" element={<OrderTrackingPage />} />
+            <Route path="track/:code" element={<OrderTrackingPage />} />
 
-      {/* Delivery Dashboard (Mobile First, No Admin Layout) */}
-      <Route path="/delivery" element={
-        <ProtectedRoute>
-          <DeliveryDashboard />
-        </ProtectedRoute>
-      } />
-      
-      <Route path="/admin" element={
-        <ProtectedRoute>
-          <AdminLayout />
-        </ProtectedRoute>
-      }>
-        <Route index element={<DashboardPage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="dispatch" element={<DispatchPage />} />
-        <Route path="tables" element={<TablesPage />} />
-        <Route path="menu" element={<MenuPage />} />
-        <Route path="orders" element={<OrdersPage />} />
-        <Route path="calls" element={<ServerCallsPage />} />
-        <Route path="finance" element={<FinancePage />} />
-        <Route path="cash" element={<CashPage />} />
-        <Route path="cash/transfers" element={<CashTransfersPage />} />
-        <Route path="invoices" element={<InvoicesPage />} />
-        <Route path="accounting" element={<AccountingPage />} />
-        <Route path="reservations" element={<ReservationsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
-        <Route path="audit-logs" element={<AuditLogsPage />} />
-      </Route>
+            {/* Dine-in can be here too, e.g. /r/:slug/t/:code */}
+            <Route path="t/:code" element={<DineInPage />} />
+            <Route path="dine-in/:code" element={<DineInPage />} />
+          </Route>
 
-      <Route path="*" element={<Navigate to="/admin" />} />
-      </Routes>
-    </NotificationProvider>
+          {/* Legacy/Short Routes (Redirect or Keep for compatibility if globally unique) */}
+          {/* For now, let's keep robust short links if possible, or redirect if we can't infer slug */}
+          <Route path="/t/:code" element={<DineInPage />} /> {/* Fallback or global lookup */}
+          <Route path="/dine-in/:code" element={<DineInPage />} />
+
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Delivery Dashboard (Mobile First, No Admin Layout) */}
+          <Route path="/delivery" element={
+            <ProtectedRoute>
+              <DeliveryDashboard />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }>
+            <Route index element={<DashboardPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="dispatch" element={<DispatchPage />} />
+            <Route path="tables" element={<TablesPage />} />
+            <Route path="menu" element={<MenuPage />} />
+            <Route path="orders" element={<OrdersPage />} />
+            <Route path="calls" element={<ServerCallsPage />} />
+            <Route path="finance" element={<FinancePage />} />
+            <Route path="cash" element={<CashPage />} />
+            <Route path="cash/transfers" element={<CashTransfersPage />} />
+            <Route path="invoices" element={<InvoicesPage />} />
+            <Route path="accounting" element={<AccountingPage />} />
+            <Route path="reservations" element={<ReservationsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="audit-logs" element={<AuditLogsPage />} />
+            <Route path="subscription" element={<SubscriptionPage />} />
+          </Route>
+
+          {/* SUPER ADMIN ROUTES */}
+          <Route path="/admin/super" element={<SuperAdminLayout />}>
+            <Route index element={<SuperAdminDashboard />} />
+            <Route path="tenants" element={<TenantsPage />} />
+            <Route path="invoices" element={<SuperAdminInvoicesPage />} />
+            <Route path="audit-logs" element={<AuditLogsPage />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/admin" />} />
+        </Routes>
+      </NotificationProvider>
     </BrandingProvider>
   );
 }

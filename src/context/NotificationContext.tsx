@@ -13,18 +13,17 @@ export const useNotifications = () => useContext(NotificationContext);
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   const eventSourceRef = useRef<EventSource | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  // Initialize Audio
-  useEffect(() => {
-    audioRef.current = new Audio('/sounds/notification.mp3'); 
-    audioRef.current.volume = 0.5;
-  }, []);
-
+  // Audio is created on demand to avoid persistent connection/cache issues in some browsers
   const playSound = () => {
-    if (audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(e => console.log('Audio play failed', e));
+    try {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.volume = 0.5;
+        audio.play().catch(e => {
+            // Autoplay policy or other error
+            console.warn('Notification sound blocked:', e);
+        });
+    } catch (e) {
+        console.error('Audio setup failed:', e);
     }
   };
 

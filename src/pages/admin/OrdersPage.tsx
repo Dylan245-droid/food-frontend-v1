@@ -6,7 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, Search, Banknote, Flame, BellRing, User, LayoutGrid, List, Plus } from 'lucide-react';
+import { ChefHat, Check, Clock, ShoppingBag, UtensilsCrossed, Search, Flame, BellRing, User, LayoutGrid, List, Plus, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentModal } from '../../components/ui/PaymentModal';
 import { Receipt } from '../../components/Receipt';
@@ -17,6 +17,7 @@ import { useCashSession } from '../../hooks/useCashSession';
 import { NoCashSessionAlert } from '../../components/NoCashSessionAlert';
 import { formatCurrency } from '../../lib/utils';
 import { NewOrderModal } from '../../components/admin/NewOrderModal';
+import { useSubscription } from '../../hooks/useSubscription';
 
 // ... (keep existing interfaces)
 interface MenuItem {
@@ -150,6 +151,17 @@ export default function OrdersPage() {
       }
   };
 
+  // Check KDS Feature
+  const { can } = useSubscription(); // Assuming useSubscription hook handles feature checks
+  const hasKds = can('kds_enabled');
+
+  // Enforce List View if no KDS
+  useEffect(() => {
+    if (!hasKds && viewMode !== 'list') {
+        setViewMode('list');
+    }
+  }, [hasKds, viewMode]);
+
   const handlePayAndPrint = async (order: Order, skipConfirm = false) => {
       // ** CHECK SESSION FIRST ** (except for reprint of already paid orders)
       if (order.status !== 'paid' && !checkSessionBeforePayment(order.type)) {
@@ -200,6 +212,26 @@ export default function OrdersPage() {
       } finally {
           setLoadingDrivers(false);
       }
+  };
+
+  // Print-only function for deliveries (no payment logic)
+  const handlePrintOnly = (order: Order) => {
+      const receipt: ReceiptOrder = {
+          id: order.id,
+          dailyNumber: order.dailyNumber,
+          pickupCode: order.pickupCode || null,
+          status: order.status as 'pending' | 'in_progress' | 'delivered' | 'paid' | 'cancelled',
+          totalAmount: order.totalAmount,
+          items: order.items,
+          createdAt: order.createdAt,
+          type: order.type,
+          clientName: order.clientName,
+          table: order.table ? { name: order.table.name } : undefined,
+          subtotal: Math.round(order.totalAmount / 1.18),
+          tax: order.totalAmount - Math.round(order.totalAmount / 1.18)
+      };
+      setReceiptOrder(receipt);
+      setTimeout(() => window.print(), 500);
   };
 
   const handleDeliveryHandover = (order: Order) => {
@@ -337,6 +369,8 @@ export default function OrdersPage() {
         </div>
 
         {/* View Toggle */}
+        {/* View Toggle - Only show if KDS enabled */}
+        {hasKds && (
         <div className="flex gap-1 bg-stone-100 p-1 rounded-lg">
           <button
             onClick={() => setViewMode('kanban')}
@@ -353,6 +387,7 @@ export default function OrdersPage() {
             <List className="w-4 h-4" />
           </button>
         </div>
+        )}
       </div>
 
       {/* Kanban View */}
@@ -424,7 +459,7 @@ export default function OrdersPage() {
                           if (order.type === 'takeout') {
                               handlePayAndPrint(order);
                           } else if (order.type === 'delivery') {
-                               if (order.deliveryStatus !== 'picked_up') {
+                               if (!order.deliveryStatus || order.deliveryStatus === 'pending') {
                                   handleDeliveryHandover(order);
                                } else {
                                   toast.info("Commande déjà en course");
@@ -437,8 +472,16 @@ export default function OrdersPage() {
                               ? (order.deliveryStatus === 'picked_up' || order.deliveryStatus === 'assigned' ? undefined : 'CONFIER')
                               : undefined
                       }
-                      onSecondaryAction={undefined}
-                      secondaryActionLabel={undefined}
+                      onSecondaryAction={
+                          order.type === 'delivery'
+                              ? () => handlePrintOnly(order)
+                              : undefined
+                      }
+                      secondaryActionLabel={
+                          order.type === 'delivery'
+                              ? 'TICKET'
+                              : undefined
+                      }
                       variant={order.type === 'delivery' && (order.deliveryStatus === 'picked_up' || order.deliveryStatus === 'assigned') ? 'info' : 'delivered'}  
                   />
               ))}
@@ -460,11 +503,25 @@ export default function OrdersPage() {
                   <OrderCard 
                       key={order.id} 
                       order={order} 
-                      onAction={() => handlePayAndPrint(order)} 
+                      onAction={
+                          order.type === 'delivery'
+                              ? undefined  // No primary action for delivery (driver handles payment)
+                              : () => handlePayAndPrint(order)
+                      } 
                       actionLabel={
                           order.type === 'delivery' 
-                               ? (order.deliveryStatus === 'delivered' ? 'LIVRÉE' : 'EN COURSE')
+                               ? undefined
                                : 'TICKET'
+                      }
+                      onSecondaryAction={
+                          order.type === 'delivery'
+                              ? () => handlePrintOnly(order)
+                              : undefined
+                      }
+                      secondaryActionLabel={
+                          order.type === 'delivery'
+                              ? 'TICKET'
+                              : undefined
                       }
                       variant="paid" 
                   />
@@ -725,13 +782,14 @@ export default function OrdersPage() {
       <PaymentModal 
         order={paymentModalOrder}
         onClose={() => setPaymentModalOrder(null)}
-        onConfirm={async (amountReceived) => {
+        onConfirm={async (amountReceived, method) => {
             if (!paymentModalOrder) return;
             try {
                 // Call API with extra amountReceived param
                 await api.patch(`/staff/orders/${paymentModalOrder.id}/status`, { 
                     status: 'paid',
-                    amountReceived // New param
+                    amountReceived, // New param
+                    paymentMethod: method
                 });
                 
                 // Print Receipt
@@ -960,22 +1018,24 @@ function OrderCard({ order, onAction, actionLabel, variant, readonly = false, on
                 </div>
             )}
 
-            {!readonly && actionLabel && (
+            {!readonly && (actionLabel || secondaryActionLabel) && (
                 <div className="p-2 pl-4 bg-stone-50 border-t border-stone-100 mt-auto flex gap-2">
-                    <Button
-                        onClick={onAction} 
-                        className={`font-black uppercase tracking-wide text-xs py-2 h-10 ${onSecondaryAction ? 'flex-1' : 'w-full'} ${theme.btn} rounded-lg shadow-sm`}
-                        style={(variant === 'paid' || variant === 'progress') ? { background: 'var(--primary-gradient)' } : undefined}
-                    >
-                        {variant === 'pending' && <Flame className="w-3 h-3 mr-1" />}
-                        {actionLabel}
-                    </Button>
+                    {actionLabel && (
+                        <Button
+                            onClick={onAction} 
+                            className={`font-black uppercase tracking-wide text-xs py-2 h-10 ${onSecondaryAction ? 'flex-1' : 'w-full'} ${theme.btn} rounded-lg shadow-sm`}
+                            style={(variant === 'paid' || variant === 'progress') ? { background: 'var(--primary-gradient)' } : undefined}
+                        >
+                            {variant === 'pending' && <Flame className="w-3 h-3 mr-1" />}
+                            {actionLabel}
+                        </Button>
+                    )}
                     {onSecondaryAction && (
                         <Button
                             onClick={onSecondaryAction} 
-                            className="flex-1 font-black uppercase tracking-wide text-xs py-2 h-10 bg-green-600 text-white hover:bg-green-700 rounded-lg shadow-sm"
+                            className={`${actionLabel ? 'flex-1' : 'w-full'} font-black uppercase tracking-wide text-xs py-2 h-10 bg-stone-700 text-white hover:bg-stone-800 rounded-lg shadow-sm`}
                         >
-                            <Banknote className="w-3 h-3 mr-1" />
+                            <Printer className="w-3 h-3 mr-1" />
                             {secondaryActionLabel}
                         </Button>
                     )}

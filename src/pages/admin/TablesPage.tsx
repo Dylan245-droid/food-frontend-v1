@@ -13,6 +13,7 @@ import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder, OrderItem } from '../../components/Receipt';
 import { useBranding } from '../../context/BrandingContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSubscription } from '../../hooks/useSubscription';
 import { useCashSession } from '../../hooks/useCashSession';
 import { toast } from 'sonner';
 
@@ -66,6 +67,7 @@ export default function TablesPage() {
   const { branding } = useBranding();
   const { user } = useAuth();
   const { hasActiveSession, loading: sessionLoading } = useCashSession();
+  const { isTableLimitReached, planName, maxTables } = useSubscription();
   const navigate = useNavigate();
   const baseUrl = window.location.origin;
 
@@ -283,10 +285,29 @@ export default function TablesPage() {
                 </div>
                 {isMyTables ? 'Mon Rang' : 'Salle & Tables'}
             </h1>
-            <p className="text-stone-400 text-sm font-medium ml-14">Plan de salle et assignations</p>
+            <p className="text-stone-400 text-sm font-medium ml-14">Plan de salle et assignations
+                <span className={`ml-3 px-2 py-0.5 rounded-full text-xs font-bold ${
+                    isTableLimitReached(data?.data.length || 0) ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'
+                }`}>
+                    {data?.data.length || 0} / {maxTables === 999 ? '∞' : maxTables} tables
+                </span>
+            </p>
         </div>
         {!isMyTables && (
-            <Button onClick={() => setIsModalOpen(true)} className="bg-stone-900 text-white hover:bg-stone-800 gap-2 h-12 px-6 rounded-xl font-bold shadow-lg shadow-stone-900/10">
+            <Button 
+                onClick={() => {
+                    if (isTableLimitReached(data?.data.length || 0)) {
+                         alert(`Limite de tables atteinte pour l'offre ${planName}. Passez à l'offre supérieure pour en ajouter plus.`);
+                         return;
+                    }
+                    setIsModalOpen(true);
+                }} 
+                className={`gap-2 h-12 px-6 rounded-xl font-bold shadow-lg shadow-stone-900/10 ${
+                    isTableLimitReached(data?.data.length || 0) 
+                    ? 'bg-stone-100 text-stone-400 cursor-not-allowed hover:bg-stone-100' 
+                    : 'bg-stone-900 text-white hover:bg-stone-800'
+                }`}
+            >
                 <Plus className="w-4 h-4" />
                 Ajouter Table
             </Button>
@@ -501,7 +522,7 @@ export default function TablesPage() {
             </div>
             <QRCodeSVG 
               id="qr-code-svg"
-              value={`${baseUrl}/t/${selectedTable?.code}`} 
+              value={`${baseUrl}/r/${user?.tenant?.slug || 'default'}/t/${selectedTable?.code}`} 
               size={200}
               level="H"
               includeMargin
@@ -562,7 +583,7 @@ export default function TablesPage() {
             order={paymentModalData as any}
             title={`Encaissement Table`}
             onClose={() => setPaymentModalData(null)}
-            onConfirm={async (amountReceived) => {
+            onConfirm={async (amountReceived, method) => {
                 try {
                     // Distribute payment amount roughly relative to order size (for recording sake) or attribute it to first order?
                     // Better: We record separate payments for each order, but we only have ONE amountReceived from the user.
@@ -581,7 +602,7 @@ export default function TablesPage() {
                     // Aggregate Payment
                     await api.post(`/admin/tables/${paymentModalData.id}/pay`, {
                         amountReceived: amountReceived,
-                        paymentMethod: 'cash'
+                        paymentMethod: method 
                     });
                     
                     setPaymentModalData(null);

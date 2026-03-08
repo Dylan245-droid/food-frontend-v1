@@ -34,7 +34,7 @@ interface CartItem {
 
 export default function DineInPage() {
   const { branding } = useBranding();
-  const { code } = useParams();
+  const { code, slug } = useParams();
   const { data: tableData, loading, error } = useFetch<any>(`/tables/${code}`);
   const { data: tableOrders, refetch: refreshOrders } = useFetch<any>(`/tables/${code}/orders`);
   
@@ -100,7 +100,7 @@ export default function DineInPage() {
           setShowThankYou(true);
           localStorage.removeItem('activeTableCode');
           const timer = setTimeout(() => {
-              navigate('/');
+              navigate(`/r/${slug}`);
           }, 8000);
           return () => clearTimeout(timer);
       }
@@ -121,7 +121,7 @@ export default function DineInPage() {
              console.error("Erreur cleaning session", e);
          } finally {
              localStorage.removeItem('activeTableCode');
-             navigate('/');
+             navigate(`/r/${slug}`);
          }
      }
   };
@@ -213,7 +213,7 @@ export default function DineInPage() {
              </div>
              <h2 className="text-xl font-bold text-stone-900 mb-2">Table introuvable</h2>
              <p className="text-stone-500 mb-6">Le code table semble incorrect ou la session est expirée.</p>
-             <Button onClick={() => { localStorage.removeItem('activeTableCode'); navigate('/'); }} className="w-full">
+             <Button onClick={() => { localStorage.removeItem('activeTableCode'); navigate(`/r/${slug}`); }} className="w-full">
                  Retour à l'accueil
              </Button>
           </div>

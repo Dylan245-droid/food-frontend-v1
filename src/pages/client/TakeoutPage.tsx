@@ -57,6 +57,11 @@ export default function TakeoutPage() {
   const [activeCategoryId, setActiveCategoryId] = useState<number>(0);
   const navigate = useNavigate();
 
+  // Get tenant slug from URL for proper navigation
+  const path = window.location.pathname;
+  const match = path.match(/^\/r\/([^\/]+)/);
+  const tenantPath = match ? `/r/${match[1]}` : '';
+
   // Initialize active category
   useEffect(() => {
      if (menuData && menuData.length > 0 && activeCategoryId === 0) {
@@ -163,7 +168,7 @@ export default function TakeoutPage() {
         
         const pickupCode = res.data.order.pickupCode;
         localStorage.setItem('lastPickupCode', pickupCode);
-        navigate(`/track/${pickupCode}`);
+        navigate(`${tenantPath}/track/${pickupCode}`);
     } catch (error) {
         alert('Erreur lors de la commande');
     } finally {
@@ -200,18 +205,28 @@ export default function TakeoutPage() {
 
        {/* Content Grid */}
        <div className="max-w-7xl mx-auto px-6 py-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {activeCategory?.items.map(item => (
-                    <div key={item.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <MenuItemCard 
-                            item={item} 
-                            inCart={cart.find(i => i.menuItemId === item.id)} 
-                            onAdd={addToCart} 
-                            onRemove={removeFromCart} 
-                        />
+            {activeCategory && activeCategory.items.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-20 text-center opacity-60">
+                    <div className="w-20 h-20 bg-stone-200 rounded-full flex items-center justify-center mb-4">
+                        <ShoppingBag className="w-8 h-8 text-stone-400" />
                     </div>
-                ))}
-            </div>
+                    <h3 className="text-xl font-bold text-stone-600">Cette catégorie est vide</h3>
+                    <p className="text-stone-400">Aucun produit disponible pour le moment.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {activeCategory?.items.map(item => (
+                        <div key={item.id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <MenuItemCard 
+                                item={item} 
+                                inCart={cart.find(i => i.menuItemId === item.id)} 
+                                onAdd={addToCart} 
+                                onRemove={removeFromCart} 
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
        </div>
 
        {/* Floating Cart Button */}

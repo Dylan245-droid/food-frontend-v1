@@ -250,7 +250,11 @@ export default function OrderTrackingPage() {
                                      <div className="absolute -right-4 -top-4 w-16 h-16 bg-yellow-100 rounded-full blur-xl"></div>
                                     <Clock className="w-8 h-8 text-yellow-600 mx-auto mb-3 animate-spin-slow opacity-80" />
                                     <h3 className="text-lg font-bold text-yellow-800 mb-1">Commande reçue !</h3>
-                                    <p className="text-yellow-700/80 text-sm">Le chef va bientôt valider votre commande.</p>
+                                    {order.type === 'delivery' ? (
+                                        <p className="text-yellow-700/80 text-sm">Votre commande est en attente de validation par le restaurant.</p>
+                                    ) : (
+                                        <p className="text-yellow-700/80 text-sm">Le chef va bientôt valider votre commande.</p>
+                                    )}
                                 </div>
                             )}
                             {order.status === 'in_progress' && (
@@ -258,7 +262,11 @@ export default function OrderTrackingPage() {
                                     <div className="absolute -left-4 -bottom-4 w-20 h-20 rounded-full blur-xl animate-pulse" style={{ background: 'var(--primary-100)' }}></div>
                                     <ChefHat className="w-8 h-8 mx-auto mb-3 animate-bounce" style={{ color: 'var(--primary-600)' }} />
                                     <h3 className="text-lg font-bold mb-1" style={{ color: 'var(--primary-900)' }}>Ça chauffe en cuisine !</h3>
-                                    <p className="text-sm" style={{ color: 'var(--primary-700)' }}>Vos plats sont en cours de préparation avec amour.</p>
+                                    {order.type === 'delivery' ? (
+                                        <p className="text-sm" style={{ color: 'var(--primary-700)' }}>Vos plats sont en préparation. Un livreur sera bientôt assigné.</p>
+                                    ) : (
+                                        <p className="text-sm" style={{ color: 'var(--primary-700)' }}>Vos plats sont en cours de préparation avec amour.</p>
+                                    )}
                                 </div>
                             )}
                             {order.status === 'delivered' && (
@@ -266,14 +274,22 @@ export default function OrderTrackingPage() {
                                     <div className="absolute inset-0 bg-green-100/20 animate-pulse"></div>
                                     <Utensils className="w-8 h-8 text-green-600 mx-auto mb-3" />
                                     <h3 className="text-xl font-black text-green-800 mb-1">C'est prêt ! 🍔</h3>
-                                    <p className="text-green-700 text-sm font-medium">Présentez votre code <span className="font-bold">{order.pickupCode}</span> au comptoir.</p>
+                                    {order.type === 'delivery' ? (
+                                        <p className="text-green-700 text-sm font-medium">Votre commande est en route vers <span className="font-bold">{order.deliveryAddress || 'votre adresse'}</span>.</p>
+                                    ) : (
+                                        <p className="text-green-700 text-sm font-medium">Présentez votre code <span className="font-bold">{order.pickupCode}</span> au comptoir.</p>
+                                    )}
                                 </div>
                             )}
                             {isPaid && (
                                 <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 p-8 rounded-2xl text-center relative overflow-hidden">
                                     <PartyPopper className="w-12 h-12 text-purple-500 mx-auto mb-4 animate-bounce" />
                                     <h3 className="text-xl font-black text-purple-900 mb-2">Bon Appétit !</h3>
-                                    <p className="text-purple-700/80 text-sm max-w-[200px] mx-auto">Merci de votre visite. On espère vous revoir très vite ! 👋</p>
+                                    {order.type === 'delivery' ? (
+                                        <p className="text-purple-700/80 text-sm max-w-[200px] mx-auto">Merci pour votre commande ! Régalez-vous bien ! 🍽️</p>
+                                    ) : (
+                                        <p className="text-purple-700/80 text-sm max-w-[200px] mx-auto">Merci de votre visite. On espère vous revoir très vite ! 👋</p>
+                                    )}
                                 </div>
                             )}
                         </div>

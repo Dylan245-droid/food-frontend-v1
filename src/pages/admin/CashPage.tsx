@@ -11,6 +11,7 @@ import {
   CheckCircle, XCircle, TrendingUp, TrendingDown, Receipt, Info, ShieldCheck
 } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
+import { useSubscription } from '../../hooks/useSubscription';
 
 interface CashRegister {
   id: number;
@@ -98,6 +99,8 @@ export default function CashPage() {
 
   const registers = registersData?.data || [];
   const openSessions = openSessionsData?.data || [];
+  
+  const { isRegisterLimitReached, planName, maxRegisters } = useSubscription();
 
   // Add Movement State
   const [isAddMovementModalOpen, setIsAddMovementModalOpen] = useState(false);
@@ -292,9 +295,27 @@ export default function CashPage() {
             <Banknote className="w-8 h-8" style={{ color: 'var(--primary)' }} />
             Gestion de Caisse
           </h1>
-          <p className="text-gray-500">Postes de caisse et sessions quotidiennes</p>
+          <div className="text-gray-500 flex items-center gap-2">
+              Postes de caisse et sessions quotidiennes
+                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                    isRegisterLimitReached(registers.length) ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'
+                }`}>
+                    {registers.length} / {maxRegisters === 999 ? '∞' : maxRegisters}
+                </span>
+          </div>
         </div>
-        <Button onClick={() => { setSelectedRegister(null); setRegisterForm({ name: '', location: '', type: 'sales' }); setIsRegisterModalOpen(true); }}>
+        <Button 
+            onClick={() => { 
+                if (isRegisterLimitReached(registers.length)) {
+                    alert(`Limite de caisses atteinte pour l'offre ${planName}.`);
+                    return;
+                }
+                setSelectedRegister(null); 
+                setRegisterForm({ name: '', location: '', type: 'sales' }); 
+                setIsRegisterModalOpen(true); 
+            }}
+            className={isRegisterLimitReached(registers.length) ? 'opacity-50 cursor-not-allowed' : ''}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Nouveau poste
         </Button>
@@ -497,7 +518,13 @@ export default function CashPage() {
             <Banknote className="w-16 h-16 mx-auto mb-4 opacity-30" />
             <p className="text-xl font-bold mb-2">Aucun poste de caisse</p>
             <p className="text-sm mb-4">Créez votre premier poste pour commencer</p>
-            <Button onClick={() => setIsRegisterModalOpen(true)}>
+            <Button onClick={() => {
+                if (isRegisterLimitReached(registers.length)) {
+                    alert(`Limite de caisses atteinte (${planName}).`);
+                    return;
+                }
+                setIsRegisterModalOpen(true);
+            }}>
               <Plus className="w-4 h-4 mr-2" />
               Créer un poste
             </Button>
