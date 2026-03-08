@@ -5,7 +5,7 @@ import { ServerCallsNotification } from './ServerCallsNotification';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../context/BrandingContext';
 import { useSubscription } from '../hooks/useSubscription';
-import { LayoutDashboard, ShoppingBag, Users, FileText, LogOut, Coffee, Bell, TrendingUp, X, ChefHat, Settings, Banknote, ArrowRightLeft, ExternalLink, CreditCard, Menu } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Users, FileText, LogOut, Coffee, Bell, TrendingUp, X, ChefHat, Settings, Banknote, ArrowRightLeft, ExternalLink, CreditCard } from 'lucide-react';
 import { cn } from '../lib/utils';
 import UpgradeModal from './UpgradeModal';
 

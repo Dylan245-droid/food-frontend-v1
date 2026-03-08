@@ -100,7 +100,7 @@ export default function CashPage() {
   const registers = registersData?.data || [];
   const openSessions = openSessionsData?.data || [];
 
-  const { isRegisterLimitReached, planName, maxRegisters } = useSubscription();
+  const { isRegisterLimitReached, planName } = useSubscription();
 
   // Add Movement State
   const [isAddMovementModalOpen, setIsAddMovementModalOpen] = useState(false);

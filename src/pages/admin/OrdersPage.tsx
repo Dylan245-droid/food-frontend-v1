@@ -7,7 +7,7 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
 import {
-    ChefHat, Check, Clock, Search, Plus, UtensilsCrossed, ShoppingBag, Send, CreditCard, Banknote, Printer, XCircle, ChevronRight, LayoutDashboard, LayoutGrid, List, BellRing, Flame, User
+    ChefHat, Check, Clock, Search, Plus, UtensilsCrossed, ShoppingBag, Printer, XCircle, LayoutGrid, List, BellRing, Flame, User
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentModal } from '../../components/ui/PaymentModal';
