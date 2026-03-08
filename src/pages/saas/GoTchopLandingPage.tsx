@@ -146,19 +146,22 @@ const FloatingFood = () => {
 
     useEffect(() => {
         return scrollYProgress.on("change", (latest) => {
-            // Cycle through images based on scroll percentage
-            if (latest < 0.2) setCurrentStep(0);
-            else if (latest < 0.5) setCurrentStep(1);
-            else if (latest < 0.8) setCurrentStep(2);
-            else setCurrentStep(3);
+            let nextStep = 0;
+            if (latest < 0.2) nextStep = 0;
+            else if (latest < 0.5) nextStep = 1;
+            else if (latest < 0.8) nextStep = 2;
+            else nextStep = 3;
+
+            // Only update state if the step actually changed to save cycles
+            setCurrentStep(prev => prev !== nextStep ? nextStep : prev);
         });
     }, [scrollYProgress]);
 
-    // Smooth physics-based movement
-    const y = useSpring(useTransform(scrollYProgress, [0, 1], [-50, 600]), { stiffness: 40, damping: 30 });
-    const rotate = useSpring(useTransform(scrollYProgress, [0, 1], [0, 180]), { stiffness: 40, damping: 50 });
-    const x = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8, 1], ["50%", "10%", "-40%", "30%", "0%"]), { stiffness: 50, damping: 30 });
-    const scale = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8], [1, 1.1, 0.9, 1.2]), { stiffness: 50, damping: 30 });
+    // Smooth physics-based movement - Slightly softer on mobile to reduce jank
+    const y = useSpring(useTransform(scrollYProgress, [0, 1], [-50, 600]), { stiffness: 35, damping: 25 });
+    const rotate = useSpring(useTransform(scrollYProgress, [0, 1], [0, 180]), { stiffness: 35, damping: 40 });
+    const x = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8, 1], ["40%", "10%", "-30%", "20%", "0%"]), { stiffness: 40, damping: 25 });
+    const scale = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.5, 0.8], [0.9, 1.05, 0.85, 1.1]), { stiffness: 40, damping: 25 });
 
     const images = [
         "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=500&q=80", // Burger
@@ -168,25 +171,26 @@ const FloatingFood = () => {
     ];
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center">
+        <div className="fixed inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
             {/* The Plate */}
             <motion.div
                 style={{ x, y, rotate, scale }}
-                className="relative w-[45vh] h-[45vh] opacity-90"
+                className="relative w-[30vh] h-[30vh] md:w-[50vh] md:h-[50vh] opacity-90 will-change-transform"
             >
-                {/* Glow behind */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-orange-600 to-red-600 rounded-full blur-[80px] opacity-40 animate-pulse" />
+                {/* Glow behind - Disabled on simple mobile to save GPU */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-orange-600 to-red-600 rounded-full blur-[40px] md:blur-[80px] opacity-30 md:opacity-40 md:animate-pulse" />
 
                 <AnimatePresence mode='wait'>
                     <motion.img
                         key={currentStep}
                         src={images[currentStep]}
-                        initial={{ opacity: 0, scale: 0.8, rotate: -20 }}
-                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                        exit={{ opacity: 0, scale: 1.1, rotate: 20 }}
-                        transition={{ duration: 0.6 }}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.1 }}
+                        transition={{ duration: 0.4 }}
                         className="w-full h-full object-cover rounded-full shadow-2xl border-4 border-white/5"
                         alt="Dish"
+                        style={{ transform: 'translateZ(0)' }} // Force GPU
                     />
                 </AnimatePresence>
             </motion.div>
@@ -201,10 +205,10 @@ const Navbar = () => {
     const { user } = useAuth();
 
     return (
-        <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4">
-            <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full py-3 px-6 flex items-center gap-8 shadow-2xl">
+        <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4" style={{ transform: 'translateZ(0)' }}>
+            <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full py-3 px-4 md:px-6 flex items-center gap-4 md:gap-8 shadow-2xl">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-                    <img src="/logo_dark.png" alt="GoTchop" className="h-14" />
+                    <img src="/logo_dark.png" alt="GoTchop" className="h-10 md:h-14" />
                 </div>
                 <div className="hidden md:flex gap-6 text-sm font-medium text-gray-300">
                     <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Accueil</button>
@@ -236,9 +240,9 @@ const BentoCard = ({ children, title, sub, className = "", delay = 0 }: any) => 
     <motion.div
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-100px" }}
+        viewport={{ once: true, margin: "-50px" }}
         transition={{ delay, duration: 0.8 }}
-        className={`bg-black/40 backdrop-blur-2xl border border-white/10 p-8 rounded-[2rem] overflow-hidden relative group hover:border-orange-500/30 transition-colors ${className}`}
+        className={`bg-black/40 backdrop-blur-2xl border border-white/10 p-6 md:p-8 rounded-[2rem] overflow-hidden relative group hover:border-orange-500/30 transition-colors ${className}`}
     >
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
         <div className="relative z-10 h-full flex flex-col">
@@ -268,9 +272,9 @@ const Hero = () => {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-medium text-sm mb-8 backdrop-blur-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 font-medium text-xs md:text-sm mb-6 md:mb-8 backdrop-blur-sm"
                 >
-                    <Star className="w-4 h-4 fill-orange-400" />
+                    <Star className="w-3 h-3 md:w-4 md:h-4 fill-orange-400" />
                     <span>La plateforme préférée des restaurateurs</span>
                 </motion.div>
 
@@ -292,7 +296,7 @@ const Hero = () => {
                     transition={{ delay: 0.2, duration: 0.8 }}
                     className="flex flex-col items-center"
                 >
-                    <p className="text-xl md:text-3xl text-gray-200 font-light max-w-4xl mx-auto mb-12 leading-relaxed drop-shadow-lg">
+                    <p className="text-lg md:text-3xl text-gray-200 font-light max-w-4xl mx-auto mb-10 md:mb-12 leading-relaxed drop-shadow-lg">
                         Tenir un restaurant est un défi quotidien. <br className="hidden md:block" />
                         <span className="text-white font-medium">GoTchop</span> est l'allié qui s'adapte à votre réalité, pour que vous puissiez vous concentrer sur ce qui compte : <span className="text-orange-400 italic font-serif">vos clients.</span>
                     </p>
