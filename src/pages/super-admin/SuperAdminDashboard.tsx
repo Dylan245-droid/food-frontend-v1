@@ -62,14 +62,14 @@ export default function SuperAdminDashboard() {
     ] : [];
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8 space-y-8">
-            <header className="flex justify-between items-center mb-8">
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8 space-y-8">
+            <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Vue D'Ensemble</h1>
-                    <p className="text-slate-500">Pilotage de la plateforme & Revenus</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight uppercase">Vue D'Ensemble</h1>
+                    <p className="text-slate-500 text-sm">Pilotage de la plateforme & Revenus</p>
                 </div>
-                <div className="flex gap-4">
-                    <Button variant="outline" onClick={fetchData}>Actualiser</Button>
+                <div className="flex gap-4 w-full sm:w-auto">
+                    <Button variant="outline" onClick={fetchData} className="flex-1 sm:flex-none">Actualiser</Button>
                 </div>
             </header>
 

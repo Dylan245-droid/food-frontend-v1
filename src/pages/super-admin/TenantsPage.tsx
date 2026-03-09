@@ -60,13 +60,13 @@ export default function TenantsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8">
-            <div className="flex justify-between items-end mb-8">
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900 tracking-tight">Tenants Inscrits</h1>
-                    <p className="text-slate-500 mt-1">Gérez les accès, abonnements et facturation.</p>
+                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight uppercase">Tenants Inscrits</h1>
+                    <p className="text-slate-500 mt-1 text-sm">Gérez les accès, abonnements et facturation.</p>
                 </div>
-                <Button onClick={fetchTenants} variant="outline" size="sm">Actualiser</Button>
+                <Button onClick={fetchTenants} variant="outline" size="sm" className="w-full sm:w-auto">Actualiser</Button>
             </div>
 
             <div className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">

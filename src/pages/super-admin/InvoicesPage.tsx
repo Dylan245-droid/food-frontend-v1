@@ -51,10 +51,23 @@ export default function InvoicesPage() {
         description: 'Abonnement mensuel GoTchop'
     });
 
+    const [filters, setFilters] = useState({
+        tenantId: '',
+        status: '',
+        month: '',
+        year: new Date().getFullYear().toString()
+    });
+
     const fetchInvoices = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/super-admin/invoices');
+            const params = new URLSearchParams();
+            if (filters.tenantId) params.append('tenantId', filters.tenantId);
+            if (filters.status) params.append('status', filters.status);
+            if (filters.month) params.append('month', filters.month);
+            if (filters.year) params.append('year', filters.year);
+
+            const res = await api.get(`/super-admin/invoices?${params.toString()}`);
             setInvoices(res.data.data || []);
         } catch (error) {
             console.error('Error fetching invoices:', error);
@@ -74,9 +87,12 @@ export default function InvoicesPage() {
     };
 
     useEffect(() => {
-        fetchInvoices();
         fetchTenants();
     }, []);
+
+    useEffect(() => {
+        fetchInvoices();
+    }, [filters]);
 
     const handleCreateInvoice = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -137,263 +153,329 @@ export default function InvoicesPage() {
     };
 
     return (
-        <div>
-            {/* ... existing header ... */}
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Factures Abonnements</h1>
-                <div className="flex gap-2">
-                    <Button variant="secondary" onClick={fetchInvoices}>
-                        <RotateCcw className="w-4 h-4 mr-2" />
-                        Actualiser
-                    </Button>
-                    <Button onClick={() => setShowModal(true)}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Nouvelle Facture
-                    </Button>
-                </div>
-            </div>
-
-            {/* Stats Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <p className="text-sm text-gray-500">Total Factures</p>
-                    <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
-                </div>
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <p className="text-sm text-gray-500">En Attente</p>
-                    <p className="text-2xl font-bold text-yellow-600">
-                        {invoices.filter(i => i.status === 'pending').length}
-                    </p>
-                </div>
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <p className="text-sm text-gray-500">Payées</p>
-                    <p className="text-2xl font-bold text-green-600">
-                        {invoices.filter(i => i.status === 'paid').length}
-                    </p>
-                </div>
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                    <p className="text-sm text-gray-500">En Retard</p>
-                    <p className="text-2xl font-bold text-red-600">
-                        {invoices.filter(i => i.status === 'overdue').length}
-                    </p>
-                </div>
-            </div>
-
-            {/* Invoices Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm min-w-[1000px]">
-                        <thead className="bg-gray-50 border-b border-gray-100 text-gray-500">
-                            <tr>
-                                <th className="px-6 py-3 font-semibold">N° Facture</th>
-                                <th className="px-6 py-3 font-semibold">Restaurant</th>
-                                <th className="px-6 py-3 font-semibold">Montant TTC</th>
-                                <th className="px-6 py-3 font-semibold">Période</th>
-                                <th className="px-6 py-3 font-semibold">Échéance</th>
-                                <th className="px-6 py-3 font-semibold">Statut</th>
-                                <th className="px-6 py-3 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-8 text-gray-500">
-                                        Chargement...
-                                    </td>
-                                </tr>
-                            ) : invoices.length === 0 ? (
-                                <tr>
-                                    <td colSpan={7} className="text-center py-8 text-gray-500">
-                                        Aucune facture pour le moment
-                                    </td>
-                                </tr>
-                            ) : (
-                                invoices.map((invoice) => {
-                                    const statusInfo = statusConfig[invoice.status];
-                                    const StatusIcon = statusInfo.icon;
-                                    return (
-                                        <tr key={invoice.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-3">
-                                                <div className="flex items-center gap-2">
-                                                    <FileText className="w-4 h-4 text-gray-400" />
-                                                    <span className="font-medium text-gray-900">
-                                                        {invoice.invoiceNumber}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-3 text-gray-700">
-                                                {invoice.tenant?.name || 'N/A'}
-                                            </td>
-                                            <td className="px-6 py-3 font-semibold text-gray-900">
-                                                {Number(invoice.amountTtc).toLocaleString('fr-FR')} FCFA
-                                            </td>
-                                            <td className="px-6 py-3 text-gray-500 text-xs">
-                                                {invoice.periodStart && format(new Date(invoice.periodStart), 'MMM yyyy', { locale: fr })}
-                                            </td>
-                                            <td className="px-6 py-3 text-gray-500">
-                                                {invoice.dueDate && format(new Date(invoice.dueDate), 'dd/MM/yyyy')}
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <span className={`px-2 py-1 rounded-md text-xs font-medium inline-flex items-center gap-1 ${statusInfo.color}`}>
-                                                    <StatusIcon className="w-3 h-3" />
-                                                    {statusInfo.label}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-3">
-                                                <div className="flex gap-1">
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="sm"
-                                                        onClick={() => handleDownload(invoice.id, invoice.invoiceNumber)}
-                                                        title="Télécharger PDF"
-                                                    >
-                                                        <FileText className="w-3 h-3" />
-                                                    </Button>
-
-                                                    {invoice.status !== 'paid' && (
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="sm"
-                                                            onClick={() => handleStatusChange(invoice.id, 'paid')}
-                                                            title="Marquer comme payée"
-                                                        >
-                                                            <Check className="w-3 h-3" />
-                                                        </Button>
-                                                    )}
-                                                    {invoice.status === 'pending' && (
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="sm"
-                                                            onClick={() => handleStatusChange(invoice.id, 'overdue')}
-                                                            title="Marquer en retard"
-                                                        >
-                                                            <AlertTriangle className="w-3 h-3" />
-                                                        </Button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* Create Invoice Modal */}
-            {showModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Nouvelle Facture</h2>
-                        <form onSubmit={handleCreateInvoice} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Restaurant
-                                </label>
-                                <select
-                                    value={formData.tenantId}
-                                    onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                    required
-                                >
-                                    <option value="">Sélectionner un restaurant</option>
-                                    {tenants.map((t) => (
-                                        <option key={t.id} value={t.id}>{t.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Montant HT
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={formData.amountHt}
-                                        onChange={(e) => {
-                                            const ht = Number(e.target.value);
-                                            setFormData({
-                                                ...formData,
-                                                amountHt: ht,
-                                                amountTtc: Math.round(ht * 1.18)
-                                            });
-                                        }}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                        required
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Montant TTC
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={formData.amountTtc}
-                                        onChange={(e) => setFormData({ ...formData, amountTtc: Number(e.target.value) })}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Début Période
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.periodStart}
-                                        onChange={(e) => setFormData({ ...formData, periodStart: e.target.value })}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Fin Période
-                                    </label>
-                                    <input
-                                        type="date"
-                                        value={formData.periodEnd}
-                                        onChange={(e) => setFormData({ ...formData, periodEnd: e.target.value })}
-                                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Échéance
-                                </label>
-                                <input
-                                    type="date"
-                                    value={formData.dueDate}
-                                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    Description
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                                />
-                            </div>
-                            <div className="flex gap-2 justify-end pt-4">
-                                <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>
-                                    Annuler
-                                </Button>
-                                <Button type="submit">
-                                    Créer la Facture
-                                </Button>
-                            </div>
-                        </form>
+        <div className="min-h-screen bg-slate-50 p-4 md:p-8 space-y-8">
+            <div>
+                {/* ... existing header ... */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight uppercase">Factures Abonnements</h1>
+                        <p className="text-slate-500 text-sm">Gestion des factures et règlements</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <Button variant="secondary" onClick={fetchInvoices}>
+                            <RotateCcw className="w-4 h-4 mr-2" />
+                            Actualiser
+                        </Button>
+                        <Button onClick={() => setShowModal(true)}>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Nouvelle Facture
+                        </Button>
                     </div>
                 </div>
-            )}
+
+                {/* Invoices Filters */}
+                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-wrap gap-4 items-end">
+                    <div className="flex-1 min-w-[200px]">
+                        <label className="block text-[10px] font-black uppercase text-stone-400 mb-1 ml-1">Restaurant</label>
+                        <select
+                            value={filters.tenantId}
+                            onChange={(e) => setFilters(prev => ({ ...prev, tenantId: e.target.value }))}
+                            className="w-full h-11 bg-stone-50 border border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-orange-500/20 outline-none appearance-none cursor-pointer"
+                        >
+                            <option value="">Tous les restaurants</option>
+                            {tenants.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="w-40">
+                        <label className="block text-[10px] font-black uppercase text-stone-400 mb-1 ml-1">Statut</label>
+                        <select
+                            value={filters.status}
+                            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                            className="w-full h-11 bg-stone-50 border border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-orange-500/20 outline-none appearance-none cursor-pointer"
+                        >
+                            <option value="">Tous les statuts</option>
+                            <option value="pending">En attente</option>
+                            <option value="paid">Payée</option>
+                            <option value="overdue">En retard</option>
+                            <option value="cancelled">Annulée</option>
+                        </select>
+                    </div>
+                    <div className="w-40">
+                        <label className="block text-[10px] font-black uppercase text-stone-400 mb-1 ml-1">Mois</label>
+                        <select
+                            value={filters.month}
+                            onChange={(e) => setFilters(prev => ({ ...prev, month: e.target.value }))}
+                            className="w-full h-11 bg-stone-50 border border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-orange-500/20 outline-none appearance-none cursor-pointer"
+                        >
+                            <option value="">Tous les mois</option>
+                            {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                    {format(new Date(2024, i, 1), 'MMMM', { locale: fr })}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="w-32">
+                        <label className="block text-[10px] font-black uppercase text-stone-400 mb-1 ml-1">Année</label>
+                        <select
+                            value={filters.year}
+                            onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
+                            className="w-full h-11 bg-stone-50 border border-stone-100 rounded-xl px-4 text-sm font-bold focus:ring-2 focus:ring-orange-500/20 outline-none appearance-none cursor-pointer"
+                        >
+                            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                    </div>
+                    <button
+                        onClick={() => setFilters({ tenantId: '', status: '', month: '', year: '2026' })}
+                        className="h-11 px-4 text-stone-400 hover:text-orange-500 transition-colors"
+                        title="Réinitialiser"
+                    >
+                        <RotateCcw className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Stats Summary */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <p className="text-sm text-gray-500">Total Factures</p>
+                        <p className="text-2xl font-bold text-gray-900">{invoices.length}</p>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <p className="text-sm text-gray-500">En Attente</p>
+                        <p className="text-2xl font-bold text-yellow-600">
+                            {invoices.filter(i => i.status === 'pending').length}
+                        </p>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <p className="text-sm text-gray-500">Payées</p>
+                        <p className="text-2xl font-bold text-green-600">
+                            {invoices.filter(i => i.status === 'paid').length}
+                        </p>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <p className="text-sm text-gray-500">En Retard</p>
+                        <p className="text-2xl font-bold text-red-600">
+                            {invoices.filter(i => i.status === 'overdue').length}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Invoices Table */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm min-w-[1000px]">
+                            <thead className="bg-gray-50 border-b border-gray-100 text-gray-500">
+                                <tr>
+                                    <th className="px-6 py-3 font-semibold">N° Facture</th>
+                                    <th className="px-6 py-3 font-semibold">Restaurant</th>
+                                    <th className="px-6 py-3 font-semibold">Montant TTC</th>
+                                    <th className="px-6 py-3 font-semibold">Période</th>
+                                    <th className="px-6 py-3 font-semibold">Échéance</th>
+                                    <th className="px-6 py-3 font-semibold">Statut</th>
+                                    <th className="px-6 py-3 font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={7} className="text-center py-8 text-gray-500">
+                                            Chargement...
+                                        </td>
+                                    </tr>
+                                ) : invoices.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="text-center py-8 text-gray-500">
+                                            Aucune facture pour le moment
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    invoices.map((invoice) => {
+                                        const statusInfo = statusConfig[invoice.status];
+                                        const StatusIcon = statusInfo.icon;
+                                        return (
+                                            <tr key={invoice.id} className="hover:bg-gray-50">
+                                                <td className="px-6 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText className="w-4 h-4 text-gray-400" />
+                                                        <span className="font-medium text-gray-900">
+                                                            {invoice.invoiceNumber}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-3 text-gray-700">
+                                                    {invoice.tenant?.name || 'N/A'}
+                                                </td>
+                                                <td className="px-6 py-3 font-semibold text-gray-900">
+                                                    {Number(invoice.amountTtc).toLocaleString('fr-FR')} FCFA
+                                                </td>
+                                                <td className="px-6 py-3 text-gray-500 text-xs">
+                                                    {invoice.periodStart && format(new Date(invoice.periodStart), 'MMM yyyy', { locale: fr })}
+                                                </td>
+                                                <td className="px-6 py-3 text-gray-500">
+                                                    {invoice.dueDate && format(new Date(invoice.dueDate), 'dd/MM/yyyy')}
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    <span className={`px-2 py-1 rounded-md text-xs font-medium inline-flex items-center gap-1 ${statusInfo.color}`}>
+                                                        <StatusIcon className="w-3 h-3" />
+                                                        {statusInfo.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    <div className="flex gap-1">
+                                                        <Button
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            onClick={() => handleDownload(invoice.id, invoice.invoiceNumber)}
+                                                            title="Télécharger PDF"
+                                                        >
+                                                            <FileText className="w-3 h-3" />
+                                                        </Button>
+
+                                                        {invoice.status !== 'paid' && (
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                onClick={() => handleStatusChange(invoice.id, 'paid')}
+                                                                title="Marquer comme payée"
+                                                            >
+                                                                <Check className="w-3 h-3" />
+                                                            </Button>
+                                                        )}
+                                                        {invoice.status === 'pending' && (
+                                                            <Button
+                                                                variant="secondary"
+                                                                size="sm"
+                                                                onClick={() => handleStatusChange(invoice.id, 'overdue')}
+                                                                title="Marquer en retard"
+                                                            >
+                                                                <AlertTriangle className="w-3 h-3" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Create Invoice Modal */}
+                {showModal && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">Nouvelle Facture</h2>
+                            <form onSubmit={handleCreateInvoice} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Restaurant
+                                    </label>
+                                    <select
+                                        value={formData.tenantId}
+                                        onChange={(e) => setFormData({ ...formData, tenantId: e.target.value })}
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                        required
+                                    >
+                                        <option value="">Sélectionner un restaurant</option>
+                                        {tenants.map((t) => (
+                                            <option key={t.id} value={t.id}>{t.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Montant HT
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={formData.amountHt}
+                                            onChange={(e) => {
+                                                const ht = Number(e.target.value);
+                                                setFormData({
+                                                    ...formData,
+                                                    amountHt: ht,
+                                                    amountTtc: Math.round(ht * 1.18)
+                                                });
+                                            }}
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Montant TTC
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={formData.amountTtc}
+                                            onChange={(e) => setFormData({ ...formData, amountTtc: Number(e.target.value) })}
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Début Période
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={formData.periodStart}
+                                            onChange={(e) => setFormData({ ...formData, periodStart: e.target.value })}
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Fin Période
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={formData.periodEnd}
+                                            onChange={(e) => setFormData({ ...formData, periodEnd: e.target.value })}
+                                            className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Échéance
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={formData.dueDate}
+                                        onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Description
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                                    />
+                                </div>
+                                <div className="flex gap-2 justify-end pt-4">
+                                    <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>
+                                        Annuler
+                                    </Button>
+                                    <Button type="submit">
+                                        Créer la Facture
+                                    </Button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

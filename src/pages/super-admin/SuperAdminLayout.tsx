@@ -1,10 +1,17 @@
+import { useState, useEffect } from 'react';
 import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { LayoutDashboard, Users, LogOut, Activity, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, Activity, CreditCard, TrendingUp, Menu, X as CloseIcon } from 'lucide-react';
 
 const SuperAdminLayout = () => {
   const { user, logout, loading } = useAuth();
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Close mobile menu on route change
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -25,13 +32,37 @@ const SuperAdminLayout = () => {
     { name: 'Vue d\'ensemble', href: '/admin/super', icon: LayoutDashboard },
     { name: 'Restaurants', href: '/admin/super/tenants', icon: Users },
     { name: 'Facturation', href: '/admin/super/invoices', icon: CreditCard },
+    { name: 'Revenus', href: '/admin/super/revenue', icon: TrendingUp },
     { name: 'Audit Logs', href: '/admin/super/audit-logs', icon: Activity },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="min-h-screen bg-gray-100">
+      {/* Mobile Menu Toggle */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-gray-900 flex items-center justify-between px-4 z-50">
+        <h1 className="text-xl font-bold text-orange-500">SUPER ADMIN</h1>
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 text-gray-400 hover:text-white"
+        >
+          {isMobileMenuOpen ? <CloseIcon className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col fixed inset-y-0 bg-gray-900 text-white">
+      <div className={`
+        fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out flex flex-col
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0
+      `}>
         <div className="flex-1 flex flex-col min-h-0">
           <div className="flex items-center h-16 flex-shrink-0 px-4 bg-gray-900 border-b border-gray-800">
             <h1 className="text-xl font-bold text-orange-500">SUPER ADMIN</h1>
@@ -80,8 +111,8 @@ const SuperAdminLayout = () => {
       </div>
 
       {/* Main content */}
-      <div className="md:ml-64 flex-1 flex flex-col min-h-screen overflow-hidden">
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+      <div className="md:ml-64 flex-1 flex flex-col min-h-screen">
+        <main className="flex-1 pt-16 md:pt-0 p-4 md:p-6 overflow-x-hidden">
           <Outlet />
         </main>
       </div>

@@ -32,6 +32,7 @@ import SuperAdminLayout from './pages/super-admin/SuperAdminLayout';
 import TenantsPage from './pages/super-admin/TenantsPage';
 import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard';
 import SuperAdminInvoicesPage from './pages/super-admin/InvoicesPage';
+import RevenuePage from './pages/super-admin/RevenuePage';
 import SubscriptionPage from './pages/admin/SubscriptionPage';
 import { useAuth } from './context/AuthContext';
 
@@ -126,6 +127,7 @@ export default function App() {
             <Route index element={<SuperAdminDashboard />} />
             <Route path="tenants" element={<TenantsPage />} />
             <Route path="invoices" element={<SuperAdminInvoicesPage />} />
+            <Route path="revenue" element={<RevenuePage />} />
             <Route path="audit-logs" element={<AuditLogsPage />} />
           </Route>
 
