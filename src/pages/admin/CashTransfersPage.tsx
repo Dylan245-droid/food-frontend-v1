@@ -89,14 +89,17 @@ export default function CashTransfersPage() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto p-6 space-y-8">
-            <div className="flex items-center gap-2 md:gap-3 mb-6 md:mb-8">
-                <div className="p-2 md:p-3 bg-indigo-100 rounded-xl">
-                    <ArrowRightLeft className="w-4 h-4 md:w-6 md:h-6 text-indigo-700" />
-                </div>
-                <div>
-                    <h1 className="text-lg md:text-2xl font-black text-stone-900 leading-none">Transferts de Fonds</h1>
-                    <p className="text-[10px] md:text-sm text-stone-500 mt-1">Déplacer l'argent des caisses de vente vers le fonctionnement</p>
+        <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-20">
+            {/* Header */}
+            <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-stone-100">
+                <div className="min-w-0 w-full xs:w-auto">
+                    <h1 className="text-base md:text-2xl font-black text-stone-900 flex items-center gap-2 md:gap-3 uppercase tracking-tight font-display">
+                        <div className="bg-indigo-100 p-1.5 md:p-2.5 rounded-xl text-indigo-700 shrink-0">
+                            <ArrowRightLeft className="w-4 h-4 md:w-6 md:h-6" />
+                        </div>
+                        <span className="truncate">Transferts de Fonds</span>
+                    </h1>
+                    <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-1 md:mt-2 ml-10 md:ml-14 truncate">Déplacer l'argent des caisses vers le fonctionnement</p>
                 </div>
             </div>
 
@@ -119,8 +122,8 @@ export default function CashTransfersPage() {
                                     key={session.id}
                                     onClick={() => setSourceSessionId(session.id)}
                                     className={`p-4 rounded-xl border cursor-pointer transition-all ${sourceSessionId === session.id
-                                            ? 'border-green-500 bg-green-50 ring-2 ring-green-200'
-                                            : 'border-stone-200 bg-white hover:border-green-300'
+                                        ? 'border-green-500 bg-green-50 ring-2 ring-green-200'
+                                        : 'border-stone-200 bg-white hover:border-green-300'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
@@ -207,8 +210,8 @@ export default function CashTransfersPage() {
                                     key={session.id}
                                     onClick={() => setTargetSessionId(session.id)}
                                     className={`p-4 rounded-xl border cursor-pointer transition-all ${targetSessionId === session.id
-                                            ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
-                                            : 'border-stone-200 bg-white hover:border-purple-300'
+                                        ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
+                                        : 'border-stone-200 bg-white hover:border-purple-300'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">

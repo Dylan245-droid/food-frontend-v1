@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useState } from 'react';
 import { useFetch } from '../../lib/useFetch';
-import { Loader2, Calendar, TrendingUp, DollarSign, ShoppingBag, Utensils, ArrowUpRight, Clock, CreditCard, PieChart as PieIcon, Calculator, Receipt } from 'lucide-react';
+import { Loader2, Calendar, TrendingUp, DollarSign, ShoppingBag, Utensils, ArrowUpRight, Clock, CreditCard, PieChart as PieIcon, Calculator, Receipt, FileText } from 'lucide-react';
 import { useBranding } from '../../context/BrandingContext';
 import { FinancialReportPrintable } from '../../components/FinancialReportPrintable';
 import {
@@ -43,7 +43,7 @@ export default function FinancePage() {
     if (error) return <div className="p-4 bg-red-50 text-red-600 rounded-lg">Erreur de chargement des statistiques.</div>;
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-4 md:px-8">
             {/* The Portal Report (Hidden until print) */}
             <FinancialReportPrintable
                 stats={stats}
@@ -53,34 +53,45 @@ export default function FinancePage() {
             />
 
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2">
-                        <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
-                        Tableau de Bord Financier
-                    </h1>
-                    <p className="text-xs md:text-sm text-gray-500">Analysez vos performances et revenus.</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10 w-full xs:w-auto">
+                    <div className="bg-blue-600 p-3 rounded-2xl text-white shadow-xl shadow-blue-100 shrink-0 self-start md:self-center">
+                        <TrendingUp className="w-6 h-6 md:w-8 md:h-8" />
+                    </div>
+                    <div className="min-w-0">
+                        <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight font-display leading-tight">
+                            <span className="truncate font-display">Finances</span>
+                        </h1>
+                        <p className="text-stone-400 text-xs md:text-sm font-bold mt-1 md:mt-2 truncate">Analysez vos performances et revenus.</p>
+                    </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-                    <Calendar className="w-4 h-4 text-gray-400 ml-2" />
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="border-none text-sm focus:ring-0 text-gray-600"
-                    />
-                    <span className="text-gray-300">|</span>
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="border-none text-sm focus:ring-0 text-gray-600"
-                    />
+
+                <div className="flex flex-wrap items-center gap-2 bg-stone-50 p-2 rounded-2xl border border-stone-100 w-full xs:w-auto relative z-10 sm:w-auto shrink-0">
+                    <div className="flex items-center gap-1 bg-white px-2 py-1.5 rounded-xl border border-stone-200 flex-1 sm:flex-none">
+                        <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="bg-transparent border-none text-[10px] md:text-xs font-bold focus:ring-0 text-stone-600 p-0 w-full"
+                        />
+                    </div>
+                    <span className="text-stone-300 hidden md:block">|</span>
+                    <div className="flex items-center gap-1 bg-white px-2 py-1.5 rounded-xl border border-stone-200 flex-1 sm:flex-none">
+                        <Calendar className="w-3.5 h-3.5 text-stone-400" />
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="bg-transparent border-none text-[10px] md:text-xs font-bold focus:ring-0 text-stone-600 p-0 w-full"
+                        />
+                    </div>
                     <button
                         onClick={handlePrintRequest}
-                        className="ml-2 px-3 py-1 bg-gray-900 text-white text-xs font-bold rounded hover:bg-black transition-colors"
+                        className="flex-1 sm:flex-none h-11 px-6 bg-stone-900 hover:bg-black text-white shadow-xl shadow-stone-200 rounded-2xl font-bold uppercase tracking-wider text-[10px] md:text-xs active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
-                        IMPRIMER RAPPORT
+                        <FileText className="w-4 h-4" />
+                        <span>Imprimer Rapport</span>
                     </button>
                 </div>
             </div>

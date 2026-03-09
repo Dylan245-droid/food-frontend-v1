@@ -275,42 +275,43 @@ export default function TablesPage() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 px-4 md:px-8">
       {/* Header */}
-      <div className="flex justify-between items-center bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-stone-100">
-        <div>
-          <h1 className="text-lg md:text-2xl font-black text-stone-900 flex items-center gap-2 md:gap-3 uppercase tracking-tight font-display">
-            <div className="bg-stone-900 p-1.5 md:p-2 rounded-xl text-white">
-              <Armchair className="w-4 h-4 md:w-6 md:h-6" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10 w-full xs:w-auto">
+          <div className="bg-stone-900 p-3 rounded-2xl text-white shadow-xl shadow-stone-100 shrink-0 self-start md:self-center">
+            <Armchair className="w-6 h-6 md:w-8 md:h-8" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight font-display leading-tight">
+              <span className="truncate">{isMyTables ? 'Mon Rang' : 'Salle & Tables'}</span>
+            </h1>
+            <div className="text-stone-400 text-[10px] md:text-sm font-bold mt-1 md:mt-2 flex items-center gap-1.5 min-w-0">
+              <span className="truncate">Plan de salle et assignations</span>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] md:text-xs font-bold whitespace-nowrap flex-shrink-0 ${isTableLimitReached(data?.data.length || 0) ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'
+                }`}>
+                {data?.data.length || 0} / {maxTables === 999 ? '∞' : maxTables}
+              </span>
             </div>
-            {isMyTables ? 'Mon Rang' : 'Salle & Tables'}
-          </h1>
-          <div className="text-stone-400 text-[10px] md:text-sm font-medium ml-8 md:ml-14 flex items-center gap-1.5 min-w-0">
-            <span className="truncate">Plan de salle et assignations</span>
-            <span className={`px-2 py-0.5 rounded-full text-[9px] md:text-xs font-bold whitespace-nowrap flex-shrink-0 ${isTableLimitReached(data?.data.length || 0) ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'
-              }`}>
-              {data?.data.length || 0} / {maxTables === 999 ? '∞' : maxTables}
-            </span>
           </div>
         </div>
         {!isMyTables && (
-          <Button
-            onClick={() => {
-              if (isTableLimitReached(data?.data.length || 0)) {
-                alert(`Limite de tables atteinte pour l'offre ${planName}. Passez à l'offre supérieure pour en ajouter plus.`);
-                return;
-              }
-              setIsModalOpen(true);
-            }}
-            className={`gap-2 h-10 md:h-12 px-4 md:px-6 rounded-xl font-bold shadow-lg shadow-stone-900/10 ${isTableLimitReached(data?.data.length || 0)
-              ? 'bg-stone-100 text-stone-400 cursor-not-allowed hover:bg-stone-100'
-              : 'bg-stone-900 text-white hover:bg-stone-800'
-              }`}
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden xs:inline">Ajouter Table</span>
-            <span className="xs:hidden">Ajouter</span>
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto shrink-0 relative z-10">
+            <Button
+              onClick={() => {
+                if (isTableLimitReached(data?.data.length || 0)) {
+                  alert(`Limite de tables atteinte pour l'offre ${planName}. Passez à l'offre supérieure pour en ajouter plus.`);
+                  return;
+                }
+                setIsModalOpen(true);
+              }}
+              className="flex-1 sm:flex-none h-11 md:h-14 px-6 md:px-8 bg-stone-900 hover:bg-black text-white shadow-xl shadow-stone-200 rounded-2xl font-bold uppercase tracking-wider text-[10px] md:text-xs active:scale-95 transition-all"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              <span className="hidden sm:inline">Ajouter une table</span>
+              <span className="sm:hidden">Ajouter</span>
+            </Button>
+          </div>
         )}
       </div>
 

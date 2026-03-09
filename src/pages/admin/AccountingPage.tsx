@@ -121,21 +121,25 @@ export default function AccountingPage() {
   const loading = loadingJournal || loadingLedger || loadingBalance || loadingChart;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in duration-500 px-4 md:px-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="min-w-0">
-          <h1 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 truncate">
-            <BookOpen className="w-6 h-6 md:w-8 md:h-8 shrink-0" style={{ color: 'var(--primary)' }} />
-            <span className="truncate">Comptabilité</span>
-          </h1>
-          <p className="text-[10px] md:text-sm text-gray-500 truncate">Journal, Grand Livre et Balance - SYSCOHADA</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10 w-full xs:w-auto">
+          <div className="bg-stone-900 p-3 rounded-2xl text-white shadow-xl shadow-stone-100 shrink-0 self-start md:self-center">
+            <BookOpen className="w-6 h-6 md:w-8 md:h-8" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight font-display leading-tight">
+              <span className="truncate text-stone-900">Comptabilité</span>
+            </h1>
+            <p className="text-stone-400 text-xs md:text-sm font-bold mt-1 md:mt-2 truncate">Journal, Grand Livre et Balance - SYSCOHADA</p>
+          </div>
         </div>
-        <div className="flex gap-2 w-full md:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto shrink-0 relative z-10">
           {activeTab === 'journal' && (
             <Button
               variant="outline"
-              className="flex-1 md:flex-none h-10 md:h-11 text-xs md:text-sm"
+              className="flex-1 sm:flex-none h-11 md:h-14 px-4 md:px-6 rounded-2xl border-stone-200 hover:bg-stone-50 text-[10px] md:text-xs font-bold uppercase tracking-wider"
               onClick={async () => {
                 try {
                   const params = new URLSearchParams({
@@ -161,13 +165,17 @@ export default function AccountingPage() {
                 }
               }}
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-3.5 h-3.5 mr-1.5 md:mr-2" />
               Export
             </Button>
           )}
-          <Button onClick={() => setIsNewEntryModalOpen(true)} className="flex-1 md:flex-none h-10 md:h-11 text-xs md:text-sm">
+          <Button
+            onClick={() => setIsNewEntryModalOpen(true)}
+            className="flex-1 sm:flex-none h-11 md:h-14 px-4 md:px-6 bg-stone-900 hover:bg-black text-white shadow-xl shadow-stone-200 rounded-2xl font-bold uppercase tracking-wider text-[10px] md:text-xs active:scale-95 transition-all"
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Nouvelle écriture
+            <span className="hidden sm:inline">Nouvelle écriture</span>
+            <span className="sm:hidden">Écriture</span>
           </Button>
         </div>
       </div>

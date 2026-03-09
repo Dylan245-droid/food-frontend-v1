@@ -129,63 +129,100 @@ export default function ReservationsPage() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div className="min-w-0">
-          <h1 className="text-lg md:text-2xl font-bold text-stone-900 truncate">Réservations</h1>
-          <p className="text-xs md:text-sm text-stone-500 truncate">Gérez les réservations (Téléphone, Web, etc.)</p>
+    <div className="max-w-[1600px] mx-auto space-y-6 md:space-y-8 animate-in fade-in duration-500 pb-20 px-4 md:px-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10 w-full xs:w-auto">
+          <div className="bg-stone-900 p-3 rounded-2xl text-white shadow-xl shadow-stone-100 shrink-0 self-start md:self-center">
+            <Calendar className="w-6 h-6 md:w-8 md:h-8" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight font-display leading-tight">
+              <span className="truncate">Réservations</span>
+            </h1>
+            <p className="text-stone-400 text-xs md:text-sm font-bold mt-1 md:mt-2 truncate">Gerez les réservations (Téléphone, Web, etc.)</p>
+          </div>
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Nouvelle Réservation
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto shrink-0 relative z-10">
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="flex-1 sm:flex-none h-11 md:h-14 px-6 md:px-8 bg-stone-900 hover:bg-black text-white shadow-xl shadow-stone-200 rounded-2xl font-bold uppercase tracking-wider text-[10px] md:text-xs active:scale-95 transition-all"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Nouvelle Réservation</span>
+            <span className="sm:hidden">Nouvelle</span>
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
         {/* Incoming / Pending */}
         <div className="space-y-4">
-          <h3 className="font-bold text-orange-600 flex items-center">
-            <Clock className="w-4 h-4 mr-2" />
-            À Venir / En Attente
-          </h3>
+          <div className="flex items-center gap-2 pb-2 border-b border-orange-100">
+            <div className="bg-orange-50 p-1.5 rounded-lg text-orange-600">
+              <Clock className="w-4 h-4" />
+            </div>
+            <h3 className="font-black text-orange-600 text-sm uppercase tracking-wider">À Venir / En Attente</h3>
+            <span className="ml-auto bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {reservations.filter((r) => ['pending', 'confirmed'].includes(r.status)).length}
+            </span>
+          </div>
+
           {reservations.filter((r) => ['pending', 'confirmed'].includes(r.status)).length === 0 && (
-            <p className="text-stone-400 text-sm italic">Aucune réservation à venir.</p>
+            <div className="py-8 text-center bg-white/50 rounded-2xl border border-dashed border-stone-200">
+              <p className="text-stone-400 text-xs font-bold italic">Aucune réservation à venir.</p>
+            </div>
           )}
+
           {reservations.filter((r) => ['pending', 'confirmed'].includes(r.status)).map((r) => (
-            <div key={r.id} className="bg-white p-4 rounded-xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-2">
-                <h4 className="font-bold text-lg">{r.customerName}</h4>
-                <span className={`px-2 py-1 rounded text-xs font-bold ${r.source === 'web' ? 'bg-blue-100 text-blue-700' : 'bg-stone-100 text-stone-700'}`}>
+            <div key={r.id} className="bg-white p-4 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md transition-all group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-orange-50 rounded-full -mr-8 -mt-8 opacity-50"></div>
+
+              <div className="flex justify-between items-start mb-3 relative z-10">
+                <div className="min-w-0">
+                  <h4 className="font-black text-stone-900 text-lg leading-tight truncate">{r.customerName}</h4>
+                  <div className="flex items-center text-stone-400 text-[10px] font-bold mt-0.5">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {new Date(r.date).toLocaleDateString('fr-FR')} à {r.time}
+                  </div>
+                </div>
+                <span className={`shrink-0 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm ${r.source === 'web' ? 'bg-blue-500 text-white' : 'bg-stone-100 text-stone-600'}`}>
                   {r.source === 'web' ? 'WEB' : 'TEL'}
                 </span>
               </div>
-              <div className="flex items-center text-stone-600 mb-1">
-                <Phone className="w-3 h-3 mr-2" /> {r.customerPhone}
+
+              <div className="space-y-2 mb-4 relative z-10">
+                <div className="flex items-center text-stone-600 text-xs font-medium">
+                  <div className="w-6 h-6 rounded-lg bg-stone-50 flex items-center justify-center mr-2">
+                    <Phone className="w-3 h-3 text-stone-400" />
+                  </div>
+                  {r.customerPhone}
+                </div>
+                <div className="flex items-center text-stone-600 text-xs font-medium">
+                  <div className="w-6 h-6 rounded-lg bg-stone-50 flex items-center justify-center mr-2">
+                    <Users className="w-3 h-3 text-stone-400" />
+                  </div>
+                  <span className="font-black text-stone-800 mr-1">{r.guests}</span> personnes
+                </div>
               </div>
-              <div className="flex items-center text-stone-600 mb-1">
-                <Users className="w-3 h-3 mr-2" /> {r.guests} pers.
-              </div>
-              <div className="flex items-center text-stone-800 font-medium mb-3">
-                <Calendar className="w-3 h-3 mr-2" />
-                {new Date(r.date).toLocaleDateString('fr-FR')} à {r.time}
-              </div>
+
               {r.notes && (
-                <div className="bg-yellow-50 p-2 rounded text-xs text-yellow-800 mb-3 border border-yellow-100">
-                  Note: {r.notes}
+                <div className="bg-orange-50/50 p-2.5 rounded-xl text-[10px] text-orange-800 mb-4 border border-orange-100/50 italic leading-relaxed">
+                  <span className="font-black not-italic mr-1">Note:</span> {r.notes}
                 </div>
               )}
 
-              <div className="flex gap-2 pt-2 border-t border-stone-50">
+              <div className="flex gap-2 relative z-10">
                 <button
                   onClick={() => handleSeatClick(r)}
-                  className="flex-1 bg-green-50 text-green-700 py-1.5 rounded hover:bg-green-100 text-xs font-bold flex items-center justify-center gap-1"
+                  className="flex-[2] bg-emerald-600 text-white py-2.5 rounded-xl hover:bg-emerald-700 text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-100 active:scale-95 transition-all"
                 >
-                  <MapPin className="w-3 h-3" />
+                  <MapPin className="w-3.5 h-3.5" />
                   Installer
                 </button>
                 <button
                   onClick={() => updateStatus(r.id, 'cancelled')}
-                  className="bg-red-50 text-red-700 py-1 px-3 rounded hover:bg-red-100"
+                  className="flex-1 bg-rose-50 text-rose-600 py-2.5 rounded-xl hover:bg-rose-100 text-[10px] font-black uppercase tracking-wider flex items-center justify-center active:scale-95 transition-all border border-rose-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -196,24 +233,38 @@ export default function ReservationsPage() {
 
         {/* Seated / Completed Today */}
         <div className="space-y-4">
-          <h3 className="font-bold text-green-600 flex items-center">
-            <CheckCircle className="w-4 h-4 mr-2" />
-            Installés / Honorés
-          </h3>
+          <div className="flex items-center gap-2 pb-2 border-b border-emerald-100">
+            <div className="bg-emerald-50 p-1.5 rounded-lg text-emerald-600">
+              <CheckCircle className="w-4 h-4" />
+            </div>
+            <h3 className="font-black text-emerald-600 text-sm uppercase tracking-wider">Installés / Honorés</h3>
+            <span className="ml-auto bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {reservations.filter((r) => r.status === 'seated').length}
+            </span>
+          </div>
+
           {reservations.filter((r) => r.status === 'seated').length === 0 && (
-            <p className="text-stone-400 text-sm italic">Aucun client installé.</p>
+            <div className="py-8 text-center bg-white/50 rounded-2xl border border-dashed border-stone-200">
+              <p className="text-stone-400 text-xs font-bold italic">Aucun client installé.</p>
+            </div>
           )}
+
           {reservations.filter((r) => r.status === 'seated').map((r) => (
-            <div key={r.id} className="bg-green-50 p-4 rounded-xl border border-green-200">
-              <div className="flex justify-between">
-                <h4 className="font-bold">{r.customerName}</h4>
-                <span className="text-xs text-green-700">{r.time}</span>
+            <div key={r.id} className="bg-emerald-50/50 p-4 rounded-2xl border border-emerald-100 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-100 rounded-full -mr-6 -mt-6 opacity-30"></div>
+
+              <div className="flex justify-between items-start mb-2 relative z-10">
+                <h4 className="font-black text-emerald-900 text-base truncate">{r.customerName}</h4>
+                <span className="text-[10px] font-black text-emerald-600 bg-white px-2 py-0.5 rounded-lg shadow-sm">{r.time}</span>
               </div>
-              <p className="text-sm text-stone-600">{r.guests} personnes</p>
+              <p className="text-xs font-bold text-emerald-700/70 mb-3 relative z-10">{r.guests} personnes</p>
+
               {r.table && (
-                <div className="mt-2 bg-green-100 px-2 py-1 rounded text-xs font-bold text-green-800 inline-flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {r.table.name}
+                <div className="relative z-10">
+                  <div className="bg-emerald-600 px-3 py-1.5 rounded-xl text-[10px] font-black text-white inline-flex items-center gap-1.5 shadow-md shadow-emerald-100">
+                    <MapPin className="w-3 h-3" />
+                    {r.table.name}
+                  </div>
                 </div>
               )}
             </div>
@@ -222,21 +273,31 @@ export default function ReservationsPage() {
 
         {/* Cancelled */}
         <div className="space-y-4">
-          <h3 className="font-bold text-red-600 flex items-center">
-            <Trash2 className="w-4 h-4 mr-2" />
-            Annulées
-          </h3>
+          <div className="flex items-center gap-2 pb-2 border-b border-rose-100">
+            <div className="bg-rose-50 p-1.5 rounded-lg text-rose-600">
+              <Trash2 className="w-4 h-4" />
+            </div>
+            <h3 className="font-black text-rose-600 text-sm uppercase tracking-wider">Annulées</h3>
+            <span className="ml-auto bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+              {reservations.filter((r) => r.status === 'cancelled').length}
+            </span>
+          </div>
+
           {reservations.filter((r) => r.status === 'cancelled').length === 0 && (
-            <p className="text-stone-400 text-sm italic">Aucune réservation annulée.</p>
+            <div className="py-8 text-center bg-white/50 rounded-2xl border border-dashed border-stone-200">
+              <p className="text-stone-400 text-xs font-bold italic">Aucune réservation annulée.</p>
+            </div>
           )}
+
           {reservations.filter((r) => r.status === 'cancelled').map((r) => (
-            <div key={r.id} className="bg-red-50 p-4 rounded-xl border border-red-200 opacity-60">
-              <div className="flex justify-between">
-                <h4 className="font-bold line-through">{r.customerName}</h4>
-                <span className="text-xs">{r.time}</span>
+            <div key={r.id} className="bg-stone-50 p-4 rounded-2xl border border-stone-100 opacity-60 grayscale group">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="font-black text-stone-500 text-base line-through truncate">{r.customerName}</h4>
+                <span className="text-[10px] font-bold text-stone-400">{r.time}</span>
               </div>
-              <p className="text-sm text-stone-500">{r.guests} personnes</p>
-              <p className="text-xs text-stone-400 mt-1">
+              <p className="text-xs font-bold text-stone-400 mb-1">{r.guests} personnes</p>
+              <p className="text-[10px] font-medium text-stone-400 flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
                 {new Date(r.date).toLocaleDateString('fr-FR')}
               </p>
             </div>

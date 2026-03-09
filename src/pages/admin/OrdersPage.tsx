@@ -306,22 +306,22 @@ export default function OrdersPage() {
 
 
     return (
-        <div className="space-y-6 h-full flex flex-col">
+        <div className="max-w-[1600px] mx-auto space-y-6 h-full flex flex-col px-4 md:px-8">
             {/* Cash Session Alert */}
             {!sessionLoading && <NoCashSessionAlert show={!hasActiveSession} />}
 
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
+            <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-4 bg-white p-4 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
                 {/* Decorative background for header */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-orange-100/50 transition-colors"></div>
 
-                <div className="relative z-10">
-                    <h1 className="text-lg md:text-3xl font-black text-stone-900 flex items-center gap-2 md:gap-4 uppercase tracking-tight font-display">
-                        <div className="bg-orange-500 p-1.5 md:p-2.5 rounded-2xl text-white shadow-lg shadow-orange-200">
+                <div className="relative z-10 min-w-0 w-full xs:w-auto">
+                    <h1 className="text-base md:text-3xl font-black text-stone-900 flex items-center gap-2 md:gap-4 uppercase tracking-tight font-display">
+                        <div className="bg-orange-500 p-1.5 md:p-2.5 rounded-xl md:rounded-2xl text-white shadow-lg shadow-orange-200 shrink-0">
                             <UtensilsCrossed className="w-4 h-4 md:w-7 md:h-7" />
                         </div>
-                        Cuisine & Envois
+                        <span className="truncate">Cuisine & Envois</span>
                     </h1>
-                    <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-1.5 md:mt-2 ml-1">Flux de production en temps réel</p>
+                    <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-1 md:mt-2 ml-8 md:ml-12 truncate">Flux de production en temps réel</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto relative z-10">
@@ -341,7 +341,7 @@ export default function OrdersPage() {
                         <Button onClick={() => setIsNewOrderModalOpen(true)} className="flex-1 sm:flex-none bg-stone-900 text-white hover:bg-stone-800 gap-2 h-10 md:h-12 px-4 md:px-6 rounded-2xl font-bold shadow-xl shadow-stone-200 transition-all active:scale-95 leading-none">
                             <Plus className="w-4 h-4" />
                             <span className="hidden xs:inline">Nouvelle</span>
-                            <span className="xs:hidden">New</span>
+                            <span className="xs:hidden">Nouvelle</span>
                         </Button>
                         <Button onClick={() => setIsPickupModalOpen(true)} variant="outline" className="flex-1 sm:flex-none gap-2 h-10 md:h-12 px-4 md:px-6 rounded-2xl font-bold border-stone-200 hover:bg-stone-50 transition-all active:scale-95 leading-none">
                             <ShoppingBag className="w-4 h-4" />

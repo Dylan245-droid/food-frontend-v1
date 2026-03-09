@@ -287,21 +287,23 @@ export default function CashPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-green-50/50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
+    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-4 md:px-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-stone-50/50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
 
-        <div className="relative z-10">
-          <h1 className="text-lg md:text-3xl font-black text-stone-900 flex items-center gap-2 md:gap-4 uppercase tracking-tight font-display">
-            <div className="bg-stone-900 p-1.5 md:p-2.5 rounded-2xl text-white shadow-lg">
-              <Banknote className="w-4 h-4 md:w-7 md:h-7" />
-            </div>
-            Caisse & Sessions
-          </h1>
-          <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-1.5 md:mt-2 ml-1">Gérez vos encaissements et fonds de caisse</p>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10 w-full xs:w-auto">
+          <div className="bg-stone-900 p-3 rounded-2xl text-white shadow-xl shadow-stone-100 shrink-0 self-start md:self-center">
+            <Banknote className="w-6 h-6 md:w-8 md:h-8" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight font-display leading-tight">
+              <span className="truncate">Caisse & Sessions</span>
+            </h1>
+            <p className="text-stone-400 text-xs md:text-sm font-bold mt-1 md:mt-2 truncate">Gérer vos encaissements et fonds de caisse</p>
+          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto relative z-10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto relative z-10">
           <Button
             onClick={() => {
               if (isRegisterLimitReached(registers.length)) {
@@ -312,9 +314,11 @@ export default function CashPage() {
               setRegisterForm({ name: '', location: '', type: 'sales' });
               setIsRegisterModalOpen(true);
             }}
-            className="bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-100 h-12 px-6 rounded-2xl font-black uppercase tracking-wider text-xs active:scale-95 transition-all w-full md:w-auto"
+            className="flex-1 sm:flex-none h-11 md:h-14 px-6 md:px-8 bg-stone-900 hover:bg-black text-white shadow-xl shadow-stone-200 rounded-2xl font-bold uppercase tracking-wider text-[10px] md:text-xs active:scale-95 transition-all w-full md:w-auto flex items-center justify-center shrink-0"
           >
-            <Plus className="w-4 h-4 mr-2" /> Nouveau Poste
+            <Plus className="w-4 h-4 mr-2" />
+            <span className="hidden xs:inline">Nouveau Poste</span>
+            <span className="xs:hidden">Nouveau</span>
           </Button>
         </div>
       </div>

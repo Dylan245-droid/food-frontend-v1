@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useFetch } from '../../lib/useFetch';
-import { Search, Filter, Eye, Download, X, Check, XCircle } from 'lucide-react';
+import { Search, Filter, Eye, Download, X, Check, XCircle, FileText } from 'lucide-react';
 import api from '../../lib/api';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
@@ -129,7 +129,7 @@ export default function InvoicesPage() {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500 pb-20">
+        <div className="max-w-[1600px] mx-auto space-y-6 animate-in fade-in duration-500 pb-20 px-4 md:px-8">
 
             {/* Hidden Receipt for Printing */}
             {createPortal(
@@ -139,15 +139,22 @@ export default function InvoicesPage() {
                 document.body
             )}
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="min-w-0">
-                    <h1 className="text-lg md:text-2xl font-black text-gray-900 truncate">Factures</h1>
-                    <p className="text-[10px] md:text-sm text-gray-500 truncate">Gérez vos factures et avoirs.</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+                <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10 w-full xs:w-auto">
+                    <div className="bg-stone-900 p-3 rounded-2xl text-white shadow-xl shadow-stone-100 shrink-0 self-start md:self-center">
+                        <FileText className="w-6 h-6 md:w-8 md:h-8" />
+                    </div>
+                    <div className="min-w-0">
+                        <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight font-display leading-tight">
+                            <span className="truncate">Factures</span>
+                        </h1>
+                        <p className="text-stone-400 text-xs md:text-sm font-bold mt-1 md:mt-2 truncate">Gerez vos factures et avoirs.</p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 relative z-10">
                     <Button
                         variant="outline"
-                        className="gap-2"
+                        className="flex-1 sm:flex-none h-11 md:h-14 px-6 md:px-8 rounded-2xl border-stone-200 hover:bg-stone-50 text-[10px] md:text-xs font-bold uppercase tracking-wider gap-2 transition-all active:scale-95"
                         onClick={async () => {
                             try {
                                 const params = new URLSearchParams({
@@ -175,7 +182,7 @@ export default function InvoicesPage() {
                             }
                         }}
                     >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-3.5 h-3.5" />
                         Export
                     </Button>
                 </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useBranding } from '../../context/BrandingContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Settings, ChefHat, Palette, MessageSquare, Loader2, Upload, Image, MapPin, Gift, Info, Settings2 } from 'lucide-react';
+import { Settings2, ChefHat, Loader2, MapPin, Truck, Check, Upload, Palette, Gift, Info, MessageSquare, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 
@@ -160,27 +160,32 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
+    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-4 md:px-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-32 h-32 bg-stone-50/50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
 
-        <div className="relative z-10">
-          <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-3 md:gap-4 font-display">
-            <div className="bg-stone-900 p-2 md:p-2.5 rounded-2xl text-white shadow-lg">
-              <Settings2 className="w-5 h-5 md:w-7 md:h-7" />
-            </div>
-            Configuration <span className="text-stone-300 font-light hidden xs:inline">Globale</span>
-          </h1>
-          <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-2 ml-1">Identité, logistique et paramètres système</p>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 relative z-10 w-full xs:w-auto">
+          <div className="bg-stone-900 p-3 rounded-2xl text-white shadow-xl shadow-stone-100 shrink-0 self-start md:self-center">
+            <Settings2 className="w-6 h-6 md:w-8 md:h-8" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-2 uppercase tracking-tight font-display leading-tight">
+              <span className="truncate">Configuration</span>
+            </h1>
+            <p className="text-stone-400 text-xs md:text-sm font-bold mt-1 md:mt-2 truncate text-left">Identité, logistique et paramètres système</p>
+          </div>
         </div>
 
-        <div className="flex gap-2 relative z-10">
+        <div className="flex gap-2 relative z-10 w-full sm:w-auto shrink-0">
           <Button
             onClick={(e) => handleSubmit(e)}
             disabled={saving}
-            className="bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-100 h-12 px-8 rounded-2xl font-black uppercase tracking-wider text-xs active:scale-95 transition-all w-full lg:w-auto"
+            className="flex-1 sm:flex-none h-11 md:h-14 px-6 md:px-10 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-100 rounded-2xl font-bold uppercase tracking-wider text-[10px] md:text-xs active:scale-95 transition-all"
           >
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : <Check className="w-4 h-4 mr-2" />}
+            {saving ? 'Envoi...' : 'Enregistrer'}
           </Button>
         </div>
       </div>
@@ -259,7 +264,7 @@ export default function SettingsPage() {
                     />
                   ) : (
                     <div className="text-center">
-                      <Image className="w-8 h-8 text-stone-400 mx-auto mb-1" />
+                      <ImageIcon className="w-8 h-8 text-stone-400 mx-auto mb-1" />
                       <span className="text-xs text-stone-500 font-medium">Aucun logo</span>
                     </div>
                   )}
@@ -465,7 +470,7 @@ export default function SettingsPage() {
                   <img src={formData.heroImage} alt="Hero" className="w-full h-full object-cover" />
                 ) : (
                   <div className="text-center">
-                    <Image className="w-6 h-6 text-stone-400 mx-auto mb-1" />
+                    <ImageIcon className="w-6 h-6 text-stone-400 mx-auto mb-1" />
                     <span className="text-[10px] text-stone-500 font-medium">Aucune</span>
                   </div>
                 )}
@@ -521,7 +526,7 @@ export default function SettingsPage() {
             {/* Infos Légales (Tickets/Factures) */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
               <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-                <Settings className="w-5 h-5 text-purple-600" />
+                <Settings2 className="w-5 h-5 text-purple-600" />
                 <h2 className="text-lg font-bold text-stone-900">Informations légales</h2>
               </div>
               <p className="text-sm text-stone-500">Ces informations apparaissent sur les tickets et factures</p>
@@ -578,7 +583,7 @@ export default function SettingsPage() {
             {/* Frais de Livraison */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-stone-100 space-y-6">
               <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-                <Settings className="w-5 h-5 text-blue-600" />
+                <Truck className="w-5 h-5 text-blue-600" />
                 <h2 className="text-lg font-bold text-stone-900">Frais de Livraison (par ville)</h2>
               </div>
 
