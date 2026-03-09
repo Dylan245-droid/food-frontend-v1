@@ -65,7 +65,7 @@ export default function AdminLayout() {
 
   // Redirection for Super Admin without tenant
   useEffect(() => {
-    if (user?.role === 'super_admin' && !user.tenantId && location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin/super')) {
+    if (user?.role === 'super_admin' && !user.tenant && location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin/super')) {
       navigate('/admin/super');
     }
   }, [user, location.pathname, navigate]);

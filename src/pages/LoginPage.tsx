@@ -22,7 +22,7 @@ export default function LoginPage() {
 
     const handleLoginSuccess = (user: any, token: string) => {
         login(token, user);
-        if (user.role === 'super_admin' && !user.tenantId) {
+        if (user.role === 'super_admin' && !user.tenant) {
             navigate('/admin/super');
         } else if (user.role === 'livreur') {
             navigate('/delivery');
