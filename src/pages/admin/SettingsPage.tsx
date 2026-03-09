@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import api from '../../lib/api';
 
 // Derive base URL from API configuration (same as MenuPage)
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:9015/api';
+const API_URL = import.meta.env.VITE_API_URL || '';
 const BASE_URL = API_URL.replace('/api', ''); // remove /api suffix to get root
 
 export default function SettingsPage() {

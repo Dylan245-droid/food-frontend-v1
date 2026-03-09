@@ -1,14 +1,16 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import {
     ChevronRight, ArrowRight, ShieldCheck,
     UtensilsCrossed, Smartphone, Heart, Users, Star, Check, LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../lib/api';
 import { PRICING_FEATURES } from '../../data/pricingFeatures';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:9015';
 
 // --- Assets & Data ---
 
@@ -22,8 +24,7 @@ const Showcase = () => {
     useEffect(() => {
         const fetchTenants = async () => {
             try {
-                // Hardcode URL for dev stability
-                const response = await axios.get('http://localhost:9015/api/tenants/featured');
+                const response = await api.get('/tenants/featured');
                 if (response.data && Array.isArray(response.data)) {
                     setTenants(response.data);
                 }
@@ -47,7 +48,7 @@ const Showcase = () => {
     const getTenantImage = (t: any) => {
         if (t.heroImage) {
             if (t.heroImage.startsWith('http')) return t.heroImage;
-            return `http://localhost:9015${t.heroImage}`;
+            return `${API_BASE_URL}${t.heroImage}`;
         }
         return null;
     };
@@ -221,8 +222,8 @@ const Navbar = () => {
                 </div>
                 <div className="hidden md:flex gap-6 text-sm font-medium text-gray-300">
                     <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="hover:text-white transition-colors">Accueil</button>
-                    <button onClick={() => window.scrollTo({ top: 1000, behavior: 'smooth' })} className="hover:text-white transition-colors">Solutions</button>
-                    <button onClick={() => window.scrollTo({ top: 3000, behavior: 'smooth' })} className="hover:text-white transition-colors">Tarifs</button>
+                    <button onClick={() => document.getElementById('solutions')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Solutions</button>
+                    <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition-colors">Tarifs</button>
                 </div>
                 <button
                     onClick={() => user ? navigate('/admin/dashboard') : navigate('/login')}
@@ -239,8 +240,8 @@ const Navbar = () => {
     );
 };
 
-const Section = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
-    <section className={`relative z-10 min-h-screen py-12 md:py-20 flex items-center ${className}`}>
+const Section = ({ children, className = "", id }: { children: React.ReactNode, className?: string, id?: string }) => (
+    <section id={id} className={`relative z-10 min-h-screen py-12 md:py-20 flex items-center ${className}`}>
         {children}
     </section>
 );
@@ -307,7 +308,7 @@ const Hero = () => {
                         </button>
 
                         <button
-                            onClick={() => window.scrollTo({ top: 1000, behavior: 'smooth' })}
+                            onClick={() => document.getElementById('solutions')?.scrollIntoView({ behavior: 'smooth' })}
                             className="px-10 py-5 bg-white/5 backdrop-blur-md border border-white/10 text-white rounded-full font-bold text-lg hover:bg-white/10 transition-all flex items-center gap-3 group"
                         >
                             Pourquoi GoTchop ?
@@ -322,7 +323,7 @@ const Hero = () => {
 
 const ValueProposition = () => {
     return (
-        <Section className="py-16 md:py-32">
+        <Section id="solutions" className="py-16 md:py-32">
             <div className="max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-16 items-center">
                 <BentoCard title="Sans Friction" sub="L'expérience QR Code" className="min-h-[400px]">
                     <div className="space-y-6">
@@ -440,7 +441,7 @@ const FeaturesGrid = () => {
 
 const Pricing = () => {
     return (
-        <Section className="py-12 md:py-20 relative z-10">
+        <Section id="pricing" className="py-12 md:py-20 relative z-10">
             <div className="max-w-7xl mx-auto px-6 w-full">
                 <div className="text-center mb-12 md:mb-20">
                     <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Tarifs Transparents.</h2>

@@ -188,7 +188,7 @@ export default function MenuPage() {
     );
 
     // Derive base URL from API configuration
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:9015/api';
+    const API_URL = import.meta.env.VITE_API_URL || '';
     const BASE_URL = API_URL.replace('/api', ''); // remove /api suffix if present to get root
 
     // Helper to resolve image URL
@@ -236,8 +236,8 @@ export default function MenuPage() {
                 <button
                     onClick={() => { setActiveCategory('all'); setCurrentPage(1); }}
                     className={`whitespace-nowrap px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === 'all'
-                            ? 'bg-stone-900 text-white shadow-lg shadow-stone-200 -translate-y-0.5'
-                            : 'bg-white text-stone-400 hover:text-stone-600 border border-stone-100'
+                        ? 'bg-stone-900 text-white shadow-lg shadow-stone-200 -translate-y-0.5'
+                        : 'bg-white text-stone-400 hover:text-stone-600 border border-stone-100'
                         }`}
                 >
                     Tout voir
@@ -247,8 +247,8 @@ export default function MenuPage() {
                         key={cat.id}
                         onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); }}
                         className={`whitespace-nowrap px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 group ${activeCategory === cat.id
-                                ? 'bg-orange-500 text-white shadow-lg shadow-orange-100 -translate-y-0.5'
-                                : 'bg-white text-stone-400 hover:text-orange-500 border border-stone-100 hover:bg-orange-50/30'
+                            ? 'bg-orange-500 text-white shadow-lg shadow-orange-100 -translate-y-0.5'
+                            : 'bg-white text-stone-400 hover:text-orange-500 border border-stone-100 hover:bg-orange-50/30'
                             }`}
                     >
                         {cat.name}
@@ -318,8 +318,8 @@ export default function MenuPage() {
                                     <button
                                         onClick={() => handleToggle(item)}
                                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-black uppercase transition-all shadow-sm ${item.isAvailable
-                                                ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
-                                                : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
+                                            ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
+                                            : 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
                                             }`}
                                     >
                                         {item.isAvailable ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
