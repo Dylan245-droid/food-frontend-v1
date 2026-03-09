@@ -4,7 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { Plus, Pencil, Trash2, Upload, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, Users, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getImageUrl } from '../../lib/utils';
 import { toast } from 'sonner';
@@ -294,6 +294,19 @@ export default function UsersPage() {
             onChange={e => setFormData({ ...formData, email: e.target.value })}
             required
           />
+
+          {currentUser && formData.email !== currentUser.email && (
+            <div className="flex gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100 animate-in slide-in-from-top-2 duration-300">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-xs font-black text-amber-900 uppercase tracking-tight">Attention : Changement d'identifiant</p>
+                <p className="text-[10px] text-amber-700 leading-relaxed font-medium">
+                  Le changement de l'email modifiera l'identifiant de connexion de ce membre.
+                  Il devra utiliser cette nouvelle adresse pour accéder à son compte.
+                </p>
+              </div>
+            </div>
+          )}
           {!currentUser && (
             <Input
               label="Mot de passe"
