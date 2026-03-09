@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../context/BrandingContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { LayoutDashboard, ShoppingBag, Users, FileText, LogOut, Coffee, Bell, TrendingUp, X, ChefHat, Settings, Banknote, ArrowRightLeft, ExternalLink, CreditCard } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { cn, getImageUrl } from '../lib/utils';
 import UpgradeModal from './UpgradeModal';
 
 export default function AdminLayout() {
@@ -275,8 +275,12 @@ export default function AdminLayout() {
           className="p-5 mt-auto m-4 rounded-[2rem] border border-stone-100/50 bg-stone-50/50"
         >
           <div className="flex items-center gap-3 mb-4">
-            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-white ${user?.role === 'super_admin' ? 'bg-indigo-600' : 'bg-stone-900'}`}>
-              {user?.fullName?.charAt(0) || 'U'}
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-white shrink-0 overflow-hidden ${user?.role === 'super_admin' ? 'bg-indigo-600' : 'bg-stone-900'}`}>
+              {user?.avatar ? (
+                <img src={getImageUrl(user.avatar)!} alt={user.fullName} className="w-full h-full object-cover" />
+              ) : (
+                user?.fullName?.charAt(0) || 'U'
+              )}
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-black text-stone-900 truncate">{user?.fullName}</p>

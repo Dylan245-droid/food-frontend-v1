@@ -17,6 +17,7 @@ interface User {
     features?: any;
     branding?: any;
   };
+  avatar?: string;
 }
 
 interface AuthContextType {

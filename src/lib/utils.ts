@@ -8,3 +8,10 @@ export function cn(...inputs: ClassValue[]) {
 export function formatCurrency(amount: number) {
     return new Intl.NumberFormat('fr-FR').format(amount).replace(/\u202f/g, ' ') + ' FCFA';
 }
+
+export function getImageUrl(path?: string) {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:9015';
+    return `${baseUrl}${path}`;
+}

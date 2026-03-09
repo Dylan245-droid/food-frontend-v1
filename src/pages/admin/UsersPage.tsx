@@ -6,6 +6,8 @@ import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
 import { Plus, Pencil, Trash2, Upload, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getImageUrl } from '../../lib/utils';
+import { toast } from 'sonner';
 
 interface User {
   id: number;
@@ -37,18 +39,17 @@ export default function UsersPage() {
   const currentCount = usersData?.data?.length || 0;
   const isLimitReached = isStaffLimitReached(currentCount);
 
-  // Helper to get image URL
-  const getImageUrl = (path?: string) => {
-    if (!path) return null;
-    if (path.startsWith('http')) return path;
-    // Strip /api from VITE_API_URL to get base URL
-    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:9015';
-    return `${baseUrl}${path}`;
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // Validation simple de la taille (ex: 2Mo)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("L'image est trop volumineuse (max 2Mo)");
+        return;
+      }
+
       setAvatarFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     }
@@ -77,14 +78,35 @@ export default function UsersPage() {
         // Update
         if (!formData.password) data.delete('password');
         await api.patch(`/admin/users/${currentUser.id}`, data, config);
+        toast.success("Membre mis à jour avec succès");
+
+        // Si c'est l'utilisateur actuel qui se met à jour, on rafraîchit le contexte global
+        if (currentUser.id === authUser?.id) {
+          // Si c'est l'utilisateur actuel qui se met à jour, on rafraîchit le contexte global
+        }
       } else {
         // Create
         await api.post('/admin/users', data, config);
+        toast.success("Membre créé avec succès");
       }
       setIsModalOpen(false);
       refetch();
+
+      // Important: refresh auth user if modified
+      if (currentUser?.id === authUser?.id) {
+        window.location.reload(); // Simple but effective to refresh all contexts if it's the current user
+      }
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Erreur lors de l\'enregistrement');
+      const errorMessage = error.response?.data?.message || error.message || 'Erreur lors de l\'enregistrement';
+      const status = error.response?.status;
+
+      if (status === 413) {
+        toast.error("Le fichier est trop lourd pour le serveur");
+      } else if (status === 403) {
+        toast.error("Vous n'avez pas les permissions pour cette action");
+      } else {
+        toast.error(`Erreur: ${errorMessage}`);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -94,9 +116,10 @@ export default function UsersPage() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')) return;
     try {
       await api.delete(`/admin/users/${id}`);
+      toast.success("Membre supprimé avec succès");
       refetch();
-    } catch (error) {
-      alert('Erreur lors de la suppression');
+    } catch (error: any) {
+      toast.error("Erreur lors de la suppression : " + (error.response?.data?.message || error.message));
     }
   };
 
