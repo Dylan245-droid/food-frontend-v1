@@ -23,8 +23,8 @@ const LegalLayout = ({ title, subtitle, icon: Icon, children }: { title: string,
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
                     <img src="/logo_dark.png" alt="GoTchop" className="h-10 md:h-12 hover:opacity-90 transition-opacity" />
                 </div>
-                <button 
-                    onClick={() => navigate('/')} 
+                <button
+                    onClick={() => navigate('/')}
                     className="flex items-center gap-2 text-sm font-bold text-stone-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -34,7 +34,7 @@ const LegalLayout = ({ title, subtitle, icon: Icon, children }: { title: string,
 
             <div className="pt-32 pb-24 px-6">
                 <div className="max-w-4xl mx-auto">
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
@@ -47,13 +47,13 @@ const LegalLayout = ({ title, subtitle, icon: Icon, children }: { title: string,
                         {subtitle && <p className="text-xl text-stone-400 max-w-2xl mx-auto leading-relaxed">{subtitle}</p>}
                     </motion.div>
 
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="bg-stone-900/50 border border-white/5 rounded-3xl p-8 md:p-12 shadow-2xl backdrop-blur-sm"
                     >
-                        <div className="prose prose-invert prose-lg prose-orange max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-p:text-stone-300 prose-li:text-stone-300">
+                        <div className="prose prose-invert prose-lg prose-orange max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h3:text-orange-500 prose-h3:text-2xl prose-h3:mt-12 prose-h3:mb-6 prose-p:text-stone-300 prose-p:mb-8 prose-li:text-stone-300">
                             {children}
                         </div>
                     </motion.div>
@@ -68,8 +68,8 @@ const LegalLayout = ({ title, subtitle, icon: Icon, children }: { title: string,
 };
 
 export const LegalMentionsPage = () => (
-    <LegalLayout 
-        title="Mentions Légales" 
+    <LegalLayout
+        title="Mentions Légales"
         subtitle="Informations légales et administratives relatives à l'exploitation de la plateforme GoTchop."
         icon={Building2}
     >
@@ -115,8 +115,8 @@ export const LegalMentionsPage = () => (
 
         <h3>3. Hébergement</h3>
         <p>
-            Le Site est hébergé par :<br/>
-            <strong>{PLATFORM_CONFIG.host}</strong><br/>
+            Le Site est hébergé par :<br />
+            <strong>{PLATFORM_CONFIG.host}</strong><br />
             Infrastructure Cloud sécurisée et redondante.
         </p>
 
@@ -128,32 +128,32 @@ export const LegalMentionsPage = () => (
 );
 
 export const TermsPage = () => (
-    <LegalLayout 
-        title="Conditions Générales d'Utilisation" 
+    <LegalLayout
+        title="Conditions Générales d'Utilisation"
         subtitle="Règles d'accès et d'utilisation des services GoTchop pour les Restaurateurs et les Clients."
         icon={Scale}
     >
         <p className="text-sm text-stone-500 italic mb-8">Dernière mise à jour : 24 Janvier 2026</p>
-        
+
         <h3>1. Objet et Acceptation</h3>
         <p>
             Les présentes Conditions Générales d'Utilisation (CGU) ont pour objet de définir les modalités de mise à disposition des services du site et de l'application GoTchop (ci-après "le Service") aux utilisateurs.
             L'utilisation du Service implique l'acceptation sans réserve des présentes CGU. En accédant au Service, l'utilisateur déclare avoir lu, compris et accepté les présentes conditions.
         </p>
-        
+
         <h3>2. Description du Service</h3>
         <p>
             GoTchop est une solution SaaS permettant aux restaurateurs de digitaliser leur activité (Menu QR Code, Commandes, Livraison, Paiements) et aux clients finaux de passer commande.
             {PLATFORM_CONFIG.companyName} agit en tant que prestataire technique mettant en relation Restaurateurs et Clients.
         </p>
-        
+
         <h3>3. Responsabilités</h3>
         <p><strong>Pour les Restaurateurs :</strong> Vous êtes responsable des informations publiées (prix, allergènes) et de la bonne exécution des commandes.</p>
         <p><strong>Pour les Clients :</strong> Vous vous engagez à honorer les commandes passées et à respecter le personnel du restaurant et les livreurs.</p>
         <p>
             {PLATFORM_CONFIG.companyName} ne saurait être tenu responsable en cas d'indisponibilité du Service pour des raisons de maintenance ou de force majeure.
         </p>
-        
+
         <h3>4. Paiements et Abonnement</h3>
         <p>
             Les services Premium pour restaurants sont soumis à abonnement. Les paiements sont sécurisés via Fiafio.
@@ -168,8 +168,8 @@ export const TermsPage = () => (
 );
 
 export const PrivacyPage = () => (
-    <LegalLayout 
-        title="Politique de Confidentialité" 
+    <LegalLayout
+        title="Politique de Confidentialité"
         subtitle="Engagement de GoTchop concernant la protection de vos données personnelles."
         icon={ShieldCheck}
     >
@@ -185,7 +185,7 @@ export const PrivacyPage = () => (
             Le responsable du traitement des données est la société {PLATFORM_CONFIG.companyName}, sise à {PLATFORM_CONFIG.address}.
             Email DPO : {PLATFORM_CONFIG.email}
         </p>
-        
+
         <h3>2. Données Collectées</h3>
         <p>Nous collectons les données strictement nécessaires au fonctionnement du service :</p>
         <ul>
@@ -193,7 +193,7 @@ export const PrivacyPage = () => (
             <li><strong>Client Final :</strong> Nom, Téléphone, Adresse de livraison (si applicable).</li>
             <li><strong>Paiement (Abonnements Premium) :</strong> Les transactions pour les services payants sont traitées par notre partenaire Fiafio. Nous ne stockons aucune donnée bancaire.</li>
         </ul>
-        
+
         <h3>3. Finalité du Traitement</h3>
         <p>Vos données sont utilisées pour :</p>
         <ul>
@@ -202,12 +202,12 @@ export const PrivacyPage = () => (
             <li>Communiquer avec vous (notifications de commande, factures).</li>
             <li>Assurer la sécurité de la plateforme et prévenir la fraude.</li>
         </ul>
-        
+
         <h3>4. Partage des Données</h3>
         <p>
             Vos données ne sont jamais vendues à des tiers. Elles peuvent être transmises à nos sous-traitants (Hébergement, Livraison) uniquement pour les besoins de l'exécution du service.
         </p>
-        
+
         <h3>5. Sécurité</h3>
         <p>
             Nous mettons en œuvre des mesures de sécurité avancées (Chiffrement SSL, pare-feu, contrôle d'accès strict) pour protéger vos données contre tout accès non autorisé.

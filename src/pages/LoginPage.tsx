@@ -54,7 +54,7 @@ export default function LoginPage() {
                 {/* Header */}
                 <div className="text-center group cursor-pointer" onClick={() => navigate('/')}>
                     <div className="mx-auto transform group-hover:rotate-6 transition-transform duration-500">
-                        <img src="/logo_dark.png" alt="GoTchop" className="h-20 mx-auto" />
+                        <img src="/logo_dark.png" alt="GoTchop" className="h-16 md:h-20 mx-auto" />
                     </div>
                     <h2 className="mt-4 text-center text-2xl font-black text-white tracking-tight">
                         GoTchop <span className="text-orange-500">Admin</span>
@@ -65,7 +65,7 @@ export default function LoginPage() {
                 </div>
 
                 {/* Form Card */}
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 py-6 px-4 shadow-2xl rounded-2xl sm:px-8 relative overflow-hidden">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 py-5 md:py-6 px-4 shadow-2xl rounded-2xl sm:px-8 relative overflow-hidden">
                     {/* Gradient Border Top */}
                     <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 to-red-600 opacity-50" />
 

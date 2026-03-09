@@ -33,13 +33,13 @@ const ContactPage = () => {
 
     return (
         <div className="min-h-screen bg-stone-950 text-stone-300 font-sans selection:bg-orange-500 selection:text-white relative overflow-hidden flex flex-col">
-           {/* Navbar */}
-           <nav className="fixed top-0 inset-x-0 z-50 bg-stone-950/80 backdrop-blur-md border-b border-white/5 h-20 flex items-center justify-between px-6 lg:px-12">
+            {/* Navbar */}
+            <nav className="fixed top-0 inset-x-0 z-50 bg-stone-950/80 backdrop-blur-md border-b border-white/5 h-20 flex items-center justify-between px-6 lg:px-12">
                 <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
                     <img src="/logo_dark.png" alt="GoTchop" className="h-10 md:h-12 hover:opacity-90 transition-opacity" />
                 </div>
-                <button 
-                    onClick={() => navigate('/')} 
+                <button
+                    onClick={() => navigate('/')}
                     className="flex items-center gap-2 text-sm font-bold text-stone-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 px-4 py-2 rounded-full backdrop-blur-sm"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -47,12 +47,12 @@ const ContactPage = () => {
                 </button>
             </nav>
 
-            <div className="flex-1 flex items-center relative z-10 pt-24 pb-20">
-                 {/* Background decoration */}
-                 <div className="absolute top-0 right-0 w-[50vw] h-full bg-orange-600/5 blur-[120px] pointer-events-none" />
+            <div className="flex-1 flex items-center relative z-10 pt-20 md:pt-24 pb-12 md:pb-20">
+                {/* Background decoration */}
+                <div className="absolute top-0 right-0 w-[50vw] h-full bg-orange-600/5 blur-[120px] pointer-events-none" />
 
-                 <div className="max-w-7xl mx-auto px-6 w-full grid lg:grid-cols-2 gap-20 items-start">
-                    
+                <div className="max-w-7xl mx-auto px-6 w-full grid lg:grid-cols-2 gap-12 md:gap-20 items-start">
+
                     {/* Left: Info & Vibe */}
                     <div className="pt-10">
                         <motion.div
@@ -64,27 +64,27 @@ const ContactPage = () => {
                             <span>Contactez notre équipe</span>
                         </motion.div>
 
-                        <motion.h1 
+                        <motion.h1
                             initial={{ opacity: 0, y: 50 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="text-5xl md:text-7xl font-black text-white mb-8 leading-tight font-display"
+                            className="text-4xl md:text-7xl font-black text-white mb-8 leading-tight font-display"
                         >
-                            Parlons <br/>
+                            Parlons <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Business.</span>
                         </motion.h1>
-                        
-                        <motion.p 
+
+                        <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
                             className="text-xl text-stone-400 mb-12 max-w-lg leading-relaxed"
                         >
-                            Une question sur nos offres ? Besoin d'une démo personnalisée ? 
+                            Une question sur nos offres ? Besoin d'une démo personnalisée ?
                             L'équipe <strong>NOUN CONCEPT</strong>, basée à Libreville, est là pour digitaliser votre restaurant.
                         </motion.p>
 
-                        <motion.div 
+                        <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ delay: 0.3 }}
@@ -97,77 +97,77 @@ const ContactPage = () => {
                     </div>
 
                     {/* Right: Premium Form */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="bg-stone-900/50 backdrop-blur-xl border border-white/10 p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative group hover:border-orange-500/20 transition-colors"
+                        className="bg-stone-900/50 backdrop-blur-xl border border-white/10 p-6 md:p-10 rounded-[2rem] md:rounded-[2.5rem] shadow-2xl relative group hover:border-orange-500/20 transition-colors"
                     >
                         <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 to-red-600 opacity-20" />
-                        
+
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Nom</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         required
                                         value={formData.lastName}
-                                        onChange={e => setFormData({...formData, lastName: e.target.value})}
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all" 
-                                        placeholder="Votre nom" 
+                                        onChange={e => setFormData({ ...formData, lastName: e.target.value })}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all"
+                                        placeholder="Votre nom"
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Prénom</label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         required
                                         value={formData.firstName}
-                                        onChange={e => setFormData({...formData, firstName: e.target.value})}
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all" 
-                                        placeholder="Votre prénom" 
+                                        onChange={e => setFormData({ ...formData, firstName: e.target.value })}
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all"
+                                        placeholder="Votre prénom"
                                     />
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Email Professionnel</label>
-                                <input 
-                                    type="email" 
+                                <input
+                                    type="email"
                                     required
                                     value={formData.email}
-                                    onChange={e => setFormData({...formData, email: e.target.value})}
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all" 
-                                    placeholder="jean@restaurant.com" 
+                                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all"
+                                    placeholder="jean@restaurant.com"
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Téléphone (Optionnel)</label>
-                                <input 
-                                    type="tel" 
+                                <input
+                                    type="tel"
                                     value={formData.phone}
-                                    onChange={e => setFormData({...formData, phone: e.target.value})}
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all" 
-                                    placeholder="+241 ..." 
+                                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all"
+                                    placeholder="+241 ..."
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-xs font-bold uppercase tracking-widest text-stone-500 mb-2">Message</label>
-                                <textarea 
-                                    rows={4} 
+                                <textarea
+                                    rows={4}
                                     required
                                     value={formData.message}
-                                    onChange={e => setFormData({...formData, message: e.target.value})}
-                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all resize-none" 
-                                    placeholder="Dites-nous tout sur votre projet..." 
+                                    onChange={e => setFormData({ ...formData, message: e.target.value })}
+                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-orange-500 focus:bg-white/5 transition-all resize-none"
+                                    placeholder="Dites-nous tout sur votre projet..."
                                 />
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={loading}
                                 className="w-full bg-white text-black font-bold py-5 rounded-xl hover:bg-orange-500 hover:text-white transition-all flex items-center justify-center gap-2 group/btn disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -178,7 +178,7 @@ const ContactPage = () => {
                         </form>
                     </motion.div>
 
-                 </div>
+                </div>
             </div>
         </div>
     );

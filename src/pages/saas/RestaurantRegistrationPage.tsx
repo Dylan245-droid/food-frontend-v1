@@ -78,7 +78,7 @@ const RestaurantRegistrationPage: React.FC = () => {
       <div className="max-w-md w-full space-y-4 relative z-10 my-8">
         <div className="text-center group cursor-pointer" onClick={() => navigate('/')}>
           <div className="mx-auto transform group-hover:rotate-6 transition-transform duration-500">
-            <img src="/logo_dark.png" alt="GoTchop" className="h-24 mx-auto" />
+            <img src="/logo_dark.png" alt="GoTchop" className="h-16 md:h-24 mx-auto" />
           </div>
           <h2 className="mt-4 text-center text-3xl font-black text-white tracking-tight leading-tight">
             Rejoignez l'Élite <br />
@@ -89,7 +89,7 @@ const RestaurantRegistrationPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 py-6 px-4 shadow-2xl rounded-2xl sm:px-8 relative overflow-hidden">
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 py-5 md:py-6 px-4 shadow-2xl rounded-2xl sm:px-8 relative overflow-hidden">
           {/* Gradient Border Top */}
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-orange-500 to-red-600 opacity-50" />
 

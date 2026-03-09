@@ -77,16 +77,16 @@ const Showcase = () => {
     if (cards.length === 0) return null;
 
     return (
-        <Section className="py-20 overflow-hidden relative z-10 flex flex-col justify-start">
+        <Section className="py-12 md:py-20 overflow-hidden relative z-10 flex flex-col justify-start">
             {/* Header - Strictly separated from Marquee */}
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6 }}
-                className="max-w-7xl mx-auto px-6 mb-24 relative text-center z-20"
+                className="max-w-7xl mx-auto px-6 mb-12 md:mb-24 relative text-center z-20"
             >
-                <h2 className="text-5xl font-black text-white mb-6 drop-shadow-2xl">L'Élite du Goût.</h2>
+                <h2 className="text-4xl font-black text-white mb-6 drop-shadow-2xl">L'Élite du Goût.</h2>
                 <p className="text-gray-400 max-w-lg mx-auto text-lg drop-shadow-md">
                     Rejoignez les meilleurs restaurateurs de la ville.
                 </p>
@@ -240,7 +240,7 @@ const Navbar = () => {
 };
 
 const Section = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
-    <section className={`relative z-10 min-h-screen py-20 flex items-center ${className}`}>
+    <section className={`relative z-10 min-h-screen py-12 md:py-20 flex items-center ${className}`}>
         {children}
     </section>
 );
@@ -267,7 +267,7 @@ const BentoCard = ({ children, title, sub, className = "", delay = 0 }: any) => 
 const Hero = () => {
     const navigate = useNavigate();
     return (
-        <Section className="justify-center text-center overflow-hidden pt-40">
+        <Section className="justify-center text-center overflow-hidden pt-24 md:pt-40">
             <div className="max-w-[90vw] relative z-10">
                 {/* Softer background glow */}
                 <motion.div
@@ -282,7 +282,7 @@ const Hero = () => {
                     <span>La plateforme préférée des restaurateurs</span>
                 </div>
 
-                <h1 className="text-5xl md:text-8xl font-black text-white leading-tight mb-8 tracking-tight drop-shadow-2xl">
+                <h1 className="text-4xl md:text-8xl font-black text-white leading-tight mb-8 tracking-tight drop-shadow-2xl">
                     Petit ou Grand,<br />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-orange-600 animate-gradient-x">
                         Vous êtes le Chef.
@@ -322,7 +322,7 @@ const Hero = () => {
 
 const ValueProposition = () => {
     return (
-        <Section className="py-32">
+        <Section className="py-16 md:py-32">
             <div className="max-w-7xl mx-auto px-6 w-full grid md:grid-cols-2 gap-16 items-center">
                 <BentoCard title="Sans Friction" sub="L'expérience QR Code" className="min-h-[400px]">
                     <div className="space-y-6">
@@ -383,9 +383,9 @@ const FeaturesGrid = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6 }}
-                    className="text-center mb-16"
+                    className="text-center mb-10 md:mb-16"
                 >
-                    <h2 className="text-4xl md:text-5xl font-black text-white mb-4">Pilotage Intégral.</h2>
+                    <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Pilotage Intégral.</h2>
                     <p className="text-gray-400 max-w-2xl mx-auto">De la prise de commande à la gestion des stocks, tout est là.</p>
                 </motion.div>
 
@@ -440,10 +440,10 @@ const FeaturesGrid = () => {
 
 const Pricing = () => {
     return (
-        <Section className="py-20 relative z-10">
+        <Section className="py-12 md:py-20 relative z-10">
             <div className="max-w-7xl mx-auto px-6 w-full">
-                <div className="text-center mb-20">
-                    <h2 className="text-5xl font-black text-white mb-4">Tarifs Transparents.</h2>
+                <div className="text-center mb-12 md:mb-20">
+                    <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Tarifs Transparents.</h2>
                     <p className="text-gray-400 text-lg">
                         <span className="text-orange-500 font-bold">14 jours d'essai gratuits</span> sur toutes les offres. <br />
                         Aucune carte bancaire requise. Annulez à tout moment.
@@ -546,11 +546,11 @@ const Pricing = () => {
 const Footer = () => {
     const navigate = useNavigate();
     return (
-        <footer className="relative z-10 bg-black py-20 border-t border-white/10 mt-20">
-            <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
+        <footer className="relative z-10 bg-black py-12 md:py-20 border-t border-white/10 mt-12 md:mt-20">
+            <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8 md:gap-12">
                 <div className="col-span-2">
                     <div className="text-2xl font-black text-white flex items-center gap-2 mb-6 cursor-pointer" onClick={() => navigate('/')}>
-                        <img src="/logo_dark.png" alt="GoTchop" className="h-14" />
+                        <img src="/logo_dark.png" alt="GoTchop" className="h-10 md:h-14" />
                     </div>
                     <p className="text-gray-500 max-w-sm">
                         La technologie au service de la gastronomie.
@@ -582,7 +582,7 @@ const Footer = () => {
                     </ul>
                 </div>
             </div>
-            <div className="max-w-7xl mx-auto px-6 mt-20 pt-8 border-t border-white/5 text-center text-gray-600 text-xs font-mono">
+            <div className="max-w-7xl mx-auto px-6 mt-12 md:mt-20 pt-8 border-t border-white/5 text-center text-gray-600 text-xs font-mono">
                 © {new Date().getFullYear()} NOUN CONCEPT. Fait avec passion à Libreville, Gabon.
             </div>
         </footer>

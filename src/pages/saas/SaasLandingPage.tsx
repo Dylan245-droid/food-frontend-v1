@@ -170,7 +170,7 @@ const SaasLandingPage: React.FC = () => {
         </div>
 
         {/* Features - "Tout ce qu'il faut" */}
-        <div className="py-24 bg-white">
+        <div className="py-16 md:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="lg:grid lg:grid-cols-2 lg:gap-16 items-center">
               <div>
