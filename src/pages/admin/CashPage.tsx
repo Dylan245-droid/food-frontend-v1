@@ -292,13 +292,13 @@ export default function CashPage() {
         <div className="absolute top-0 right-0 w-32 h-32 bg-green-50/50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
 
         <div className="relative z-10">
-          <h1 className="text-2xl md:text-3xl font-black text-stone-900 flex items-center gap-4 font-display">
-            <div className="bg-stone-900 p-2.5 rounded-2xl text-white shadow-lg">
-              <Banknote className="w-6 h-6 md:w-7 md:h-7" />
+          <h1 className="text-lg md:text-3xl font-black text-stone-900 flex items-center gap-2 md:gap-4 uppercase tracking-tight font-display">
+            <div className="bg-stone-900 p-1.5 md:p-2.5 rounded-2xl text-white shadow-lg">
+              <Banknote className="w-4 h-4 md:w-7 md:h-7" />
             </div>
             Caisse & Sessions
           </h1>
-          <p className="text-stone-400 text-sm font-bold mt-2 ml-1">Gérez vos encaissements et fonds de caisse</p>
+          <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-1.5 md:mt-2 ml-1">Gérez vos encaissements et fonds de caisse</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto relative z-10">

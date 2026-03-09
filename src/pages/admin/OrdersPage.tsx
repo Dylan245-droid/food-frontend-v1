@@ -315,9 +315,9 @@ export default function OrdersPage() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-orange-100/50 transition-colors"></div>
 
                 <div className="relative z-10">
-                    <h1 className="text-xl md:text-3xl font-black text-stone-900 flex items-center gap-3 md:gap-4 uppercase tracking-tight font-display">
-                        <div className="bg-orange-500 p-2 md:p-2.5 rounded-2xl text-white shadow-lg shadow-orange-200">
-                            <UtensilsCrossed className="w-5 h-5 md:w-7 md:h-7" />
+                    <h1 className="text-lg md:text-3xl font-black text-stone-900 flex items-center gap-2 md:gap-4 uppercase tracking-tight font-display">
+                        <div className="bg-orange-500 p-1.5 md:p-2.5 rounded-2xl text-white shadow-lg shadow-orange-200">
+                            <UtensilsCrossed className="w-4 h-4 md:w-7 md:h-7" />
                         </div>
                         Cuisine & Envois
                     </h1>

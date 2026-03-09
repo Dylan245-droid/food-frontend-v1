@@ -110,8 +110,8 @@ export default function AdminLayout() {
   }
 
   // ... (Journaux, Site, Server specific links remains the same... ensure to copy strictly if unchanged)
-  if (user?.role === 'super_admin' || user?.role === 'admin') {
-    menuItems.push({ icon: FileText, label: 'Journaux', path: '/admin/audit-logs', roles: ['super_admin', 'admin'], feature: 'finance_enabled' }); // User said "Journaux" should be inaccessible. Assuming finance_enabled covers this 'advanced' feature set or use another flag. Reusing finance_enabled for simplicity as 'Advanced Admin'.
+  if (user?.role === 'super_admin') {
+    menuItems.push({ icon: FileText, label: 'Journaux', path: '/admin/audit-logs', roles: ['super_admin'], feature: 'finance_enabled' });
   }
   if (user?.tenant?.slug) {
     menuItems.push({ icon: ExternalLink, label: 'Voir Site', path: `/r/${user.tenant.slug}`, roles: ['super_admin', 'admin', 'salle', 'serveur', 'caissier'] });

@@ -3,7 +3,7 @@ import { useFetch } from '../../lib/useFetch';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { 
+import {
   BookOpen, Eye, Loader2, ChevronDown, ChevronRight, FileText, Plus, Download
 } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
@@ -50,7 +50,7 @@ interface LedgerEntry {
 export default function AccountingPage() {
   // Tabs
   const [activeTab, setActiveTab] = useState<'journal' | 'ledger' | 'balance' | 'chart'>('journal');
-  
+
   // Filters
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
@@ -60,13 +60,13 @@ export default function AccountingPage() {
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   // Data fetching - all tabs fetch on mount, filter by activeTab on render
-  const { data: journalData, loading: loadingJournal } = 
+  const { data: journalData, loading: loadingJournal } =
     useFetch<any>(`/admin/accounting/journal?startDate=${startDate}&endDate=${endDate}`);
-  const { data: ledgerData, loading: loadingLedger } = 
+  const { data: ledgerData, loading: loadingLedger } =
     useFetch<any>(`/admin/accounting/ledger?startDate=${startDate}&endDate=${endDate}`);
-  const { data: balanceData, loading: loadingBalance } = 
+  const { data: balanceData, loading: loadingBalance } =
     useFetch<any>(`/admin/accounting/balance?endDate=${endDate}`);
-  const { data: chartData, loading: loadingChart } = 
+  const { data: chartData, loading: loadingChart } =
     useFetch<any>('/admin/accounting/chart');
 
   // State
@@ -93,7 +93,7 @@ export default function AccountingPage() {
 
   // Toggle class expansion
   const toggleClass = (cls: number) => {
-    setExpandedClasses(prev => 
+    setExpandedClasses(prev =>
       prev.includes(cls) ? prev.filter(c => c !== cls) : [...prev, cls]
     );
   };
@@ -124,55 +124,56 @@ export default function AccountingPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-            <BookOpen className="w-8 h-8" style={{ color: 'var(--primary)' }} />
-            Comptabilité
+        <div className="min-w-0">
+          <h1 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2 truncate">
+            <BookOpen className="w-6 h-6 md:w-8 md:h-8 shrink-0" style={{ color: 'var(--primary)' }} />
+            <span className="truncate">Comptabilité</span>
           </h1>
-          <p className="text-gray-500">Journal, Grand Livre et Balance - SYSCOHADA</p>
+          <p className="text-[10px] md:text-sm text-gray-500 truncate">Journal, Grand Livre et Balance - SYSCOHADA</p>
         </div>
-        <div className="flex gap-2">
-            {activeTab === 'journal' && (
-                <Button 
-                    variant="outline"
-                    onClick={async () => {
-                        try {
-                            const params = new URLSearchParams({
-                                startDate,
-                                endDate,
-                            });
-                            
-                            const response = await api.get(`/admin/accounting/export?${params}`, {
-                                responseType: 'blob'
-                            });
-                            
-                            const url = window.URL.createObjectURL(new Blob([response.data]));
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.setAttribute('download', `journal_${startDate}_${endDate}.csv`);
-                            document.body.appendChild(link);
-                            link.click();
-                            link.remove();
-                            window.URL.revokeObjectURL(url);
-                        } catch (error) {
-                            console.error('Export failed', error);
-                            alert("Erreur lors de l'export");
-                        }
-                    }}
-                >
-                    <Download className="w-4 h-4 mr-2" />
-                    Export
-                </Button>
-            )}
-            <Button onClick={() => setIsNewEntryModalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nouvelle écriture
+        <div className="flex gap-2 w-full md:w-auto">
+          {activeTab === 'journal' && (
+            <Button
+              variant="outline"
+              className="flex-1 md:flex-none h-10 md:h-11 text-xs md:text-sm"
+              onClick={async () => {
+                try {
+                  const params = new URLSearchParams({
+                    startDate,
+                    endDate,
+                  });
+
+                  const response = await api.get(`/admin/accounting/export?${params}`, {
+                    responseType: 'blob'
+                  });
+
+                  const url = window.URL.createObjectURL(new Blob([response.data]));
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.setAttribute('download', `journal_${startDate}_${endDate}.csv`);
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+                  window.URL.revokeObjectURL(url);
+                } catch (error) {
+                  console.error('Export failed', error);
+                  alert("Erreur lors de l'export");
+                }
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export
             </Button>
+          )}
+          <Button onClick={() => setIsNewEntryModalOpen(true)} className="flex-1 md:flex-none h-10 md:h-11 text-xs md:text-sm">
+            <Plus className="w-4 h-4 mr-2" />
+            Nouvelle écriture
+          </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-stone-200 pb-2">
+      <div className="flex gap-2 border-b border-stone-200 pb-2 overflow-x-auto no-scrollbar">
         {[
           { id: 'journal', label: 'Journal' },
           { id: 'ledger', label: 'Grand Livre' },
@@ -182,11 +183,10 @@ export default function AccountingPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-              activeTab === tab.id 
-                ? 'bg-stone-900 text-white' 
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
+            className={`px-4 py-2 rounded-lg font-medium text-xs md:text-sm transition-all whitespace-nowrap ${activeTab === tab.id
+              ? 'bg-stone-900 text-white'
+              : 'text-stone-600 hover:bg-stone-100'
+              }`}
           >
             {tab.label}
           </button>
@@ -196,7 +196,7 @@ export default function AccountingPage() {
       {/* Date Filters (not for chart) */}
       {activeTab !== 'chart' && (
         <div className="bg-white rounded-xl p-4 border border-stone-100 flex flex-wrap gap-4 items-end">
-          <div className="w-36">
+          <div className="flex-1 min-w-[140px]">
             <label className="block text-xs font-medium text-stone-500 mb-1">Du</label>
             <input
               type="date"
@@ -205,7 +205,7 @@ export default function AccountingPage() {
               className="w-full py-2 px-3 border border-stone-200 rounded-lg text-sm"
             />
           </div>
-          <div className="w-36">
+          <div className="flex-1 min-w-[140px]">
             <label className="block text-xs font-medium text-stone-500 mb-1">Au</label>
             <input
               type="date"
@@ -228,7 +228,7 @@ export default function AccountingPage() {
       {activeTab === 'journal' && !loading && (
         <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="bg-stone-50 border-b border-stone-100">
                   <th className="text-left py-3 px-4 text-xs font-bold text-stone-500 uppercase">N° Écriture</th>
@@ -289,7 +289,7 @@ export default function AccountingPage() {
       {activeTab === 'ledger' && !loading && (
         <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="bg-stone-50 border-b border-stone-100">
                   <th className="text-left py-3 px-4 text-xs font-bold text-stone-500 uppercase">Compte</th>
@@ -331,23 +331,21 @@ export default function AccountingPage() {
       {activeTab === 'balance' && !loading && (
         <div className="space-y-4">
           {balanceData?.totals && (
-            <div className={`p-4 rounded-xl flex items-center justify-between ${
-              balanceData.totals.balanced ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
-            }`}>
-              <span className="font-medium">Balance au {new Date(balanceData.asOf).toLocaleDateString('fr-FR')}</span>
-              <div className="flex gap-8">
+            <div className={`p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 ${balanceData.totals.balanced ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+              }`}>
+              <span className="font-medium text-sm">Balance au {new Date(balanceData.asOf).toLocaleDateString('fr-FR')}</span>
+              <div className="flex flex-wrap gap-4 md:gap-8 w-full sm:w-auto justify-between">
                 <div>
-                  <span className="text-xs text-stone-500">Total Débit</span>
-                  <p className="font-mono font-bold">{formatCurrency(balanceData.totals.debit)}</p>
+                  <span className="text-[10px] text-stone-500 uppercase block">Débit</span>
+                  <p className="font-mono font-bold text-sm">{formatCurrency(balanceData.totals.debit)}</p>
                 </div>
                 <div>
-                  <span className="text-xs text-stone-500">Total Crédit</span>
-                  <p className="font-mono font-bold">{formatCurrency(balanceData.totals.credit)}</p>
+                  <span className="text-[10px] text-stone-500 uppercase block">Crédit</span>
+                  <p className="font-mono font-bold text-sm">{formatCurrency(balanceData.totals.credit)}</p>
                 </div>
-                <div>
-                  <span className={`px-2 py-1 rounded text-xs font-bold ${
-                    balanceData.totals.balanced ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  }`}>
+                <div className="flex items-center">
+                  <span className={`px-2 py-1 rounded text-[10px] font-bold ${balanceData.totals.balanced ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    }`}>
                     {balanceData.totals.balanced ? '✓ Équilibrée' : '✗ Déséquilibrée'}
                   </span>
                 </div>
@@ -355,26 +353,28 @@ export default function AccountingPage() {
             </div>
           )}
           <div className="bg-white rounded-2xl border border-stone-100 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-stone-50 border-b border-stone-100">
-                  <th className="text-left py-3 px-4 text-xs font-bold text-stone-500 uppercase">Code</th>
-                  <th className="text-left py-3 px-4 text-xs font-bold text-stone-500 uppercase">Libellé</th>
-                  <th className="text-right py-3 px-4 text-xs font-bold text-stone-500 uppercase">Débit</th>
-                  <th className="text-right py-3 px-4 text-xs font-bold text-stone-500 uppercase">Crédit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-50">
-                {balance.map((item: any) => (
-                  <tr key={item.code} className="hover:bg-stone-50">
-                    <td className="py-2 px-4 font-mono text-sm">{item.code}</td>
-                    <td className="py-2 px-4 text-sm text-stone-600">{item.label}</td>
-                    <td className="py-2 px-4 text-right font-mono text-sm">{item.debit > 0 ? formatCurrency(item.debit) : '-'}</td>
-                    <td className="py-2 px-4 text-right font-mono text-sm">{item.credit > 0 ? formatCurrency(item.credit) : '-'}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px]">
+                <thead>
+                  <tr className="bg-stone-50 border-b border-stone-100">
+                    <th className="text-left py-3 px-4 text-xs font-bold text-stone-500 uppercase">Code</th>
+                    <th className="text-left py-3 px-4 text-xs font-bold text-stone-500 uppercase">Libellé</th>
+                    <th className="text-right py-3 px-4 text-xs font-bold text-stone-500 uppercase">Débit</th>
+                    <th className="text-right py-3 px-4 text-xs font-bold text-stone-500 uppercase">Crédit</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-stone-50">
+                  {balance.map((item: any) => (
+                    <tr key={item.code} className="hover:bg-stone-50">
+                      <td className="py-2 px-4 font-mono text-sm">{item.code}</td>
+                      <td className="py-2 px-4 text-sm text-stone-600">{item.label}</td>
+                      <td className="py-2 px-4 text-right font-mono text-sm">{item.debit > 0 ? formatCurrency(item.debit) : '-'}</td>
+                      <td className="py-2 px-4 text-right font-mono text-sm">{item.credit > 0 ? formatCurrency(item.credit) : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -388,10 +388,10 @@ export default function AccountingPage() {
                 onClick={() => toggleClass(Number(classNum))}
                 className="w-full px-4 py-3 flex items-center justify-between bg-stone-50 hover:bg-stone-100 transition-colors"
               >
-                <span className="font-bold text-stone-800">
+                <span className="font-bold text-stone-800 text-sm">
                   Classe {classNum} - {classLabels[Number(classNum)] || 'Autres'}
                 </span>
-                {expandedClasses.includes(Number(classNum)) 
+                {expandedClasses.includes(Number(classNum))
                   ? <ChevronDown className="w-5 h-5 text-stone-400" />
                   : <ChevronRight className="w-5 h-5 text-stone-400" />
                 }
@@ -400,13 +400,12 @@ export default function AccountingPage() {
                 <div className="divide-y divide-stone-50">
                   {groupedChart[Number(classNum)].map((account: Account) => (
                     <div key={account.id} className="px-4 py-2 flex items-center justify-between hover:bg-stone-50">
-                      <div>
-                        <span className="font-mono font-bold text-stone-900 mr-3">{account.code}</span>
-                        <span className="text-sm text-stone-600">{account.label}</span>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-mono font-bold text-stone-900 mr-3 text-sm">{account.code}</span>
+                        <span className="text-sm text-stone-600 truncate inline-block max-w-[150px] md:max-w-none align-bottom">{account.label}</span>
                       </div>
-                      <span className={`text-xs px-2 py-0.5 rounded ${
-                        account.normalBalance === 'debit' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
-                      }`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded shrink-0 ${account.normalBalance === 'debit' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
+                        }`}>
                         {account.normalBalance === 'debit' ? 'Débiteur' : 'Créditeur'}
                       </span>
                     </div>
@@ -419,15 +418,15 @@ export default function AccountingPage() {
       )}
 
       {/* Entry Details Modal */}
-      <Modal 
-        isOpen={isDetailsModalOpen} 
+      <Modal
+        isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
         title={`Écriture ${selectedEntry?.entryNumber || ''}`}
       >
         {selectedEntry && (
           <div className="space-y-6">
             {/* Header */}
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-4 text-xs md:text-sm">
               <div>
                 <p className="text-stone-500">Date</p>
                 <p className="font-medium">{new Date(selectedEntry.entryDate).toLocaleDateString('fr-FR')}</p>
@@ -444,44 +443,46 @@ export default function AccountingPage() {
 
             {/* Lines */}
             <div>
-              <h4 className="text-xs font-bold text-stone-500 uppercase tracking-wide mb-2">Lignes comptables</h4>
+              <h4 className="text-[10px] font-bold text-stone-500 uppercase tracking-wide mb-2">Lignes comptables</h4>
               <div className="border border-stone-200 rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-stone-50">
-                    <tr>
-                      <th className="text-left py-2 px-3">Compte</th>
-                      <th className="text-right py-2 px-3">Débit</th>
-                      <th className="text-right py-2 px-3">Crédit</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-stone-100">
-                    {selectedEntry.lines?.map(line => (
-                      <tr key={line.id}>
-                        <td className="py-2 px-3">
-                          <span className="font-mono font-bold">{line.account.code}</span>
-                          <span className="text-stone-500 ml-2">{line.account.label}</span>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs md:text-sm min-w-[500px]">
+                    <thead className="bg-stone-50">
+                      <tr>
+                        <th className="text-left py-2 px-3">Compte</th>
+                        <th className="text-right py-2 px-3">Débit</th>
+                        <th className="text-right py-2 px-3">Crédit</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-100">
+                      {selectedEntry.lines?.map(line => (
+                        <tr key={line.id}>
+                          <td className="py-2 px-3">
+                            <span className="font-mono font-bold">{line.account.code}</span>
+                            <span className="text-stone-500 ml-2">{line.account.label}</span>
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono">
+                            {line.debitAmount > 0 ? formatCurrency(line.debitAmount) : '-'}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono">
+                            {line.creditAmount > 0 ? formatCurrency(line.creditAmount) : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-stone-100 font-bold">
+                      <tr>
+                        <td className="py-2 px-3">TOTAL</td>
+                        <td className="py-2 px-3 text-right font-mono">
+                          {formatCurrency(selectedEntry.lines?.reduce((s, l) => s + l.debitAmount, 0) || 0)}
                         </td>
                         <td className="py-2 px-3 text-right font-mono">
-                          {line.debitAmount > 0 ? formatCurrency(line.debitAmount) : '-'}
-                        </td>
-                        <td className="py-2 px-3 text-right font-mono">
-                          {line.creditAmount > 0 ? formatCurrency(line.creditAmount) : '-'}
+                          {formatCurrency(selectedEntry.lines?.reduce((s, l) => s + l.creditAmount, 0) || 0)}
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-stone-100 font-bold">
-                    <tr>
-                      <td className="py-2 px-3">TOTAL</td>
-                      <td className="py-2 px-3 text-right font-mono">
-                        {formatCurrency(selectedEntry.lines?.reduce((s, l) => s + l.debitAmount, 0) || 0)}
-                      </td>
-                      <td className="py-2 px-3 text-right font-mono">
-                        {formatCurrency(selectedEntry.lines?.reduce((s, l) => s + l.creditAmount, 0) || 0)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -493,13 +494,13 @@ export default function AccountingPage() {
       </Modal>
 
       {/* New Entry Modal */}
-      <Modal 
-        isOpen={isNewEntryModalOpen} 
+      <Modal
+        isOpen={isNewEntryModalOpen}
         onClose={() => setIsNewEntryModalOpen(false)}
         title="Nouvelle écriture comptable"
       >
-        <NewEntryForm 
-          accounts={chart} 
+        <NewEntryForm
+          accounts={chart}
           onSuccess={() => {
             setIsNewEntryModalOpen(false);
             window.location.reload();
@@ -512,13 +513,13 @@ export default function AccountingPage() {
 }
 
 // New Entry Form Component
-function NewEntryForm({ 
-  accounts, 
-  onSuccess, 
-  onCancel 
-}: { 
-  accounts: Account[]; 
-  onSuccess: () => void; 
+function NewEntryForm({
+  accounts,
+  onSuccess,
+  onCancel
+}: {
+  accounts: Account[];
+  onSuccess: () => void;
   onCancel: () => void;
 }) {
   const [description, setDescription] = useState('');
@@ -574,7 +575,7 @@ function NewEntryForm({
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full border border-stone-200 rounded-lg px-3 py-2"
+          className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm"
           placeholder="Ex: Achat fournitures"
         />
       </div>
@@ -585,18 +586,18 @@ function NewEntryForm({
           type="text"
           value={reference}
           onChange={(e) => setReference(e.target.value)}
-          className="w-full border border-stone-200 rounded-lg px-3 py-2"
+          className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm"
           placeholder="Ex: FACT-001"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">Compte Débit *</label>
-          <select 
+          <select
             value={debitAccountId}
             onChange={(e) => setDebitAccountId(Number(e.target.value))}
-            className="w-full border border-stone-200 rounded-lg px-3 py-2"
+            className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm"
           >
             <option value="">Sélectionner...</option>
             {accounts.map(acc => (
@@ -606,10 +607,10 @@ function NewEntryForm({
         </div>
         <div>
           <label className="block text-sm font-medium text-stone-700 mb-1">Compte Crédit *</label>
-          <select 
+          <select
             value={creditAccountId}
             onChange={(e) => setCreditAccountId(Number(e.target.value))}
-            className="w-full border border-stone-200 rounded-lg px-3 py-2"
+            className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm"
           >
             <option value="">Sélectionner...</option>
             {accounts.map(acc => (
@@ -625,16 +626,16 @@ function NewEntryForm({
           type="number"
           value={amount || ''}
           onChange={(e) => setAmount(Number(e.target.value))}
-          className="w-full border border-stone-200 rounded-lg px-3 py-2"
+          className="w-full border border-stone-200 rounded-lg px-3 py-2 text-sm"
           min={1}
         />
       </div>
 
       <div className="flex gap-3 pt-4">
-        <Button type="button" variant="secondary" className="flex-1" onClick={onCancel}>
+        <Button type="button" variant="secondary" className="flex-1 h-10 md:h-11" onClick={onCancel}>
           Annuler
         </Button>
-        <Button type="submit" className="flex-1" disabled={submitting}>
+        <Button type="submit" className="flex-1 h-10 md:h-11 shadow-lg" disabled={submitting}>
           {submitting ? 'Création...' : 'Créer l\'écriture'}
         </Button>
       </div>

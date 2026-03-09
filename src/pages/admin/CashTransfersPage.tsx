@@ -7,23 +7,23 @@ import { ArrowRight, Wallet, ArrowRightLeft, AlertCircle, Loader2 } from 'lucide
 import { toast } from 'sonner';
 
 interface CashSession {
-  id: number;
-  cashRegisterId: number;
-  openingBalance: number;
-  expectedBalance: number | null; // This might be null if not calculated recently, but we need current balance
-  // actually currentBalance comes from the backend endpoint logic often not on the model directly unless computed
-  status: 'open' | 'closed';
-  openedAt: string;
-  cashRegister: { 
-      id: number;
-      name: string; 
-      type: 'sales' | 'delivery' | 'operating';
-  };
-  opener: { fullName: string };
-  // We need current balance. The endpoint /sessions/current returns it calculated?
-  // Let's check CashPage usage. It uses /admin/cash/sessions/current which returns data including currentBalance.
-  // Wait, looking at CashRegistersController.index, it computes currentBalance.
-  // But /admin/cash/sessions/current is CashSessionsController.current.
+    id: number;
+    cashRegisterId: number;
+    openingBalance: number;
+    expectedBalance: number | null; // This might be null if not calculated recently, but we need current balance
+    // actually currentBalance comes from the backend endpoint logic often not on the model directly unless computed
+    status: 'open' | 'closed';
+    openedAt: string;
+    cashRegister: {
+        id: number;
+        name: string;
+        type: 'sales' | 'delivery' | 'operating';
+    };
+    opener: { fullName: string };
+    // We need current balance. The endpoint /sessions/current returns it calculated?
+    // Let's check CashPage usage. It uses /admin/cash/sessions/current which returns data including currentBalance.
+    // Wait, looking at CashRegistersController.index, it computes currentBalance.
+    // But /admin/cash/sessions/current is CashSessionsController.current.
 }
 
 interface EnrichedSession extends CashSession {
@@ -46,13 +46,13 @@ export default function CashTransfersPage() {
     const [submitting, setSubmitting] = useState(false);
 
     // Filter sessions
-    const sourceSessions = useMemo(() => 
-        sessions.filter(s => ['sales', 'delivery'].includes(s.cashRegister.type)), 
-    [sessions]);
+    const sourceSessions = useMemo(() =>
+        sessions.filter(s => ['sales', 'delivery'].includes(s.cashRegister.type)),
+        [sessions]);
 
-    const targetSessions = useMemo(() => 
-        sessions.filter(s => s.cashRegister.type === 'operating'), 
-    [sessions]);
+    const targetSessions = useMemo(() =>
+        sessions.filter(s => s.cashRegister.type === 'operating'),
+        [sessions]);
 
     // Selected Session Details
 
@@ -90,13 +90,13 @@ export default function CashTransfersPage() {
 
     return (
         <div className="max-w-5xl mx-auto p-6 space-y-8">
-            <div className="flex items-center gap-3 mb-8">
-                <div className="p-3 bg-indigo-100 rounded-xl">
-                    <ArrowRightLeft className="w-6 h-6 text-indigo-700" />
+            <div className="flex items-center gap-2 md:gap-3 mb-6 md:mb-8">
+                <div className="p-2 md:p-3 bg-indigo-100 rounded-xl">
+                    <ArrowRightLeft className="w-4 h-4 md:w-6 md:h-6 text-indigo-700" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-black text-stone-900">Transferts de Fonds</h1>
-                    <p className="text-stone-500">Déplacer l'argent des caisses de vente vers le fonctionnement</p>
+                    <h1 className="text-lg md:text-2xl font-black text-stone-900 leading-none">Transferts de Fonds</h1>
+                    <p className="text-[10px] md:text-sm text-stone-500 mt-1">Déplacer l'argent des caisses de vente vers le fonctionnement</p>
                 </div>
             </div>
 
@@ -107,7 +107,7 @@ export default function CashTransfersPage() {
                         <div className="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs">1</div>
                         Origine (Vente/Livraison)
                     </h2>
-                    
+
                     <div className="space-y-3">
                         {sourceSessions.length === 0 ? (
                             <div className="p-4 border border-dashed rounded-xl text-center text-stone-400 text-sm">
@@ -115,14 +115,13 @@ export default function CashTransfersPage() {
                             </div>
                         ) : (
                             sourceSessions.map(session => (
-                                <div 
+                                <div
                                     key={session.id}
                                     onClick={() => setSourceSessionId(session.id)}
-                                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                                        sourceSessionId === session.id 
-                                            ? 'border-green-500 bg-green-50 ring-2 ring-green-200' 
+                                    className={`p-4 rounded-xl border cursor-pointer transition-all ${sourceSessionId === session.id
+                                            ? 'border-green-500 bg-green-50 ring-2 ring-green-200'
                                             : 'border-stone-200 bg-white hover:border-green-300'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
                                         <span className="font-bold text-stone-900">{session.cashRegister.name}</span>
@@ -145,17 +144,17 @@ export default function CashTransfersPage() {
 
                 {/* Transfer Form (Center) */}
                 <div className="lg:mt-12 bg-white p-6 rounded-2xl shadow-sm border border-stone-100 relative">
-                     {(!sourceSessionId || !targetSessionId) && (
+                    {(!sourceSessionId || !targetSessionId) && (
                         <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center p-6 text-center">
                             <p className="text-stone-400 font-bold text-sm">Sélectionnez une origine et une destination</p>
                         </div>
-                     )}
-                     
-                     <div className="flex justify-center mb-6 text-stone-300">
-                        <ArrowRight className="w-8 h-8" />
-                     </div>
+                    )}
 
-                     <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="flex justify-center mb-6 text-stone-300">
+                        <ArrowRight className="w-8 h-8" />
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label className="block text-sm font-bold text-stone-700 mb-2">Montant à transférer</label>
                             <div className="relative">
@@ -172,22 +171,22 @@ export default function CashTransfersPage() {
                             </div>
                         </div>
 
-                        <Input 
+                        <Input
                             label="Motif / Note"
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             placeholder="Ex: Versement fin de service..."
                         />
 
-                        <Button 
-                            type="submit" 
+                        <Button
+                            type="submit"
                             className="w-full py-4 text-lg bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-200"
                             disabled={amount <= 0 || submitting}
                             isLoading={submitting}
                         >
                             Valider le transfert
                         </Button>
-                     </form>
+                    </form>
                 </div>
 
                 {/* Target Selection */}
@@ -196,7 +195,7 @@ export default function CashTransfersPage() {
                         <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs">2</div>
                         Destination (Fonctionnement)
                     </h2>
-                    
+
                     <div className="space-y-3">
                         {targetSessions.length === 0 ? (
                             <div className="p-4 border border-dashed rounded-xl text-center text-stone-400 text-sm">
@@ -204,14 +203,13 @@ export default function CashTransfersPage() {
                             </div>
                         ) : (
                             targetSessions.map(session => (
-                                <div 
+                                <div
                                     key={session.id}
                                     onClick={() => setTargetSessionId(session.id)}
-                                    className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                                        targetSessionId === session.id 
-                                            ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200' 
+                                    className={`p-4 rounded-xl border cursor-pointer transition-all ${targetSessionId === session.id
+                                            ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
                                             : 'border-stone-200 bg-white hover:border-purple-300'
-                                    }`}
+                                        }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
                                         <span className="font-bold text-stone-900">{session.cashRegister.name}</span>
@@ -226,12 +224,12 @@ export default function CashTransfersPage() {
                     </div>
                 </div>
             </div>
-            
+
             {/* Disclaimer */}
             <div className="bg-blue-50 text-blue-800 p-4 rounded-xl text-sm flex gap-3 items-start">
                 <AlertCircle className="w-5 h-5 shrink-0" />
                 <p>
-                    Le transfert crée automatiquement un mouvement de <strong>SORTIE</strong> dans la caisse d'origine 
+                    Le transfert crée automatiquement un mouvement de <strong>SORTIE</strong> dans la caisse d'origine
                     et un mouvement d'<strong>ENTRÉE</strong> dans la caisse de destination.
                 </p>
             </div>

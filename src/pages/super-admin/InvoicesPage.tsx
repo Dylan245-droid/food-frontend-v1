@@ -7,21 +7,21 @@ import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 
 interface SubscriptionInvoice {
-  id: number;
-  invoiceNumber: string;
-  amountHt: number;
-  amountTtc: number;
-  status: 'pending' | 'paid' | 'cancelled' | 'overdue';
-  dueDate: string;
-  periodStart: string;
-  periodEnd: string;
-  details: any;
-  createdAt: string;
-  tenant: {
-    id: string;
-    name: string;
-    slug: string;
-  };
+    id: number;
+    invoiceNumber: string;
+    amountHt: number;
+    amountTtc: number;
+    status: 'pending' | 'paid' | 'cancelled' | 'overdue';
+    dueDate: string;
+    periodStart: string;
+    periodEnd: string;
+    details: any;
+    createdAt: string;
+    tenant: {
+        id: string;
+        name: string;
+        slug: string;
+    };
 }
 
 interface Tenant {
@@ -182,7 +182,7 @@ export default function InvoicesPage() {
             {/* Invoices Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
+                    <table className="w-full text-left text-sm min-w-[1000px]">
                         <thead className="bg-gray-50 border-b border-gray-100 text-gray-500">
                             <tr>
                                 <th className="px-6 py-3 font-semibold">N° Facture</th>
@@ -249,7 +249,7 @@ export default function InvoicesPage() {
                                                     >
                                                         <FileText className="w-3 h-3" />
                                                     </Button>
-                                                    
+
                                                     {invoice.status !== 'paid' && (
                                                         <Button
                                                             variant="secondary"

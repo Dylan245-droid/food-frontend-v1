@@ -92,10 +92,10 @@ export default function InvoicesPage() {
 
     const viewInvoice = async (invoice: Invoice) => {
         try {
-             const res = await api.get(`/admin/invoices/${invoice.id}`);
-             setSelectedInvoice(res.data.data);
-             setIsDetailsModalOpen(true);
-        } catch(e) {
+            const res = await api.get(`/admin/invoices/${invoice.id}`);
+            setSelectedInvoice(res.data.data);
+            setIsDetailsModalOpen(true);
+        } catch (e) {
             console.error(e);
             alert("Impossible de charger les détails de la facture");
         }
@@ -103,7 +103,7 @@ export default function InvoicesPage() {
 
     const handlePrintReceipt = () => {
         if (!selectedInvoice) return;
-        
+
         const receipt: any = {
             id: selectedInvoice.id,
             dailyNumber: null,
@@ -113,7 +113,7 @@ export default function InvoicesPage() {
             items: selectedInvoice.items?.map((item: any) => ({
                 id: item.id,
                 quantity: item.quantity,
-                unitPrice: item.unitPriceHt, 
+                unitPrice: item.unitPriceHt,
                 menuItem: { name: item.description }
             })) || [],
             createdAt: selectedInvoice.issuedAt,
@@ -122,7 +122,7 @@ export default function InvoicesPage() {
             subtotal: selectedInvoice.items?.reduce((acc: number, item: any) => acc + item.totalHt, 0),
             tax: selectedInvoice.taxAmount
         };
-        
+
         setReceiptData(receipt);
         // Delay to allow rendering
         setTimeout(() => window.print(), 500);
@@ -130,7 +130,7 @@ export default function InvoicesPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-            
+
             {/* Hidden Receipt for Printing */}
             {createPortal(
                 <div id="printable-receipt">
@@ -140,13 +140,13 @@ export default function InvoicesPage() {
             )}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-2xl font-black text-gray-900">Factures</h1>
-                    <p className="text-gray-500">Gérez vos factures et avoirs.</p>
+                <div className="min-w-0">
+                    <h1 className="text-lg md:text-2xl font-black text-gray-900 truncate">Factures</h1>
+                    <p className="text-[10px] md:text-sm text-gray-500 truncate">Gérez vos factures et avoirs.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button 
-                        variant="outline" 
+                    <Button
+                        variant="outline"
                         className="gap-2"
                         onClick={async () => {
                             try {
@@ -156,11 +156,11 @@ export default function InvoicesPage() {
                                     ...(dateRange.start && { startDate: dateRange.start }),
                                     ...(dateRange.end && { endDate: dateRange.end }),
                                 });
-                                
+
                                 const response = await api.get(`/admin/invoices/export?${params}`, {
                                     responseType: 'blob'
                                 });
-                                
+
                                 const url = window.URL.createObjectURL(new Blob([response.data]));
                                 const link = document.createElement('a');
                                 link.href = url;
@@ -185,9 +185,9 @@ export default function InvoicesPage() {
             <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-1 w-full">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input 
-                        type="text" 
-                        placeholder="Rechercher (Numéro, Client...)" 
+                    <input
+                        type="text"
+                        placeholder="Rechercher (Numéro, Client...)"
                         className="pl-10 w-full border-gray-200 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -196,8 +196,8 @@ export default function InvoicesPage() {
                 <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                     <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
                         <Filter className="w-4 h-4 text-gray-400 ml-2" />
-                        <select 
-                            value={statusFilter} 
+                        <select
+                            value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
                             className="bg-transparent border-none text-sm font-medium focus:ring-0 text-gray-700"
                         >
@@ -210,8 +210,8 @@ export default function InvoicesPage() {
                     <div className="flex items-center gap-2">
                         <div className="bg-gray-50 border border-gray-200 rounded-lg flex items-center px-2 py-1">
                             <span className="text-xs text-gray-500 mr-2">Du</span>
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 value={dateRange.start}
                                 onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
                                 className="bg-transparent border-none p-0 text-sm w-32 focus:ring-0"
@@ -219,8 +219,8 @@ export default function InvoicesPage() {
                         </div>
                         <div className="bg-gray-50 border border-gray-200 rounded-lg flex items-center px-2 py-1">
                             <span className="text-xs text-gray-500 mr-2">Au</span>
-                            <input 
-                                type="date" 
+                            <input
+                                type="date"
                                 value={dateRange.end}
                                 onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
                                 className="bg-transparent border-none p-0 text-sm w-32 focus:ring-0"
@@ -232,58 +232,60 @@ export default function InvoicesPage() {
 
             {/* List */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <table className="w-full text-sm text-left">
-                    <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-100">
-                        <tr>
-                            <th className="p-4">Numéro</th>
-                            <th className="p-4">Date</th>
-                            <th className="p-4">Client</th>
-                            <th className="p-4 text-right">Montant TTC</th>
-                            <th className="p-4 text-center">Statut</th>
-                            <th className="p-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {loading ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-gray-400">Chargement...</td></tr>
-                        ) : invoices.length === 0 ? (
-                            <tr><td colSpan={6} className="p-8 text-center text-gray-400">Aucune facture trouvée.</td></tr>
-                        ) : (
-                            invoices.map((inv: any) => (
-                                <tr key={inv.id} className="hover:bg-gray-50 transition-colors group">
-                                    <td className="p-4 font-mono font-bold text-gray-900">{inv.invoiceNumber}</td>
-                                    <td className="p-4 text-gray-600">{new Date(inv.issuedAt).toLocaleDateString()}</td>
-                                    <td className="p-4">
-                                        <div className="font-medium text-gray-900">{inv.clientName || 'Client de passage'}</div>
-                                        {inv.clientNif && <div className="text-xs text-gray-400">NIF: {inv.clientNif}</div>}
-                                    </td>
-                                    <td className="p-4 text-right font-bold text-gray-900">{formatCurrency(inv.totalTtc)}</td>
-                                    <td className="p-4 text-center">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left min-w-[800px]">
+                        <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-100">
+                            <tr>
+                                <th className="p-4">Numéro</th>
+                                <th className="p-4">Date</th>
+                                <th className="p-4">Client</th>
+                                <th className="p-4 text-right">Montant TTC</th>
+                                <th className="p-4 text-center">Statut</th>
+                                <th className="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {loading ? (
+                                <tr><td colSpan={6} className="p-8 text-center text-gray-400">Chargement...</td></tr>
+                            ) : invoices.length === 0 ? (
+                                <tr><td colSpan={6} className="p-8 text-center text-gray-400">Aucune facture trouvée.</td></tr>
+                            ) : (
+                                invoices.map((inv: any) => (
+                                    <tr key={inv.id} className="hover:bg-gray-50 transition-colors group">
+                                        <td className="p-4 font-mono font-bold text-gray-900">{inv.invoiceNumber}</td>
+                                        <td className="p-4 text-gray-600">{new Date(inv.issuedAt).toLocaleDateString()}</td>
+                                        <td className="p-4">
+                                            <div className="font-medium text-gray-900">{inv.clientName || 'Client de passage'}</div>
+                                            {inv.clientNif && <div className="text-xs text-gray-400">NIF: {inv.clientNif}</div>}
+                                        </td>
+                                        <td className="p-4 text-right font-bold text-gray-900">{formatCurrency(inv.totalTtc)}</td>
+                                        <td className="p-4 text-center">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1
                                             ${inv.status === 'finalized' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}
                                         `}>
-                                            {inv.status === 'finalized' ? <Check className="w-3 h-3"/> : <X className="w-3 h-3"/>}
-                                            {inv.status === 'finalized' ? 'Validée' : 'Annulée'}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <button 
-                                            onClick={() => viewInvoice(inv)}
-                                            className="p-2 hover:bg-gray-200 rounded-lg text-gray-500 hover:text-blue-600 transition-colors"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                                                {inv.status === 'finalized' ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
+                                                {inv.status === 'finalized' ? 'Validée' : 'Annulée'}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <button
+                                                onClick={() => viewInvoice(inv)}
+                                                className="p-2 hover:bg-gray-200 rounded-lg text-gray-500 hover:text-blue-600 transition-colors"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
                 {/* Pagination */}
                 <div className="p-4 border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
-                     <button disabled={page===1} onClick={() => setPage(p => p-1)} className="hover:text-blue-600 disabled:opacity-50">Précédent</button>
-                     <span>Page {page}</span>
-                     <button onClick={() => setPage(p => p+1)} className="hover:text-blue-600">Suivant</button>
+                    <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="hover:text-blue-600 disabled:opacity-50">Précédent</button>
+                    <span>Page {page}</span>
+                    <button onClick={() => setPage(p => p + 1)} className="hover:text-blue-600">Suivant</button>
                 </div>
             </div>
 
@@ -349,7 +351,7 @@ export default function InvoicesPage() {
                                     Imprimer
                                 </Button>
                                 {selectedInvoice.status !== 'cancelled' && (
-                                    <Button 
+                                    <Button
                                         variant="danger"
                                         className="flex-1"
                                         onClick={() => {
@@ -375,7 +377,7 @@ export default function InvoicesPage() {
                     </p>
                     <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1">Motif d'annulation <span className="text-red-500">*</span></label>
-                        <Input 
+                        <Input
                             value={cancelReason}
                             onChange={(e) => setCancelReason(e.target.value)}
                             placeholder="Ex: Erreur de saisie, Retourd produit..."

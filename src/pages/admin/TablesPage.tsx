@@ -279,13 +279,13 @@ export default function TablesPage() {
       {/* Header */}
       <div className="flex justify-between items-center bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-stone-100">
         <div>
-          <h1 className="text-xl md:text-2xl font-black text-stone-900 flex items-center gap-2 md:gap-3 uppercase tracking-tight font-display">
+          <h1 className="text-lg md:text-2xl font-black text-stone-900 flex items-center gap-2 md:gap-3 uppercase tracking-tight font-display">
             <div className="bg-stone-900 p-1.5 md:p-2 rounded-xl text-white">
-              <Armchair className="w-5 h-5 md:w-6 md:h-6" />
+              <Armchair className="w-4 h-4 md:w-6 md:h-6" />
             </div>
             {isMyTables ? 'Mon Rang' : 'Salle & Tables'}
           </h1>
-          <div className="text-stone-400 text-[10px] md:text-sm font-medium ml-10 md:ml-14 flex items-center gap-1.5 min-w-0">
+          <div className="text-stone-400 text-[10px] md:text-sm font-medium ml-8 md:ml-14 flex items-center gap-1.5 min-w-0">
             <span className="truncate">Plan de salle et assignations</span>
             <span className={`px-2 py-0.5 rounded-full text-[9px] md:text-xs font-bold whitespace-nowrap flex-shrink-0 ${isTableLimitReached(data?.data.length || 0) ? 'bg-red-100 text-red-600' : 'bg-stone-100 text-stone-500'
               }`}>

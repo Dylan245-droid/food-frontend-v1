@@ -16,7 +16,7 @@ import { formatCurrency } from '../../lib/utils';
 
 export default function FinancePage() {
     const { branding } = useBranding();
-    
+
     // State
     const [startDate, setStartDate] = useState(() => {
         const date = new Date();
@@ -45,38 +45,38 @@ export default function FinancePage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500 pb-20">
             {/* The Portal Report (Hidden until print) */}
-            <FinancialReportPrintable 
-                stats={stats} 
-                startDate={startDate} 
-                endDate={endDate} 
-                branding={branding} 
+            <FinancialReportPrintable
+                stats={stats}
+                startDate={startDate}
+                endDate={endDate}
+                branding={branding}
             />
 
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black text-gray-900 flex items-center gap-2">
-                        <TrendingUp className="w-8 h-8 text-blue-600" />
+                    <h1 className="text-lg md:text-2xl font-black text-gray-900 flex items-center gap-2">
+                        <TrendingUp className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
                         Tableau de Bord Financier
                     </h1>
-                    <p className="text-gray-500">Analysez vos performances et revenus.</p>
+                    <p className="text-xs md:text-sm text-gray-500">Analysez vos performances et revenus.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
                     <Calendar className="w-4 h-4 text-gray-400 ml-2" />
-                    <input 
-                        type="date" 
-                        value={startDate} 
+                    <input
+                        type="date"
+                        value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         className="border-none text-sm focus:ring-0 text-gray-600"
                     />
                     <span className="text-gray-300">|</span>
-                    <input 
-                        type="date" 
-                        value={endDate} 
+                    <input
+                        type="date"
+                        value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         className="border-none text-sm focus:ring-0 text-gray-600"
                     />
-                     <button 
+                    <button
                         onClick={handlePrintRequest}
                         className="ml-2 px-3 py-1 bg-gray-900 text-white text-xs font-bold rounded hover:bg-black transition-colors"
                     >
@@ -90,10 +90,10 @@ export default function FinancePage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="bg-white p-6 rounded-xl border border-blue-100 shadow-sm relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <DollarSign className="w-24 h-24 text-blue-600" />
+                            <DollarSign className="w-16 h-16 md:w-24 md:h-24 text-blue-600" />
                         </div>
-                        <p className="text-sm font-medium text-blue-600 mb-1">Chiffre d'Affaires (TTC)</p>
-                        <h3 className="text-3xl font-black text-gray-900">{formatCurrency(stats.kpi.totalRevenue)}</h3>
+                        <p className="text-xs md:text-sm font-medium text-blue-600 mb-1">Chiffre d'Affaires (TTC)</p>
+                        <h3 className="text-xl md:text-3xl font-black text-gray-900">{formatCurrency(stats.kpi.totalRevenue)}</h3>
                         <div className="mt-4 flex items-center text-xs text-green-600 bg-green-50 w-fit px-2 py-1 rounded-full">
                             <ArrowUpRight className="w-3 h-3 mr-1" />
                             Global
@@ -102,19 +102,19 @@ export default function FinancePage() {
 
                     <div className="bg-white p-6 rounded-xl border border-orange-100 shadow-sm relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <ShoppingBag className="w-24 h-24 text-orange-600" />
+                            <ShoppingBag className="w-16 h-16 md:w-24 md:h-24 text-orange-600" />
                         </div>
-                        <p className="text-sm font-medium text-orange-600 mb-1">Total Commandes</p>
-                        <h3 className="text-3xl font-black text-gray-900">{stats.kpi.totalOrders}</h3>
+                        <p className="text-xs md:text-sm font-medium text-orange-600 mb-1">Total Commandes</p>
+                        <h3 className="text-xl md:text-3xl font-black text-gray-900">{stats.kpi.totalOrders}</h3>
                         <p className="text-xs text-gray-400 mt-2">Sur la période sélectionnée</p>
                     </div>
 
                     <div className="bg-white p-6 rounded-xl border border-purple-100 shadow-sm relative overflow-hidden group">
                         <div className="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <Utensils className="w-24 h-24 text-purple-600" />
+                            <Utensils className="w-16 h-16 md:w-24 md:h-24 text-purple-600" />
                         </div>
-                        <p className="text-sm font-medium text-purple-600 mb-1">Panier Moyen</p>
-                        <h3 className="text-3xl font-black text-gray-900">{formatCurrency(stats.kpi.averageTicket)}</h3>
+                        <p className="text-xs md:text-sm font-medium text-purple-600 mb-1">Panier Moyen</p>
+                        <h3 className="text-xl md:text-3xl font-black text-gray-900">{formatCurrency(stats.kpi.averageTicket)}</h3>
                         <p className="text-xs text-gray-400 mt-2">Dépense moyenne par client</p>
                     </div>
                 </div>
@@ -150,7 +150,7 @@ export default function FinancePage() {
             {/* Content Area */}
             {stats && (
                 <div className="animate-in slide-in-from-bottom-4 duration-500">
-                    
+
                     {/* TAB: OVERVIEW */}
                     {activeTab === 'overview' && (
                         <div className="space-y-8">
@@ -175,9 +175,9 @@ export default function FinancePage() {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {/* Sales By Type (Sur Place vs Emporter) */}
-                             <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
                                 <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
                                     <Utensils className="w-5 h-5 text-gray-400" />
                                     Répartition par Type de Commande
@@ -196,37 +196,39 @@ export default function FinancePage() {
                             </div>
 
                             {/* Main Chart */}
-                            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px]">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6">Évolution du Chiffre d'Affaires Journalier</h3>
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={stats.charts.dailyRevenue}>
-                                        <defs>
-                                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1}/>
-                                                <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
-                                        <XAxis 
-                                            dataKey="date" 
-                                            axisLine={false} 
-                                            tickLine={false} 
-                                            tick={{fill: '#9ca3af', fontSize: 12} as any}
-                                            tickFormatter={(val: any) => new Date(val).toLocaleDateString(undefined, {day: '2-digit', month: 'short'})}
-                                        />
-                                        <YAxis 
-                                            axisLine={false} 
-                                            tickLine={false} 
-                                            tick={{fill: '#9ca3af', fontSize: 12} as any}
-                                            tickFormatter={(val: any) => `${val/1000}k`}
-                                        />
-                                        <Tooltip 
-                                            contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
-                                            formatter={(val: any) => [formatCurrency(val), "Revenu"]}
-                                        />
-                                        <Area type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
+                            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px] flex flex-col">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4">Évolution du Chiffre d'Affaires Journalier</h3>
+                                <div className="flex-1 min-h-0">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={stats.charts.dailyRevenue}>
+                                            <defs>
+                                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.1} />
+                                                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                                            <XAxis
+                                                dataKey="date"
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#9ca3af', fontSize: 12 } as any}
+                                                tickFormatter={(val: any) => new Date(val).toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}
+                                            />
+                                            <YAxis
+                                                axisLine={false}
+                                                tickLine={false}
+                                                tick={{ fill: '#9ca3af', fontSize: 12 } as any}
+                                                tickFormatter={(val: any) => `${val / 1000}k`}
+                                            />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                                formatter={(val: any) => [formatCurrency(val), "Revenu"]}
+                                            />
+                                            <Area type="monotone" dataKey="revenue" stroke="#2563eb" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -236,69 +238,75 @@ export default function FinancePage() {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 {/* Top Items - Bar Chart */}
-                                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px]">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-6">Top 10 Articles (Graphique)</h3>
-                                    <ResponsiveContainer width="100%" height="90%">
-                                        <BarChart layout="vertical" data={stats.charts.topItems} margin={{ left: 40 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                                            <XAxis type="number" hide />
-                                            <YAxis dataKey="name" type="category" width={100} tick={{fontSize: 11} as any} />
-                                            <Tooltip formatter={(val: any) => [val, "Vendus"]} />
-                                            <Bar dataKey="quantity" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px] flex flex-col">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">Top 10 Articles (Graphique)</h3>
+                                    <div className="flex-1 min-h-0">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart layout="vertical" data={stats.charts.topItems} margin={{ left: 40 }}>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                                <XAxis type="number" hide />
+                                                <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 11 } as any} />
+                                                <Tooltip formatter={(val: any) => [val, "Vendus"]} />
+                                                <Bar dataKey="quantity" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={20} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 </div>
 
                                 {/* Revenue by Category - Pie */}
-                                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px]">
-                                    <h3 className="text-lg font-bold text-gray-900 mb-6">Revenus par Catégorie</h3>
-                                    <ResponsiveContainer width="100%" height="90%">
-                                        <PieChart>
-                                            <Pie
-                                                data={stats.charts.salesByCategory}
-                                                cx="50%"
-                                                cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={100}
-                                                paddingAngle={5}
-                                                dataKey="revenue"
-                                            >
-                                                {stats.charts.salesByCategory?.map((entry: any, index: number) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip formatter={(val: any) => formatCurrency(val)} />
-                                            <Legend />
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px] flex flex-col">
+                                    <h3 className="text-lg font-bold text-gray-900 mb-4">Revenus par Catégorie</h3>
+                                    <div className="flex-1 min-h-0">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <PieChart>
+                                                <Pie
+                                                    data={stats.charts.salesByCategory}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={100}
+                                                    paddingAngle={5}
+                                                    dataKey="revenue"
+                                                >
+                                                    {stats.charts.salesByCategory?.map((entry: any, index: number) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip formatter={(val: any) => formatCurrency(val)} />
+                                                <Legend />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 </div>
                             </div>
-                            
+
                             {/* Detailed Top Items Table */}
                             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                                 <div className="p-6 border-b border-gray-100">
                                     <h3 className="text-lg font-bold text-gray-900">Détails des Ventes (Top Articles)</h3>
                                 </div>
-                                <table className="w-full text-sm text-left">
-                                    <thead className="bg-gray-50 text-gray-600 font-medium">
-                                        <tr>
-                                            <th className="p-4">Article</th>
-                                            <th className="p-4">Catégorie</th>
-                                            <th className="p-4 text-right">Quantité</th>
-                                            <th className="p-4 text-right">Revenu Généré</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-50">
-                                        {stats.charts.topItems?.map((item: any, idx: number) => (
-                                            <tr key={idx} className="hover:bg-gray-50">
-                                                <td className="p-4 font-medium text-gray-900">{item.name}</td>
-                                                <td className="p-4 text-gray-500">{item.category}</td>
-                                                <td className="p-4 text-right font-mono">{item.quantity}</td>
-                                                <td className="p-4 text-right font-bold text-blue-600">{formatCurrency(item.revenue)}</td>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-gray-50 text-gray-600 font-medium">
+                                            <tr>
+                                                <th className="p-4">Article</th>
+                                                <th className="p-4">Catégorie</th>
+                                                <th className="p-4 text-right">Quantité</th>
+                                                <th className="p-4 text-right">Revenu Généré</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {stats.charts.topItems?.map((item: any, idx: number) => (
+                                                <tr key={idx} className="hover:bg-gray-50">
+                                                    <td className="p-4 font-medium text-gray-900">{item.name}</td>
+                                                    <td className="p-4 text-gray-500">{item.category}</td>
+                                                    <td className="p-4 text-right font-mono">{item.quantity}</td>
+                                                    <td className="p-4 text-right font-bold text-blue-600">{formatCurrency(item.revenue)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -307,40 +315,44 @@ export default function FinancePage() {
                     {activeTab === 'trends' && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Hourly Traffic */}
-                            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px]">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6">Affluence Horaire (Commandes)</h3>
-                                <ResponsiveContainer width="100%" height="90%">
-                                    <BarChart data={stats.charts.hourlyTraffic}>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                        <XAxis dataKey="hour" tickFormatter={(val: any) => `${val}h`} />
-                                        <YAxis />
-                                        <Tooltip cursor={{fill: 'transparent'}} />
-                                        <Bar dataKey="orders" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px] flex flex-col">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4">Affluence Horaire (Commandes)</h3>
+                                <div className="flex-1 min-h-0">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={stats.charts.hourlyTraffic}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                            <XAxis dataKey="hour" tickFormatter={(val: any) => `${val}h`} />
+                                            <YAxis />
+                                            <Tooltip cursor={{ fill: 'transparent' }} />
+                                            <Bar dataKey="orders" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
 
                             {/* Payment Methods */}
-                            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px]">
-                                <h3 className="text-lg font-bold text-gray-900 mb-6">Méthodes de Paiement</h3>
-                                <ResponsiveContainer width="100%" height="90%">
-                                    <PieChart>
-                                        <Pie
-                                            data={stats.charts.paymentMethods}
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={100}
-                                            dataKey="total"
-                                            label={(entry: any) => `${entry.name} ${(entry.percent * 100).toFixed(0)}%`}
-                                        >
-                                            {stats.charts.paymentMethods?.map((entry: any, index: number) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip formatter={(val: any) => formatCurrency(val)} />
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                            <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm h-[400px] flex flex-col">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4">Méthodes de Paiement</h3>
+                                <div className="flex-1 min-h-0">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={stats.charts.paymentMethods}
+                                                cx="50%"
+                                                cy="50%"
+                                                outerRadius={100}
+                                                dataKey="total"
+                                                label={(entry: any) => `${entry.name} ${(entry.percent * 100).toFixed(0)}%`}
+                                            >
+                                                {stats.charts.paymentMethods?.map((entry: any, index: number) => (
+                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip formatter={(val: any) => formatCurrency(val)} />
+                                            <Legend />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         </div>
                     )}
