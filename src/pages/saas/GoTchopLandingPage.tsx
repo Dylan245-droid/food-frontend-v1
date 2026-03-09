@@ -445,7 +445,7 @@ const Pricing = () => {
                 <div className="text-center mb-12 md:mb-20">
                     <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Tarifs Transparents.</h2>
                     <p className="text-gray-400 text-lg">
-                        <span className="text-orange-500 font-bold">14 jours d'essai gratuits</span> sur toutes les offres. <br />
+                        <span className="text-orange-500 font-bold">14 jours d'essai gratuits</span> avec toutes les fonctionnalités <span className="text-white font-bold">Élite</span> débloquées. <br />
                         Aucune carte bancaire requise. Annulez à tout moment.
                     </p>
                 </div>

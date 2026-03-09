@@ -23,6 +23,8 @@ import AccountingPage from './pages/admin/AccountingPage';
 import ReservationsPage from './pages/admin/ReservationsPage';
 import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 import DispatchPage from './pages/admin/DispatchPage';
+import ActivateAccountPage from './pages/ActivateAccountPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 import GoTchopLandingPage from './pages/saas/GoTchopLandingPage';
 import RestaurantRegistrationPage from './pages/saas/RestaurantRegistrationPage';
@@ -86,6 +88,8 @@ export default function App() {
           <Route path="/dine-in/:code" element={<DineInPage />} />
 
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/activate" element={<ActivateAccountPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Delivery Dashboard (Mobile First, No Admin Layout) */}
           <Route path="/delivery" element={

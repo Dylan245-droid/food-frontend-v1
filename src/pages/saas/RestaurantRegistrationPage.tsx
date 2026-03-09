@@ -36,6 +36,8 @@ const RestaurantRegistrationPage: React.FC = () => {
     }));
   };
 
+  const [isSuccess, setIsSuccess] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -47,27 +49,45 @@ const RestaurantRegistrationPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // Use the calculated slug 
-      const payload = {
-        ...formData,
-      };
-
-      // Post to /tenants/register (baseURL already includes /api)
-      await api.post('/tenants/register', payload);
-
+      await api.post('/tenants/register', formData);
+      setIsSuccess(true);
       showToast.success('Compte créé avec succès !');
-
-      // Redirect to login page
-      navigate('/login');
-
     } catch (error: any) {
       console.error(error);
-      const msg = error.response?.data?.message || error.message || 'Erreur lors de l\'inscription';
+      const msg = error.response?.data?.message || 'Erreur lors de l\'inscription';
       showToast.error(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#050505] px-4">
+        <div className="absolute top-0 right-0 w-[50vw] h-[50vw] bg-orange-600/10 blur-[150px] rounded-full pointer-events-none" />
+        <div className="max-w-md w-full bg-white/5 backdrop-blur-xl border border-white/10 p-8 shadow-2xl rounded-2xl text-center relative z-10">
+          <div className="flex justify-center mb-6">
+            <div className="h-20 w-20 bg-orange-500/10 rounded-full flex items-center justify-center">
+              <Mail className="h-10 w-10 text-orange-500 animate-pulse" />
+            </div>
+          </div>
+          <h2 className="text-3xl font-black text-white mb-4">Vérifiez vos emails !</h2>
+          <p className="text-gray-400 mb-8 leading-relaxed">
+            Votre compte a été créé avec succès. Un lien d'activation vous a été envoyé à <span className="text-white font-bold">{formData.adminEmail}</span>.
+            <br /><br />
+            Veuillez cliquer sur ce lien pour activer votre accès.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="w-full flex justify-center items-center py-3 px-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-bold rounded-lg shadow-lg cursor-pointer"
+          >
+            Aller à la page de connexion
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#050505] relative overflow-hidden font-sans selection:bg-orange-500 selection:text-white px-4">
@@ -151,12 +171,12 @@ const RestaurantRegistrationPage: React.FC = () => {
                     onChange={(e) => setFormData({ ...formData, restaurantType: e.target.value })}
                     className="block w-full bg-black/50 border border-white/10 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all text-sm appearance-none"
                   >
-                    <option value="Restaurant Traditionnel">Restaurant Traditionnel</option>
-                    <option value="Fast-Food / Snack">Fast-Food / Snack</option>
-                    <option value="Boulangerie / Pâtisserie">Boulangerie / Pâtisserie</option>
+                    <option value="Restaurant">Restaurant Traditionnel</option>
+                    <option value="Fast-Food">Fast-Food / Snack</option>
+                    <option value="Boulangerie">Boulangerie / Pâtisserie</option>
                     <option value="Pizzeria">Pizzeria</option>
-                    <option value="Café / Salon de Thé">Café / Salon de Thé</option>
-                    <option value="Dark Kitchen (livraison uniquement)">Dark Kitchen (livraison uniquement)</option>
+                    <option value="Cafe">Café / Salon de Thé</option>
+                    <option value="Dark Kitchen">Dark Kitchen (livraison uniquement)</option>
                     <option value="Food Truck">Food Truck</option>
                   </select>
                 </div>
@@ -237,7 +257,7 @@ const RestaurantRegistrationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -264,7 +284,7 @@ const RestaurantRegistrationPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -283,7 +303,7 @@ const RestaurantRegistrationPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-bold text-white bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transform transition-all hover:-translate-y-1 ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
+                className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-lg text-sm font-bold text-white bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transform transition-all hover:-translate-y-1 cursor-pointer ${loading ? 'opacity-75 cursor-not-allowed' : ''}`}
               >
                 {loading ? 'Création en cours...' : 'Lancer mon activité'}
                 {!loading && <ArrowRight className="ml-2 h-4 w-4" />}

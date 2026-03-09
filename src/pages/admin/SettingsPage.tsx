@@ -50,9 +50,17 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (branding) {
+      // Robustness: Map old longer values from registration to short keys used in select
+      let businessType = branding.businessType || 'Restaurant';
+      if (businessType === 'Restaurant Traditionnel') businessType = 'Restaurant';
+      if (businessType === 'Fast-Food / Snack') businessType = 'Fast-Food';
+      if (businessType === 'Boulangerie / Pâtisserie') businessType = 'Boulangerie';
+      if (businessType === 'Café / Salon de Thé') businessType = 'Cafe';
+      if (businessType.includes('Dark Kitchen')) businessType = 'Dark Kitchen';
+
       setFormData({
         name: branding.name || '',
-        businessType: branding.businessType || 'Restaurant',
+        businessType: businessType,
         tagline: branding.tagline || '',
         logo: branding.logo || '',
         primaryColor: branding.primaryColor || '',

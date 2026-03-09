@@ -63,6 +63,13 @@ export default function AdminLayout() {
     }
   }, [user, location.pathname, navigate]);
 
+  // Redirection for Super Admin without tenant
+  useEffect(() => {
+    if (user?.role === 'super_admin' && !user.tenantId && location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin/super')) {
+      navigate('/admin/super');
+    }
+  }, [user, location.pathname, navigate]);
+
   // 1. Get Subscription Status
   const { can } = useSubscription();
 
@@ -139,7 +146,7 @@ export default function AdminLayout() {
         </div>
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="p-2 rounded-xl bg-stone-50 text-stone-600 hover:bg-stone-100 transition-colors"
+          className="p-2 rounded-xl bg-stone-50 text-stone-600 hover:bg-stone-100 transition-colors cursor-pointer"
         >
           <LayoutDashboard className="w-6 h-6" />
         </button>
@@ -176,7 +183,7 @@ export default function AdminLayout() {
             <span>{branding.name}</span>
           </div>
 
-          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 rounded-xl bg-stone-50 hover:bg-stone-100 transition-all">
+          <button onClick={() => setIsSidebarOpen(false)} className="lg:hidden p-2 rounded-xl bg-stone-50 hover:bg-stone-100 transition-all cursor-pointer">
             <X className="w-6 h-6 text-stone-600" />
           </button>
         </div>
