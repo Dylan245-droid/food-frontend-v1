@@ -173,8 +173,11 @@ export default function FiafioPaymentModal({ open, onClose, planName, amount, cy
                                 </div>
                                 <div className="h-px bg-stone-800 my-2" />
                                 <div className="flex justify-between items-center text-white font-bold text-lg">
-                                    <span>Total à payer</span>
-                                    <span>{formatCurrency(amount)}</span>
+                                    <span className="text-sm font-bold uppercase tracking-widest text-stone-500">Total à payer</span>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-2xl font-black tracking-tight">{new Intl.NumberFormat('fr-FR').format(amount).replace(/\u202f/g, ' ')}</span>
+                                        <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">FCFA</span>
+                                    </div>
                                 </div>
                             </div>
 

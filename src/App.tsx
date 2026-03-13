@@ -34,6 +34,7 @@ import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard';
 import SuperAdminInvoicesPage from './pages/super-admin/InvoicesPage';
 import RevenuePage from './pages/super-admin/RevenuePage';
 import SubscriptionPage from './pages/admin/SubscriptionPage';
+import SubscriptionGuard from './components/SubscriptionGuard';
 import { useAuth } from './context/AuthContext';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -111,14 +112,14 @@ export default function App() {
             <Route path="menu" element={<MenuPage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="calls" element={<ServerCallsPage />} />
-            <Route path="finance" element={<FinancePage />} />
+            <Route path="finance" element={<SubscriptionGuard feature="finance_enabled"><FinancePage /></SubscriptionGuard>} />
             <Route path="cash" element={<CashPage />} />
-            <Route path="cash/transfers" element={<CashTransfersPage />} />
-            <Route path="invoices" element={<InvoicesPage />} />
-            <Route path="accounting" element={<AccountingPage />} />
-            <Route path="reservations" element={<ReservationsPage />} />
+            <Route path="cash/transfers" element={<SubscriptionGuard feature="finance_enabled"><CashTransfersPage /></SubscriptionGuard>} />
+            <Route path="invoices" element={<SubscriptionGuard feature="finance_enabled"><InvoicesPage /></SubscriptionGuard>} />
+            <Route path="accounting" element={<SubscriptionGuard feature="accounting_export"><AccountingPage /></SubscriptionGuard>} />
+            <Route path="reservations" element={<SubscriptionGuard feature="reservations_enabled"><ReservationsPage /></SubscriptionGuard>} />
             <Route path="settings" element={<SettingsPage />} />
-            <Route path="audit-logs" element={<AuditLogsPage />} />
+            <Route path="audit-logs" element={<SubscriptionGuard feature="finance_enabled"><AuditLogsPage /></SubscriptionGuard>} />
             <Route path="subscription" element={<SubscriptionPage />} />
           </Route>
 

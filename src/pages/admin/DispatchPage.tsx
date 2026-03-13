@@ -4,6 +4,7 @@ import { Loader2, Bike, CheckCircle } from 'lucide-react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
 import { DeliveryOrderCard } from '../../components/DeliveryOrderCard';
+import DriverPicker from '../../components/admin/DriverPicker';
 
 interface Order {
     id: number;
@@ -68,16 +69,21 @@ export default function DispatchPage() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center bg-white p-4 md:p-0 md:bg-transparent rounded-2xl md:rounded-none shadow-sm md:shadow-none border border-stone-100 md:border-none">
-                <div>
-                    <h1 className="text-xl md:text-2xl font-black text-gray-900 flex items-center gap-2">
-                        <Bike className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
-                        Dispatch Livraison
-                    </h1>
-                    <p className="text-xs md:text-sm text-gray-500">Assignez les commandes <strong className="text-blue-600">prêtes</strong></p>
+            <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-6 bg-white p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50/50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50 pointer-events-none"></div>
+
+                <div className="flex items-center gap-4 md:gap-6 relative z-10">
+                    <div className="bg-stone-900 p-3 md:p-4 rounded-2xl text-white shadow-2xl shadow-stone-200 shrink-0">
+                        <Bike className="w-6 h-6 md:w-8 md:h-8" />
+                    </div>
+                    <div className="min-w-0">
+                        <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Dispatch Livraison</h1>
+                        <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">Assignation des commandes <strong className="text-blue-600">prêtes</strong></p>
+                    </div>
                 </div>
-                <div className="bg-blue-50 text-blue-700 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-bold text-xs md:text-base border border-blue-100 shadow-sm">
-                    {readyOrders.length} <span className="hidden xs:inline">prêtes</span>
+
+                <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-2xl font-black text-xs md:text-sm border border-blue-100 shadow-sm relative z-10 uppercase tracking-widest shrink-0">
+                    {readyOrders.length} {readyOrders.length > 1 ? 'Commandes' : 'Commande'} prêtes
                 </div>
             </div>
 
@@ -95,20 +101,16 @@ export default function DispatchPage() {
                             order={order}
                             actions={
                                 <>
-                                    <select
-                                        className="flex-1 bg-white border border-gray-300 text-gray-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
-                                        value={driverSelections[order.id] || ''}
-                                        onChange={(e) => handleDriverSelect(order.id, Number(e.target.value) || '')}
-                                    >
-                                        <option value="">Choisir un livreur...</option>
-                                        {drivers.map(d => (
-                                            <option key={d.id} value={d.id}>{d.fullName}</option>
-                                        ))}
-                                    </select>
+                                    <DriverPicker
+                                        drivers={drivers}
+                                        selectedId={driverSelections[order.id] || ''}
+                                        onSelect={(id) => handleDriverSelect(order.id, id)}
+                                    />
                                     <Button
                                         onClick={() => handleAssign(order.id)}
                                         isLoading={assigningId === order.id}
                                         disabled={!driverSelections[order.id]}
+                                        className="h-11 px-6 rounded-xl bg-stone-900 hover:bg-black text-white font-black uppercase tracking-widest text-[10px] shrink-0"
                                     >
                                         Assigner
                                     </Button>

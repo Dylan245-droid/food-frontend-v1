@@ -10,7 +10,7 @@ export function formatCurrency(amount: number) {
 }
 
 export function getImageUrl(path?: string) {
-    if (!path) return null;
+    if (!path) return undefined;
     if (path.startsWith('http')) return path;
     const baseUrl = (import.meta.env.VITE_API_URL || '').replace('/api', '');
     return `${baseUrl}${path}`;

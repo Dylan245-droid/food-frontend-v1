@@ -193,12 +193,15 @@ const FloatingFood = () => {
                 {/* Glow behind - Disabled on mobile to save GPU */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-orange-600 to-red-600 rounded-full blur-[20px] md:blur-[80px] opacity-20 md:opacity-40" />
 
-                <AnimatePresence mode='wait'>
+                <AnimatePresence>
                     <motion.img
                         key={currentStep}
                         src={images[currentStep]}
-                        transition={{ duration: 0.4 }}
-                        className="w-full h-full object-cover rounded-full shadow-2xl border-4 border-white/5 will-change-transform"
+                        initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
+                        animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                        exit={{ opacity: 0, scale: 1.2, rotate: 15 }}
+                        transition={{ duration: 0.6, ease: "easeInOut" }}
+                        className="absolute inset-0 w-full h-full object-cover rounded-full shadow-2xl border-4 border-white/5 will-change-transform"
                         alt="Dish"
                         style={{ transform: 'translateZ(0)' }} // Force GPU
                     />
@@ -465,8 +468,12 @@ const Pricing = () => {
                             <p className="text-gray-500 text-sm">Maquis, Fast-Food, Boulangerie, Dark Kitchen</p>
                         </div>
                         <div className="mb-6">
-                            <span className="text-4xl font-black text-white">35 000</span>
-                            <span className="text-sm font-medium text-gray-400"> F / mois</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">35 000</span>
+                                <span className="text-xs font-black uppercase tracking-widest text-gray-500">FCFA</span>
+                            </div>
+                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Par mois</div>
+
                         </div>
 
                         <div className="space-y-4 mb-8 flex-1">
@@ -495,8 +502,11 @@ const Pricing = () => {
                             <p className="text-gray-400 text-sm">Restaurants, Pizzerias, Lounges, Glaciers</p>
                         </div>
                         <div className="mb-6">
-                            <span className="text-4xl font-black text-white">65 000</span>
-                            <span className="text-sm font-medium text-gray-400"> F / mois</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">65 000</span>
+                                <span className="text-xs font-black uppercase tracking-widest text-orange-500/80">FCFA</span>
+                            </div>
+                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Par mois</div>
                         </div>
 
                         <div className="space-y-4 mb-8 flex-1">
@@ -525,8 +535,11 @@ const Pricing = () => {
                             <p className="text-gray-500 text-sm">Hôtels, Chaînes, Franchises, Food Courts</p>
                         </div>
                         <div className="mb-6">
-                            <span className="text-4xl font-black text-white">150 000</span>
-                            <span className="text-sm font-medium text-gray-400"> F / mois</span>
+                            <div className="flex items-baseline gap-1.5">
+                                <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">150 000</span>
+                                <span className="text-xs font-black uppercase tracking-widest text-gray-500">FCFA</span>
+                            </div>
+                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Par mois</div>
                         </div>
 
                         <div className="space-y-4 mb-8 flex-1">
@@ -541,6 +554,44 @@ const Pricing = () => {
                 </div>
             </div>
         </Section>
+    );
+};
+
+const CTAStripe = () => {
+    const navigate = useNavigate();
+    return (
+        <section className="relative z-10 py-16 md:py-24 px-4 sm:px-6">
+            <div className="max-w-5xl mx-auto">
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6 }}
+                    className="relative bg-gradient-to-br from-orange-600 via-orange-600 to-red-600 rounded-[2rem] md:rounded-[3rem] p-8 sm:p-10 md:p-16 text-center overflow-hidden"
+                >
+                    {/* Decorative glows */}
+                    <div className="absolute top-0 right-0 w-48 md:w-64 h-48 md:h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-36 md:w-48 h-36 md:h-48 bg-black/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+
+                    <div className="relative z-10">
+                        <h2 className="text-2xl sm:text-3xl md:text-5xl font-black text-white mb-4 tracking-tight leading-tight">
+                            Prêt à digitaliser<br className="hidden sm:block" /> votre restaurant ?
+                        </h2>
+                        <p className="text-white/80 text-base sm:text-lg max-w-xl mx-auto mb-8">
+                            Rejoignez des centaines de restaurateurs qui font confiance à GoTchop.
+                        </p>
+                        <button
+                            onClick={() => navigate('/register')}
+                            className="group px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-full font-bold text-base sm:text-lg hover:scale-105 transition-transform duration-300 shadow-2xl shadow-black/20"
+                        >
+                            <span className="flex items-center gap-2">
+                                Commencer gratuitement <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                        </button>
+                    </div>
+                </motion.div>
+            </div>
+        </section>
     );
 };
 
@@ -602,6 +653,7 @@ export default function GoTchopLandingPage() {
                 <FeaturesGrid />
                 <Showcase />
                 <Pricing />
+                <CTAStripe />
             </main>
 
             <Footer />

@@ -5,7 +5,7 @@ import { Input } from '../ui/Input';
 import { ShoppingBag, Truck, ArrowRight, ArrowLeft, Plus, Minus, Check, Copy, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
-import { formatCurrency } from '../../lib/utils';
+import { formatCurrency, cn } from '../../lib/utils';
 
 interface MenuItem {
   id: number;
@@ -51,19 +51,19 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
   // Steps
   const [step, setStep] = useState<Step>('type');
   const [orderType, setOrderType] = useState<OrderType | null>(null);
-  
+
   // Client info
   const [clientName, setClientName] = useState('');
   const [clientPhone, setClientPhone] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryCity, setDeliveryCity] = useState('libreville');
-  
+
   // Menu
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [notes, setNotes] = useState('');
-  
+
   // Result
   const [createdOrder, setCreatedOrder] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -145,7 +145,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
     setSubmitting(true);
     try {
       const items = cart.map(c => ({ menuItemId: c.menuItemId, quantity: c.quantity }));
-      
+
       let response;
       if (orderType === 'takeout') {
         response = await api.post('/orders/takeout', {
@@ -196,7 +196,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={step === 'success' ? '' : 'Nouvelle Commande'}>
       <div className="min-h-[400px]">
-        
+
         {/* Step 1: Type Selection */}
         {step === 'type' && (
           <div className="space-y-4">
@@ -234,7 +234,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
                 {orderType === 'takeout' ? '🥡 À Emporter' : '🛵 Livraison'}
               </span>
             </div>
-            
+
             <div>
               <label className="block text-sm font-bold text-stone-700 mb-1">Nom du client *</label>
               <Input
@@ -245,7 +245,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
                 autoFocus
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-bold text-stone-700 mb-1">Téléphone {orderType === 'delivery' && '*'}</label>
               <Input
@@ -317,61 +317,84 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
                   <div key={cat.id}>
                     <h4 className="font-bold text-stone-900 text-sm mb-2 px-1">{cat.name}</h4>
                     {/* Horizontal scrollable row */}
-                    <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory premium-scrollbar">
                       {cat.items.map(item => {
                         const qty = getItemQuantity(item.id);
                         return (
-                          <div 
-                            key={item.id} 
-                            className={`flex-shrink-0 w-32 rounded-xl border-2 snap-start transition-all overflow-hidden ${qty > 0 ? 'border-orange-500 bg-orange-50' : 'border-stone-100 bg-white hover:border-stone-300'}`}
+                          <div
+                            key={item.id}
+                            onClick={() => qty === 0 && addToCart(item)}
+                            className={cn(
+                              "flex-shrink-0 w-36 rounded-[1.5rem] border-2 snap-start transition-all duration-300 overflow-hidden flex flex-col cursor-pointer",
+                              qty > 0
+                                ? 'border-stone-900 bg-white shadow-xl shadow-stone-200/50 -translate-y-1'
+                                : 'border-stone-50 bg-white hover:border-stone-200'
+                            )}
                           >
                             {/* Product Image */}
-                            <div className="w-full h-20 bg-stone-100 relative">
+                            <div className="w-full h-24 bg-stone-50 relative shrink-0 overflow-hidden">
                               {item.imageUrl ? (
-                                <img 
-                                  src={getImageUrl(item.imageUrl)} 
-                                  alt={item.name} 
-                                  className="w-full h-full object-cover"
+                                <img
+                                  src={getImageUrl(item.imageUrl)}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center text-stone-300">
-                                  <ShoppingBag className="w-8 h-8" />
+                                <div className="w-full h-full flex items-center justify-center text-stone-200">
+                                  <ShoppingBag className="w-10 h-10 opacity-30" />
                                 </div>
                               )}
+
+                              {/* Quantity Badge Over Image */}
                               {qty > 0 && (
-                                <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center">
-                                  {qty}
+                                <div className="absolute top-2 right-2 z-10">
+                                  <span className="bg-stone-900 text-white text-[10px] font-black w-6 h-6 flex items-center justify-center rounded-xl shadow-lg border border-white/20">
+                                    {qty}
+                                  </span>
                                 </div>
                               )}
                             </div>
-                            <div className="p-2">
-                              <p className="font-medium text-stone-900 text-xs truncate">{item.name}</p>
-                              <p className="text-[10px] text-stone-500 mb-2">{formatCurrency(item.price)}</p>
-                            
-                              {qty === 0 ? (
-                                <button
-                                  onClick={() => addToCart(item)}
-                                  className="w-full py-1.5 rounded-lg bg-stone-900 text-white text-[10px] font-bold hover:bg-stone-800 flex items-center justify-center gap-1"
-                                >
-                                  <Plus className="w-3 h-3" /> Ajouter
-                                </button>
-                              ) : (
-                                <div className="flex items-center justify-between bg-stone-100 rounded-lg p-0.5">
+
+                            <div className="p-3 flex flex-col flex-1">
+                              <p className="font-black text-stone-900 text-[11px] uppercase tracking-tight truncate mb-1">
+                                {item.name}
+                              </p>
+
+                              <div className="flex items-baseline gap-1 mb-3 min-w-0">
+                                <span className="text-sm font-black text-stone-900 font-display truncate">
+                                  {formatCurrency(item.price).split('\u00A0')[0]}
+                                </span>
+                                <span className="text-[9px] font-black text-stone-300 uppercase leading-none">
+                                  XAF
+                                </span>
+                              </div>
+
+                              <div className="mt-auto">
+                                {qty === 0 ? (
                                   <button
-                                    onClick={() => updateQuantity(item.id, -1)}
-                                    className="w-6 h-6 rounded-md bg-white flex items-center justify-center hover:bg-stone-50 shadow-sm"
+                                    onClick={(e) => { e.stopPropagation(); addToCart(item); }}
+                                    className="w-full py-2 rounded-xl bg-stone-50 text-stone-900 text-[9px] font-black uppercase tracking-widest hover:bg-stone-900 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-1.5"
                                   >
-                                    <Minus className="w-3 h-3" />
+                                    <Plus className="w-3.5 h-3.5" /> Ajouter
                                   </button>
-                                  <span className="font-bold text-xs">{qty}</span>
-                                  <button
-                                    onClick={() => updateQuantity(item.id, 1)}
-                                    className="w-6 h-6 rounded-md bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 shadow-sm"
-                                  >
-                                    <Plus className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              )}
+                                ) : (
+                                  <div className="flex items-center justify-between bg-stone-900 rounded-xl p-1 shadow-inner shadow-stone-800">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, -1); }}
+                                      className="w-7 h-7 rounded-lg bg-stone-800 text-white flex items-center justify-center hover:bg-stone-700 transition-colors active:scale-90"
+                                    >
+                                      <Minus className="w-3.5 h-3.5" />
+                                    </button>
+                                    <span className="font-black text-white text-xs">{qty}</span>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); updateQuantity(item.id, 1); }}
+                                      className="w-7 h-7 rounded-lg bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors active:scale-90 shadow-md shadow-orange-900/20"
+                                    >
+                                      <Plus className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -417,7 +440,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
             <div className="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center">
               <Check className="w-10 h-10 text-green-600" />
             </div>
-            
+
             <div>
               <h2 className="text-2xl font-black text-stone-900 mb-2">Commande créée !</h2>
               <p className="text-stone-500">#{createdOrder.dailyNumber}</p>

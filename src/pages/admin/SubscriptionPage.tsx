@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 import { Check, ShieldCheck, Star, Clock, AlertCircle, Loader2 } from 'lucide-react';
-import { cn, formatCurrency } from '../../lib/utils';
+import { cn } from '../../lib/utils';
 import { showToast } from '../../utils/toast';
 import api from '../../lib/api';
 import { useFetch } from '../../lib/useFetch';
@@ -245,9 +245,17 @@ export default function SubscriptionPage() {
                         <p className="text-[10px] md:text-sm text-stone-500">Maquis, Dark Kitchen...</p>
                     </div>
                     <div className="mb-4 md:mb-6">
-                        <span className="text-3xl md:text-4xl font-black text-stone-900">{formatCurrency(billingCycle === 'YEARLY' ? 35000 * 12 * 0.85 : 35000)}</span>
-                        <span className="text-xs md:text-sm font-medium text-stone-400"> / {billingCycle === 'YEARLY' ? 'an' : 'mois'}</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-2xl md:text-3xl font-bold text-stone-900 tracking-tight">
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 35000 * 12 * 0.85 : 35000).replace(/\u202f/g, ' ')}
+                            </span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">FCFA</span>
+                        </div>
+                        <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
+                            Par {billingCycle === 'YEARLY' ? 'an' : 'mois'}
+                        </div>
                     </div>
+
 
                     <div className="space-y-4 mb-8 flex-1">
                         {PRICING_FEATURES.ESSENTIAL.map(f => (
@@ -291,9 +299,17 @@ export default function SubscriptionPage() {
                         <p className="text-stone-400 text-sm">Restaurants, Pizzerias, Lounges, Glaciers</p>
                     </div>
                     <div className="mb-6">
-                        <span className="text-4xl font-black text-white">{formatCurrency(billingCycle === 'YEARLY' ? 65000 * 12 * 0.85 : 65000)}</span>
-                        <span className="text-sm font-medium text-stone-500"> / {billingCycle === 'YEARLY' ? 'an' : 'mois'}</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-3xl md:text-3xl font-bold text-white tracking-tight">
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 65000 * 12 * 0.85 : 65000).replace(/\u202f/g, ' ')}
+                            </span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-orange-500/80">FCFA</span>
+                        </div>
+                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mt-1">
+                            Par {billingCycle === 'YEARLY' ? 'an' : 'mois'}
+                        </div>
                     </div>
+
 
                     <div className="space-y-4 mb-8 flex-1">
                         {PRICING_FEATURES.PRO.map(f => (
@@ -332,9 +348,17 @@ export default function SubscriptionPage() {
                         <p className="text-stone-500 text-sm">Hôtels, Chaînes, Franchises, Food Courts</p>
                     </div>
                     <div className="mb-6">
-                        <span className="text-4xl font-black text-stone-900">{formatCurrency(billingCycle === 'YEARLY' ? 150000 * 12 * 0.85 : 150000)}</span>
-                        <span className="text-sm font-medium text-stone-400"> / {billingCycle === 'YEARLY' ? 'an' : 'mois'}</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-3xl md:text-3xl font-bold text-stone-900 tracking-tight">
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 150000 * 12 * 0.85 : 150000).replace(/\u202f/g, ' ')}
+                            </span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">FCFA</span>
+                        </div>
+                        <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
+                            Par {billingCycle === 'YEARLY' ? 'an' : 'mois'}
+                        </div>
                     </div>
+
 
                     <div className="space-y-4 mb-8 flex-1">
                         {PRICING_FEATURES.ELITE.map(f => (

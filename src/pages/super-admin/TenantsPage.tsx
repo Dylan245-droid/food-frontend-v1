@@ -1,21 +1,29 @@
-
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
 import {
     Search, Power, ExternalLink, Calendar,
-    AlertCircle
+    AlertCircle, Store, User, CreditCard,
+    TrendingUp, ShieldCheck, ShieldAlert,
+    RotateCcw, Globe, ChevronRight, Zap, Loader2
 } from 'lucide-react';
 import api from '../../lib/api';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { differenceInDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { cn } from '../../lib/utils';
+import { cn, formatCurrency, getImageUrl } from '../../lib/utils';
 
 export default function TenantsPage() {
     const [tenants, setTenants] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Modal state for Manual Subscription
+    const [subModalOpen, setSubModalOpen] = useState(false);
+    const [selectedTenant, setSelectedTenant] = useState<any>(null);
+    const [subForm, setSubForm] = useState({ plan: 'ESSENTIAL', months: 1, amountTtc: 35000 });
+    const [subLoading, setSubLoading] = useState(false);
+
 
     const fetchTenants = async () => {
         setLoading(true);
@@ -23,7 +31,7 @@ export default function TenantsPage() {
             const res = await api.get('/super-admin/tenants');
             setTenants(res.data.data);
         } catch (error) {
-            toast.error("Impossible de charger les tenants");
+            toast.error("Échec de synchronisation");
         } finally {
             setLoading(false);
         }
@@ -35,7 +43,7 @@ export default function TenantsPage() {
             toast.success("Statut mis à jour");
             fetchTenants();
         } catch (error) {
-            toast.error("Erreur mise à jour statut");
+            toast.error("Erreur technique");
         }
     };
 
@@ -43,208 +51,346 @@ export default function TenantsPage() {
         fetchTenants();
     }, []);
 
+    const handleManualSubscription = async () => {
+        if (!selectedTenant) return;
+        setSubLoading(true);
+        try {
+            await api.post(`/super-admin/tenants/${selectedTenant.id}/manual-subscription`, subForm);
+            toast.success("Renouvellement manuel effectué avec succès !");
+            setSubModalOpen(false);
+            fetchTenants();
+        } catch (error) {
+            toast.error("Erreur lors du renouvellement manuel.");
+        } finally {
+            setSubLoading(false);
+        }
+    };
+
+    const updatePlan = (plan: string) => {
+        const base = plan === 'ESSENTIAL' ? 35000 : plan === 'PRO' ? 65000 : plan === 'ELITE' ? 150000 : 0;
+        setSubForm(prev => ({ ...prev, plan, amountTtc: base * prev.months }));
+    };
+
+    const updateMonths = (months: number) => {
+        const m = Math.max(1, months);
+        const base = subForm.plan === 'ESSENTIAL' ? 35000 : subForm.plan === 'PRO' ? 65000 : subForm.plan === 'ELITE' ? 150000 : 0;
+        setSubForm(prev => ({ ...prev, months: m, amountTtc: base * m }));
+    };
+
+
     const filteredTenants = tenants.filter(t =>
         t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.owner?.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.slug.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const getPlanBadge = (plan: string) => {
+    const getPlanStyles = (plan: string) => {
         const p = plan?.toUpperCase();
         switch (p) {
-            case 'ELITE': return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">Élite</span>;
-            case 'PRO': return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">Pro</span>;
-            case 'ESSENTIAL': return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">Essentiel</span>;
-            default: return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 border border-slate-200">Essai</span>;
+            case 'ELITE': return 'bg-purple-500 text-white';
+            case 'PRO': return 'bg-orange-500 text-white';
+            case 'ESSENTIAL': return 'bg-blue-500 text-white';
+            default: return 'bg-stone-100 text-stone-600';
         }
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-4 md:p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-8">
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight uppercase">Tenants Inscrits</h1>
-                    <p className="text-slate-500 mt-1 text-sm">Gérez les accès, abonnements et facturation.</p>
-                </div>
-                <Button onClick={fetchTenants} variant="outline" size="sm" className="w-full sm:w-auto">Actualiser</Button>
-            </div>
+        <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
 
-            <div className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-slate-100 bg-white sticky top-0 z-10">
-                    <div className="relative max-w-md">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <Input
-                            placeholder="Rechercher un tenant, email ou slug..."
-                            className="pl-10 h-10 bg-slate-50 border-slate-200"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+            {/* Premium Header */}
+            <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-6 bg-white p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-stone-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50 pointer-events-none"></div>
+
+                <div className="flex items-center gap-4 md:gap-6 relative z-10">
+                    <div className="bg-stone-900 p-3 md:p-4 rounded-2xl text-white shadow-2xl shadow-stone-200 shrink-0">
+                        <Store className="w-6 h-6 md:w-8 md:h-8" />
+                    </div>
+                    <div className="min-w-0">
+                        <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Park Restaurants</h1>
+                        <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">
+                            Gestion des Tenants • {tenants.length} Établissements
+                        </p>
                     </div>
                 </div>
 
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10 shrink-0">
+                    <div className="relative group/search flex-1 min-w-[300px]">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300 group-focus-within/search:text-stone-900 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="RECHERCHER UN TENANT, EMAIL OU SLUG..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="w-full h-14 pl-12 pr-4 bg-stone-50 border-none rounded-2xl font-black text-[10px] uppercase tracking-widest focus:ring-4 focus:ring-stone-100 transition-all placeholder-stone-300"
+                        />
+                    </div>
+                    <button
+                        onClick={fetchTenants}
+                        className="h-14 px-8 bg-stone-50 hover:bg-stone-100 text-stone-900 border border-stone-200 rounded-2xl font-black uppercase tracking-widest text-[10px] items-center justify-center gap-3 transition-all active:scale-95 flex flex-1 sm:flex-none shadow-sm"
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        <span>Sync</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* List Table - Premium Grouping */}
+            <div className="bg-white rounded-[2.5rem] border border-stone-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left min-w-[1000px]">
-                        <thead className="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-100">
-                            <tr>
-                                <th className="px-6 py-4 font-bold">Tenant</th>
-                                <th className="px-6 py-4 font-bold">Abonnement</th>
-                                <th className="px-6 py-4 font-bold">Paiement</th>
-                                <th className="px-6 py-4 font-bold">Revenus</th>
-                                <th className="px-6 py-4 font-bold">Prochaine Échéance</th>
-                                <th className="px-6 py-4 font-bold text-center">Activité</th>
-                                <th className="px-6 py-4 font-bold text-right">Actions</th>
+                    <table className="w-full text-left min-w-[1000px]">
+                        <thead>
+                            <tr className="bg-stone-50/50 border-b border-stone-100">
+                                <th className="p-6 text-[10px] font-black text-stone-400 uppercase tracking-widest pl-8">Identité Tenant</th>
+                                <th className="p-6 text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Abonnement</th>
+                                <th className="p-6 text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Facturation</th>
+                                <th className="p-6 text-[10px] font-black text-stone-400 uppercase tracking-widest text-center">Jours Restants</th>
+                                <th className="p-6 text-[10px] font-black text-stone-400 uppercase tracking-widest">Revenus & Usage</th>
+                                <th className="p-6 text-[10px] font-black text-stone-400 uppercase tracking-widest">Échéance Prochaine</th>
+                                <th className="p-6 text-[10px] font-black text-stone-400 uppercase tracking-widest text-right pr-8">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 bg-white">
-                            {filteredTenants.map((t) => {
-                                const isTrial = t.subscription.plan === 'TRIAL';
-                                const expiryDate = isTrial ? t.subscription.trialEndsAt : t.subscription.subscriptionEndsAt;
-                                const isExpired = expiryDate && new Date(expiryDate) < new Date();
-
-                                return (
-                                    <tr key={t.id} className="group hover:bg-slate-50/80 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="font-bold text-slate-900 flex items-center gap-2">
-                                                {t.name}
-                                                {!t.isActive && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-800">INACTIF</span>}
-                                            </div>
-                                            <a href={`/r/${t.slug}`} target="_blank" className="text-xs text-orange-600 hover:text-orange-700 flex items-center gap-1 mt-0.5">
-                                                /r/{t.slug} <ExternalLink className="w-3 h-3" />
-                                            </a>
-                                            <div className="text-xs text-slate-400 mt-1">{t.owner?.fullName} ({t.owner?.email})</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col gap-1 items-start">
-                                                {getPlanBadge(t.subscription.plan)}
-
-                                                {/* Status Badges based on reality (Dates + Status) */}
-                                                {t.subscription.status === 'SUSPENDED' ? (
-                                                    <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold border border-red-200">
-                                                        Suspendu
-                                                    </span>
-                                                ) : t.subscription.status === 'PAST_DUE' ? (
-                                                    <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded font-bold border border-orange-200">
-                                                        Paiement en retard
-                                                    </span>
-                                                ) : isExpired ? (
-                                                    isTrial ? (
-                                                        <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-medium border border-yellow-200">
-                                                            Fin d'essai
-                                                        </span>
+                        <tbody className="divide-y divide-stone-50">
+                            {loading && tenants.length === 0 ? (
+                                <tr><td colSpan={6} className="p-24 text-center"><div className="w-10 h-10 border-4 border-stone-100 border-t-stone-900 rounded-full animate-spin mx-auto"></div></td></tr>
+                            ) : filteredTenants.length === 0 ? (
+                                <tr><td colSpan={6} className="p-24 text-center text-[11px] font-black text-stone-300 uppercase tracking-widest italic">Aucun tenant identifié</td></tr>
+                            ) : (
+                                filteredTenants.map((t, idx) => {
+                                    const isExpired = t.subscription.status === 'EXPIRED' || t.subscription.status === 'SUSPENDED' || t.subscription.daysLeft === 0;
+                                    const expiryDate = t.subscription.plan === 'TRIAL' ? t.subscription.trialEndsAt : t.subscription.subscriptionEndsAt;
+                                    return (
+                                        <tr key={t.id} className="hover:bg-stone-50/50 transition-all group animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 15}ms` }}>
+                                            <td className="p-6 pl-8">
+                                                <div className="flex items-center gap-4">
+                                                    {t.logoUrl || t.logo ? (
+                                                        <img src={getImageUrl(t.logoUrl || t.logo)} alt={t.name} className="w-14 h-14 rounded-[1.5rem] object-cover border border-stone-100 group-hover:scale-105 transition-all duration-500 shadow-sm shrink-0 bg-white" />
                                                     ) : (
-                                                        <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded font-bold border border-red-100">
-                                                            Expiré
-                                                        </span>
-                                                    )
-                                                ) : isTrial ? (
-                                                    <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-medium border border-blue-100">
-                                                        En essai
-                                                    </span>
-                                                ) : null}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex flex-col gap-1 items-start text-xs">
-                                                <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                                                    {t.subscription.paymentMethod === 'FIAFIO_MANDATE' ? 'Fiafio' : 'Manuel'}
-                                                </div>
-                                                {t.subscription.paymentMethod === 'FIAFIO_MANDATE' && (
-                                                    <span className={cn(
-                                                        "px-1.5 py-0.5 rounded text-[10px] font-bold border",
-                                                        t.subscription.fiafioMandateStatus === 'ACTIVE' ? "bg-green-50 text-green-700 border-green-100" :
-                                                            t.subscription.fiafioMandateStatus === 'PENDING' ? "bg-amber-50 text-amber-700 border-amber-100" :
-                                                                "bg-red-50 text-red-700 border-red-100"
-                                                    )}>
-                                                        {t.subscription.fiafioMandateStatus}
-                                                    </span>
-                                                )}
-                                                {t.subscription.failedRenewalAttempts > 0 && (
-                                                    <span className="text-[10px] text-red-600 font-bold flex items-center gap-1 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
-                                                        <AlertCircle className="w-3 h-3" />
-                                                        Retry {t.subscription.failedRenewalAttempts}/3
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-mono text-slate-700 font-medium">
-                                                {t.subscription.plan === 'ESSENTIAL' && '35 000 F'}
-                                                {t.subscription.plan === 'PRO' && '65 000 F'}
-                                                {t.subscription.plan === 'ELITE' && '150 000 F'}
-                                                {t.subscription.plan === 'TRIAL' && '-'}
-                                                {!['ESSENTIAL', 'PRO', 'ELITE', 'TRIAL'].includes(t.subscription.plan) && '-'}
-                                            </div>
-                                            <div className="text-xs text-slate-400">/ mois</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {expiryDate ? (
-                                                <div className={`flex flex-col gap-1`}>
-                                                    <div className={`flex items-center gap-2 ${isExpired || t.subscription.status === 'SUSPENDED' || t.subscription.status === 'PAST_DUE' ? 'text-red-600 font-bold' : 'text-slate-600'}`}>
-                                                        <Calendar className="w-4 h-4 text-slate-400" />
-                                                        {format(new Date(expiryDate), 'dd MMM yyyy', { locale: fr })}
-                                                        {(isExpired || t.subscription.status === 'SUSPENDED') && <AlertCircle className="w-4 h-4" />}
-                                                    </div>
-                                                    {t.subscription.pastDueSince && (
-                                                        <div className="flex flex-col gap-0.5">
-                                                            <div className="text-[10px] text-orange-600 font-bold">
-                                                                En retard depuis le {format(new Date(t.subscription.pastDueSince), 'dd MMM', { locale: fr })}
-                                                            </div>
-                                                            <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
-                                                                <div
-                                                                    className={cn(
-                                                                        "h-full rounded-full transition-all",
-                                                                        t.subscription.status === 'SUSPENDED' ? "bg-red-500 w-full" : "bg-orange-500"
-                                                                    )}
-                                                                    style={{
-                                                                        width: t.subscription.status === 'SUSPENDED' ? '100%' : `${Math.min((new Date().getTime() - new Date(t.subscription.pastDueSince).getTime()) / (14 * 24 * 60 * 60 * 1000) * 100, 100)}%`
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <div className="text-[9px] text-slate-400 font-medium text-right">
-                                                                {Math.floor((new Date().getTime() - new Date(t.subscription.pastDueSince).getTime()) / (24 * 60 * 60 * 1000))} / 14 jours
-                                                            </div>
+                                                        <div className="w-14 h-14 shrink-0 rounded-[1.5rem] bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400 group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all group-hover:scale-105 duration-500">
+                                                            <Store className="w-7 h-7" />
                                                         </div>
                                                     )}
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <div className="font-black text-stone-900 text-sm uppercase tracking-tight truncate max-w-[200px]">{t.name}</div>
+                                                            {!t.isActive && <span className="bg-red-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-lg uppercase tracking-widest">OFF</span>}
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <Globe className="w-3 h-3 text-indigo-400" />
+                                                            <a href={`/r/${t.slug}`} target="_blank" className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest hover:underline">/r/{t.slug}</a>
+                                                        </div>
+                                                        <div className="text-[9px] text-stone-400 font-bold mt-1.5 flex items-center gap-1.5 uppercase">
+                                                            {t.owner?.avatarUrl || t.owner?.avatar ? (
+                                                                <img src={getImageUrl(t.owner.avatarUrl || t.owner.avatar)} alt={t.owner.fullName || ''} className="w-3.5 h-3.5 rounded-full object-cover shrink-0" />
+                                                            ) : (
+                                                                <User className="w-2.5 h-2.5 shrink-0" />
+                                                            )}
+                                                            {t.owner?.fullName} ({t.owner?.email})
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <span className="text-slate-400 italic">--</span>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <div className="flex flex-col items-center justify-center">
-                                                <span className="font-bold text-slate-900">{t.ordersCount}</span>
-                                                <span className="text-[10px] text-slate-400 uppercase tracking-wide">Commandes</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <Button variant="ghost" size="sm" onClick={() => window.open(`/r/${t.slug}`, '_blank')}>
-                                                    <ExternalLink className="h-4 w-4 text-slate-400" />
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() => toggleStatus(t.id)}
-                                                    className={t.isActive ? "text-red-500 hover:text-red-700" : "text-green-500 hover:text-green-700"}
-                                                >
-                                                    <Power className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            {filteredTenants.length === 0 && !loading && (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                                        Aucun tenant trouvé
-                                    </td>
-                                </tr>
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                <div className="flex flex-col items-center gap-2">
+                                                    <span className={cn(
+                                                        "px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm",
+                                                        getPlanStyles(t.subscription.plan)
+                                                    )}>
+                                                        {t.subscription.plan}
+                                                    </span>
+                                                    {t.subscription.status === 'SUSPENDED' ? (
+                                                        <span className="text-[8px] text-red-500 font-black uppercase tracking-widest flex items-center gap-1">
+                                                            <ShieldAlert className="w-3 h-3" /> Suspendu
+                                                        </span>
+                                                    ) : isExpired ? (
+                                                        <span className="text-[8px] text-orange-500 font-black uppercase tracking-widest">Délai Expiré</span>
+                                                    ) : (
+                                                        <span className="text-[8px] text-emerald-500 font-black uppercase tracking-widest">Actif / OK</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                <div className="flex flex-col items-center gap-1.5 min-w-[100px]">
+                                                    <div className="text-[10px] font-black text-stone-900 uppercase tracking-tight flex items-center gap-2">
+                                                        <CreditCard className="w-3 h-3 text-stone-400" />
+                                                        {t.subscription.paymentMethod === 'FIAFIO_MANDATE' ? 'AUTOPAY' : 'MANUEL'}
+                                                    </div>
+                                                    {t.subscription.paymentMethod === 'FIAFIO_MANDATE' && (
+                                                        <span className={cn(
+                                                            "px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border",
+                                                            t.subscription.fiafioMandateStatus === 'ACTIVE' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-700 border-red-100"
+                                                        )}>
+                                                            Mandat: {t.subscription.fiafioMandateStatus}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                <div className={cn(
+                                                    "inline-flex flex-col items-center justify-center w-12 h-12 rounded-2xl relative",
+                                                    t.subscription.daysLeft <= 3 ? "bg-red-50 text-red-600 border border-red-100" : t.subscription.daysLeft <= 7 ? "bg-orange-50 text-orange-600 border border-orange-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                                                )}>
+                                                    <span className="text-sm font-black tracking-tight leading-none">{t.subscription.daysLeft}</span>
+                                                    <span className="text-[7px] font-black uppercase tracking-widest mt-0.5">Jours</span>
+                                                    {t.subscription.daysLeft <= 3 && (
+                                                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping"></div>
+                                                    )}
+                                                    {t.subscription.daysLeft <= 3 && (
+                                                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full"></div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="p-6">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="min-w-[100px]">
+                                                        <p className="font-black text-stone-900 text-xs tracking-tight">{formatCurrency(t.subscription.plan === 'ESSENTIAL' ? 35000 : t.subscription.plan === 'PRO' ? 65000 : t.subscription.plan === 'ELITE' ? 150000 : 0)}</p>
+                                                        <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">Renouvellement</p>
+                                                    </div>
+                                                    <div className="h-10 w-[1px] bg-stone-100"></div>
+                                                    <div>
+                                                        <p className="font-black text-stone-900 text-xs tracking-tight">{t.ordersCount} <span className="text-[9px] text-stone-400">CMD</span></p>
+                                                        <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">Usage global</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-6">
+                                                {expiryDate ? (
+                                                    <div className="flex items-center gap-4">
+                                                        <div className={cn(
+                                                            "w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs",
+                                                            isExpired ? "bg-red-50 text-red-500" : "bg-stone-50 text-stone-900"
+                                                        )}>
+                                                            <Calendar className="w-4 h-4" />
+                                                        </div>
+                                                        <div>
+                                                            <p className={cn("font-black text-xs tracking-tight uppercase", isExpired ? "text-red-500" : "text-stone-900")}>
+                                                                {format(new Date(expiryDate), 'dd MMM yyyy', { locale: fr })}
+                                                            </p>
+                                                            {t.subscription.pastDueSince && (
+                                                                <p className="text-[8px] font-black text-orange-500 uppercase tracking-widest animate-pulse">Relance en cours</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-stone-300 font-black text-[10px] uppercase tracking-widest italic">Abonnement Free</span>
+                                                )}
+                                            </td>
+                                            <td className="p-6 pr-8 text-right">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button onClick={() => window.open(`/r/${t.slug}`, '_blank')} className="w-10 h-10 rounded-xl bg-stone-50 text-stone-400 hover:text-stone-900 hover:bg-stone-100 transition-all flex items-center justify-center border border-stone-100/50">
+                                                        <ExternalLink className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedTenant(t);
+                                                            const p = t.subscription.plan === 'TRIAL' ? 'ESSENTIAL' : t.subscription.plan;
+                                                            const base = p === 'ESSENTIAL' ? 35000 : p === 'PRO' ? 65000 : p === 'ELITE' ? 150000 : 0;
+                                                            setSubForm({ plan: p, months: 1, amountTtc: base });
+                                                            setSubModalOpen(true);
+                                                        }}
+                                                        className="h-10 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 border bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white"
+                                                    >
+                                                        <Zap className="w-3.5 h-3.5" /> 
+                                                        {t.subscription.plan === 'TRIAL' ? "S'abonner" : isExpired || t.subscription.status === 'SUSPENDED' ? 'Renouveler' : 'Upgrader'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => toggleStatus(t.id)}
+                                                        className={cn(
+                                                            "h-10 px-5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 border",
+                                                            t.isActive
+                                                                ? "bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white"
+                                                                : "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-100"
+                                                        )}
+                                                    >
+                                                        {t.isActive ? (
+                                                            <>Suspendre</>
+                                                        ) : (
+                                                            <>Activer Unit</>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            {/* Manual Subscription Modal */}
+            {subModalOpen && selectedTenant && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-stone-900/60 backdrop-blur-sm" onClick={() => setSubModalOpen(false)}></div>
+                    <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md relative z-10 overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="p-6 border-b border-stone-100 bg-stone-50/50">
+                            <div className="w-12 h-12 bg-white rounded-2xl shadow-sm border border-stone-100 flex items-center justify-center text-indigo-500 mb-4">
+                                <Zap className="w-6 h-6" />
+                            </div>
+                            <h2 className="text-xl font-black text-stone-900 uppercase tracking-tight">Renouv. Manuel</h2>
+                            <p className="text-xs font-bold text-stone-500 mt-1.5">Configuration de l'abonnement pour <span className="text-stone-900">{selectedTenant.name}</span></p>
+                        </div>
+
+                        <div className="p-6 space-y-5">
+                            <div>
+                                <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Plan d'abonnement</label>
+                                <div className="grid grid-cols-3 gap-2.5">
+                                    {['ESSENTIAL', 'PRO', 'ELITE'].map((p) => (
+                                        <button
+                                            key={p}
+                                            onClick={() => updatePlan(p)}
+                                            className={cn(
+                                                "py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest border-2 transition-all",
+                                                subForm.plan === p
+                                                    ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                                                    : "border-stone-100 bg-white text-stone-400 hover:border-stone-200"
+                                            )}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Durée (Mois)</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={subForm.months}
+                                        onChange={(e) => updateMonths(parseInt(e.target.value) || 1)}
+                                        className="w-full h-12 bg-stone-50 border border-stone-100 rounded-2xl px-4 text-sm font-black text-stone-900 focus:outline-none focus:ring-4 focus:ring-indigo-50"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Montant TTC</label>
+                                    <div className="h-12 bg-stone-100 rounded-2xl px-4 flex items-center border border-stone-200">
+                                        <span className="text-sm font-black text-stone-900">{formatCurrency(subForm.amountTtc)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-orange-50 text-orange-800 p-3.5 rounded-2xl text-[10px] border border-orange-100/50 flex gap-2.5">
+                                <AlertCircle className="w-4 h-4 shrink-0 text-orange-500" />
+                                <span className="font-bold leading-relaxed">Cette action va générer directement une facture avec le statut PAYÉ.</span>
+                            </div>
+                        </div>
+
+                        <div className="p-5 bg-stone-50 border-t border-stone-100 flex justify-end gap-2.5">
+                            <Button variant="outline" size="sm" onClick={() => setSubModalOpen(false)} disabled={subLoading}>Annuler</Button>
+                            <Button 
+                                size="sm" 
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white border-0 shadow-lg shadow-indigo-200 min-w-[170px]" 
+                                onClick={handleManualSubscription}
+                                disabled={subLoading}
+                            >
+                                {subLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirmer & Facturer"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

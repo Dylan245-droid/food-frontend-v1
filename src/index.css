@@ -158,3 +158,28 @@
     padding: 0;
   }
 }
+
+@layer utilities {
+  .premium-scrollbar::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  
+  .premium-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .premium-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-stone-300/80 rounded-full;
+  }
+  
+  .premium-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-stone-400;
+  }
+
+  /* Support for Firefox */
+  .premium-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #d6d3d1 transparent; /* stone-300 */
+  }
+}
