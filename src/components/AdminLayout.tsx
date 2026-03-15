@@ -326,7 +326,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 p-4 lg:p-8 xl:p-10 w-full overflow-x-hidden relative min-h-screen">
+      <main className="flex-1 min-w-0 w-full overflow-x-hidden relative min-h-screen">
         {/* Background blobs */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-orange-100/15 rounded-full blur-[120px] mix-blend-multiply"></div>
@@ -338,7 +338,7 @@ export default function AdminLayout() {
             <ServerCallsNotification />
           </div>
         )}
-        <div className="relative z-10 max-w-7xl mx-auto">
+        <div className="relative z-10 max-w-[1600px] mx-auto p-4 lg:p-8 xl:p-10">
           <Outlet />
         </div>
       </main>

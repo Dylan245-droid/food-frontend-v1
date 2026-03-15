@@ -128,20 +128,18 @@ export default function UsersPage() {
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-4 md:px-6 lg:px-8">
+    <div className="space-y-8 animate-in fade-in duration-700">
       {/* Premium Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-6 bg-white p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-6 bg-white p-4 sm:p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-30 pointer-events-none"></div>
 
         <div className="flex items-center gap-4 md:gap-6 relative z-10">
           <div className="bg-stone-900 p-3 md:p-4 rounded-2xl text-white shadow-2xl shadow-stone-200 shrink-0">
-            <Users className="w-6 h-6 md:w-8 md:h-8" />
+            <Users className="w-5 h-5 md:w-8 md:h-8" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Équipe</h1>
-            <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">
-              {currentCount} / {maxStaff} membres • Gestion des accès
-            </p>
+            <h1 className="text-base xs:text-xl sm:text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Staff & Clients</h1>
+            <p className="text-[10px] md:text-sm font-bold mt-2 truncate tracking-wide uppercase text-stone-400">Annuaire des utilisateurs</p>
           </div>
         </div>
 
@@ -325,6 +323,15 @@ export default function UsersPage() {
             )}
           </div>
 
+          <div className="flex items-center gap-3 relative z-10">
+          <div className="h-10 sm:h-12 px-4 bg-stone-50 border border-stone-100 rounded-2xl flex items-center gap-3">
+            <UsersIcon className="w-3.5 h-3.5 text-stone-400" />
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-stone-900">{usersData?.data.length || 0} Total</span>
+          </div>
+          <Button onClick={() => openModal()} className="h-10 sm:h-12 px-4 sm:px-6 bg-stone-900 hover:bg-black text-white rounded-2xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl shadow-stone-200 active:scale-95 transition-all">
+            <UserPlus className="w-3.5 h-3.5 mr-2" /> <span className="hidden xs:inline">Ajouter</span>
+          </Button>
+        </div>
           <div className="flex gap-4 pt-4">
             <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 h-16 bg-stone-50 text-stone-400 rounded-2xl font-black uppercase tracking-widest text-[10px]">
               Annuler

@@ -104,7 +104,7 @@ export default function AccountingPage() {
   const loading = loadingJournal || loadingLedger || loadingBalance || loadingChart;
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-4 md:px-6 lg:px-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
 
       {/* Premium Header */}
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-6 bg-white p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">

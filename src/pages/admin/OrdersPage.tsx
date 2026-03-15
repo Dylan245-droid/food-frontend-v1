@@ -249,11 +249,11 @@ export default function OrdersPage() {
     };
 
     return (
-        <div className="max-w-[1600px] mx-auto space-y-6 h-full flex flex-col px-4 md:px-6 lg:px-8 pb-10">
+        <div className="space-y-6 h-full flex flex-col">
             {!sessionLoading && <NoCashSessionAlert show={!hasActiveSession} />}
 
             {/* Premium Header */}
-            <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-6 bg-white p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+            <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 md:gap-6 bg-white p-4 sm:p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-30 pointer-events-none"></div>
 
                 <div className="flex items-center gap-4 md:gap-6 relative z-10">
@@ -261,35 +261,35 @@ export default function OrdersPage() {
                         <UtensilsCrossed className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Cuisine & Commandes</h1>
-                        <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">Gestion de flux en temps réel</p>
+                        <h1 className="text-base xs:text-xl sm:text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Cuisine & Commandes</h1>
+                        <p className="text-[10px] md:text-sm font-bold mt-2 truncate tracking-wide uppercase text-stone-400">Gestion de flux en temps réel</p>
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 relative z-10">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 relative z-10">
                     <div className="relative flex-1 sm:w-80">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Rechercher #ID, table, client..."
-                            className="w-full h-14 pl-12 pr-4 rounded-2xl bg-stone-50 border-none focus:ring-4 focus:ring-orange-100/50 text-xs font-black uppercase tracking-widest transition-all placeholder:text-stone-300"
+                            placeholder="Rechercher #ID, table..."
+                            className="w-full h-12 md:h-14 pl-12 pr-4 rounded-2xl bg-stone-50 border-none focus:ring-4 focus:ring-orange-100/50 text-xs font-black uppercase tracking-widest transition-all placeholder:text-stone-300"
                         />
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="grid grid-cols-2 sm:flex gap-2 shrink-0">
                         <button
                             onClick={() => setIsNewOrderModalOpen(true)}
-                            className="flex-1 sm:flex-none h-14 px-6 bg-stone-900 hover:bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            className="flex-1 sm:flex-none h-12 md:h-14 px-4 sm:px-6 bg-stone-900 hover:bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-xl shadow-stone-200 active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-3.5 h-3.5" />
                             <span>Nouvelle</span>
                         </button>
                         <button
                             onClick={() => setIsPickupModalOpen(true)}
-                            className="flex-1 sm:flex-none h-14 px-6 bg-white border border-stone-100 text-stone-900 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-sm hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center gap-2"
+                            className="flex-1 sm:flex-none h-12 md:h-14 px-4 sm:px-6 bg-white border border-stone-100 text-stone-900 rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-sm hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
-                            <ShoppingBag className="w-4 h-4" />
+                            <ShoppingBag className="w-3.5 h-3.5" />
                             <span>Retrait</span>
                         </button>
                     </div>

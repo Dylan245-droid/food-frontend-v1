@@ -39,14 +39,14 @@ export default function DashboardPage() {
     const activeOrders = pendingCount + inProgressCount;
 
     return (
-        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-700 pb-20 px-4 md:px-6 lg:px-8">
+        <div className="space-y-8 animate-in fade-in duration-700">
 
             {/* Premium Header - Stone Style */}
-            <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-6 bg-white p-6 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+            <div className="flex flex-col xl:flex-row justify-between items-stretch xl:items-center gap-6 bg-white p-4 sm:p-6 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-stone-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
                 <div className="relative z-10">
-                    <h1 className="text-2xl md:text-4xl font-black text-stone-900 tracking-tight leading-none italic uppercase underline decoration-stone-900/5 decoration-8 underline-offset-4">
+                    <h1 className="text-lg xs:text-2xl md:text-4xl font-black text-stone-900 tracking-tight leading-none italic uppercase underline decoration-stone-900/5 decoration-8 underline-offset-4">
                         {getGreeting()}, {user?.fullName?.split(' ')[0] || 'Chef'} 👋
                     </h1>
                     <p className="text-stone-400 text-xs md:text-sm font-bold mt-3 tracking-wide uppercase flex items-center gap-2">

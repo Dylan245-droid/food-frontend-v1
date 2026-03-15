@@ -200,33 +200,33 @@ export default function MenuPage() {
     };
 
     return (
-        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
+    <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-4 sm:p-5 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
 
                 <div className="relative z-10">
-                    <h1 className="text-2xl md:text-3xl font-black text-stone-900 flex items-center gap-4 font-display">
-                        <div className="bg-orange-500 p-2.5 rounded-2xl text-white shadow-lg shadow-orange-100">
-                            <ChefHat className="w-6 h-6 md:w-7 md:h-7" />
+                    <h1 className="text-base xs:text-xl md:text-3xl font-black text-stone-900 flex items-center gap-4 font-display">
+                        <div className="bg-orange-500 p-2 md:p-2.5 rounded-2xl text-white shadow-lg shadow-orange-100">
+                            <ChefHat className="w-5 h-5 md:w-7 md:h-7" />
                         </div>
                         La Carte <span className="text-stone-300 font-light hidden xs:inline">du Chef</span>
                     </h1>
-                    <p className="text-stone-400 text-sm font-bold mt-2 ml-1">Gérez vos plats et disponibilités</p>
+                    <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-2 ml-1 uppercase">Gérez vos plats et disponibilités</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto relative z-10">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 w-full lg:w-auto relative z-10">
                     {/* Search Bar */}
                     <div className="relative flex-1 sm:w-64">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 w-4 h-4" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 w-4 h-4" />
                         <input
                             type="text"
                             placeholder="Chercher un plat..."
-                            className="w-full h-12 pl-11 pr-4 bg-stone-50/50 border border-stone-100 rounded-2xl focus:border-orange-500 focus:bg-white outline-none transition-all shadow-inner font-medium text-sm"
+                            className="w-full h-12 md:h-12 pl-11 pr-4 bg-stone-50/50 border border-stone-100 rounded-2xl focus:border-orange-500 focus:bg-white outline-none transition-all shadow-inner font-bold text-xs uppercase"
                             value={searchQuery}
                             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                         />
                     </div>
-                    <Button onClick={handleOpenNew} className="bg-stone-900 hover:bg-stone-800 text-white shadow-xl shadow-stone-200 h-12 px-6 rounded-2xl font-black uppercase tracking-wider text-xs active:scale-95 transition-all">
+                    <Button onClick={handleOpenNew} className="bg-stone-900 hover:bg-stone-800 text-white shadow-xl shadow-stone-200 h-12 px-6 rounded-2xl font-black uppercase tracking-wider text-[10px] active:scale-95 transition-all">
                         <Plus className="w-4 h-4 mr-2" /> Nouveau Plat
                     </Button>
                 </div>

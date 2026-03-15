@@ -106,7 +106,7 @@ export default function ReservationsPage() {
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-4 md:px-6 lg:px-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
 
       {/* Premium Header */}
       <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-6 bg-white p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
@@ -117,7 +117,7 @@ export default function ReservationsPage() {
             <Calendar className="w-6 h-6 md:w-8 md:h-8" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Réservations</h1>
+            <h1 className="text-base sm:text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Réservations</h1>
             <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">
               {reservations.filter(r => r.status !== 'cancelled').length} actives • Planning de salle
             </p>

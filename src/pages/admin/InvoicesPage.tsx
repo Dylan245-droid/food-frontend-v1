@@ -115,23 +115,21 @@ export default function InvoicesPage() {
     };
 
     return (
-        <div className="max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500 pb-20 px-4 md:px-6 lg:px-8">
+        <div className="space-y-8 animate-in fade-in duration-500">
 
             {createPortal(<div id="printable-receipt"><Receipt order={receiptData} /></div>, document.body)}
 
             {/* Premium Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-6 bg-white p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-stone-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-20 pointer-events-none"></div>
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-6 bg-white p-4 sm:p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-stone-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
 
                 <div className="flex items-center gap-4 md:gap-6 relative z-10 text-left">
                     <div className="bg-stone-900 p-3 md:p-4 rounded-2xl text-white shadow-2xl shadow-stone-200 shrink-0">
-                        <FileText className="w-6 h-6 md:w-8 md:h-8" />
+                        <Receipt className="w-5 h-5 md:w-8 md:h-8" />
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Facturation</h1>
-                        <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">
-                            {invoicesData?.meta?.total || 0} Documents • Suivi des revenus
-                        </p>
+                        <h1 className="text-base sm:text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Facturation</h1>
+                        <p className="text-[10px] md:text-sm font-bold mt-2 truncate tracking-wide uppercase text-stone-400">Historique des transactions</p>
                     </div>
                 </div>
 
