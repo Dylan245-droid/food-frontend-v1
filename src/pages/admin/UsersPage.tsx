@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
-import { Plus, Pencil, Trash2, Upload, Users, AlertCircle, Phone, Mail, ShieldCheck, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, Users, AlertCircle, Phone, Mail, ShieldCheck, ChevronRight, Loader2, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getImageUrl, cn } from '../../lib/utils';
 import { toast } from 'sonner';
@@ -325,7 +325,7 @@ export default function UsersPage() {
 
           <div className="flex items-center gap-3 relative z-10">
           <div className="h-10 sm:h-12 px-4 bg-stone-50 border border-stone-100 rounded-2xl flex items-center gap-3">
-            <UsersIcon className="w-3.5 h-3.5 text-stone-400" />
+            <Users className="w-3.5 h-3.5 text-stone-400" />
             <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-stone-900">{usersData?.data.length || 0} Total</span>
           </div>
           <Button onClick={() => openModal()} className="h-10 sm:h-12 px-4 sm:px-6 bg-stone-900 hover:bg-black text-white rounded-2xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl shadow-stone-200 active:scale-95 transition-all">

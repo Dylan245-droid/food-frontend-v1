@@ -6,6 +6,7 @@ import api from '../../lib/api';
 import { Eye, EyeOff, Plus, Trash2, BookOpen, Utensils, PenTool, Search, ChefHat } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 import { cn, formatCurrency } from '../../lib/utils';
+import { useSearch } from '../../context/SearchContext';
 
 interface MenuItem {
     id: number;
@@ -37,9 +38,16 @@ export default function MenuPage() {
     const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
 
     const [activeCategory, setActiveCategory] = useState<number | 'all'>('all');
-    const [searchQuery, setSearchQuery] = useState('');
+    const { searchQuery, setSearchQuery, setShowSearch, setPlaceholder } = useSearch();
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 8;
+
+    // Init search context
+    useEffect(() => {
+        setShowSearch(true);
+        setPlaceholder("Chercher un délice...");
+        return () => setShowSearch(false);
+    }, []);
 
     // Init categoryId with first available category
     useEffect(() => {
@@ -201,7 +209,7 @@ export default function MenuPage() {
 
     return (
     <div className="space-y-8 animate-in fade-in duration-500">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-4 sm:p-5 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
+            <div className="flex justify-between items-center bg-white p-4 sm:p-5 md:p-8 rounded-[2.5rem] shadow-sm border border-stone-100 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50/50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50"></div>
 
                 <div className="relative z-10">
@@ -214,63 +222,69 @@ export default function MenuPage() {
                     <p className="text-stone-400 text-[10px] md:text-sm font-bold mt-2 ml-1 uppercase">Gérez vos plats et disponibilités</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 w-full lg:w-auto relative z-10">
-                    {/* Search Bar */}
-                    <div className="relative flex-1 sm:w-64">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300 w-4 h-4" />
-                        <input
-                            type="text"
-                            placeholder="Chercher un plat..."
-                            className="w-full h-12 md:h-12 pl-11 pr-4 bg-stone-50/50 border border-stone-100 rounded-2xl focus:border-orange-500 focus:bg-white outline-none transition-all shadow-inner font-bold text-xs uppercase"
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                        />
-                    </div>
+                <div className="relative z-10">
                     <Button onClick={handleOpenNew} className="bg-stone-900 hover:bg-stone-800 text-white shadow-xl shadow-stone-200 h-12 px-6 rounded-2xl font-black uppercase tracking-wider text-[10px] active:scale-95 transition-all">
-                        <Plus className="w-4 h-4 mr-2" /> Nouveau Plat
+                        <Plus className="w-4 h-4 mr-2" /> Nouveau
                     </Button>
                 </div>
             </div>
 
-            {/* Categories Tabs - Swipable */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-6 premium-scrollbar px-1 -mx-1">
-                <button
-                    onClick={() => { setActiveCategory('all'); setCurrentPage(1); }}
-                    className={`whitespace-nowrap px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === 'all'
-                        ? 'bg-stone-900 text-white shadow-lg shadow-stone-200 -translate-y-0.5'
-                        : 'bg-white text-stone-400 hover:text-stone-600 border border-stone-100'
-                        }`}
-                >
-                    Tout voir
-                </button>
-                {categoriesData?.data.map((cat) => (
+            {/* Search & Categories Section */}
+            <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 bg-white/40 backdrop-blur-md p-3 rounded-[2rem] border border-stone-100 shadow-sm">
+                {/* Categories Tabs - Swipable */}
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 premium-scrollbar flex-1">
                     <button
-                        key={cat.id}
-                        onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); }}
-                        className={`whitespace-nowrap px-6 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 group ${activeCategory === cat.id
-                            ? 'bg-orange-500 text-white shadow-lg shadow-orange-100 -translate-y-0.5'
-                            : 'bg-white text-stone-400 hover:text-orange-500 border border-stone-100 hover:bg-orange-50/30'
+                        onClick={() => { setActiveCategory('all'); setCurrentPage(1); }}
+                        className={`whitespace-nowrap px-6 py-3.5 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === 'all'
+                            ? 'bg-stone-900 text-white shadow-lg shadow-stone-200 -translate-y-0.5'
+                            : 'bg-white text-stone-400 hover:text-stone-600 border border-stone-50'
                             }`}
                     >
-                        {cat.name}
-                        {activeCategory === cat.id && (
-                            <span
-                                onClick={(e) => handleEditCategory(e, cat)}
-                                className="p-1.5 rounded-xl bg-orange-600 hover:bg-stone-900 text-white transition-colors"
-                                title="Modifier"
-                            >
-                                <PenTool className="w-3 h-3" />
-                            </span>
-                        )}
+                        Tout voir
                     </button>
-                ))}
-                <button
-                    onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsCategoryModalOpen(true); }}
-                    className="flex-shrink-0 w-10 h-10 rounded-2xl bg-stone-50 hover:bg-stone-100 text-stone-400 flex items-center justify-center transition-all border border-stone-100 active:scale-95"
-                    title="Ajouter"
-                >
-                    <Plus className="w-4 h-4" />
-                </button>
+                    {categoriesData?.data.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); }}
+                            className={`whitespace-nowrap px-6 py-3.5 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 group/cat ${activeCategory === cat.id
+                                ? 'bg-orange-500 text-white shadow-lg shadow-orange-100 -translate-y-0.5'
+                                : 'bg-white text-stone-400 hover:text-orange-500 border border-stone-50 hover:bg-orange-50/30'
+                                }`}
+                        >
+                            {cat.name}
+                            {activeCategory === cat.id && (
+                                <span
+                                    onClick={(e) => handleEditCategory(e, cat)}
+                                    className="p-1 rounded-lg bg-orange-600 hover:bg-stone-900 text-white transition-colors"
+                                    title="Modifier"
+                                >
+                                    <PenTool className="w-2.5 h-2.5" />
+                                </span>
+                            )}
+                        </button>
+                    ))}
+                    <button
+                        onClick={() => { setEditingCategory(null); setNewCategoryName(''); setIsCategoryModalOpen(true); }}
+                        className="flex-shrink-0 w-11 h-11 rounded-[1.1rem] bg-stone-50 hover:bg-stone-100 text-stone-400 flex items-center justify-center transition-all border border-stone-100 active:scale-95"
+                        title="Ajouter une catégorie"
+                    >
+                        <Plus className="w-5 h-5" />
+                    </button>
+                </div>
+
+                {/* Modern Search Bar Integrated */}
+                <div className="relative group flex-1 sm:min-w-[300px]">
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-stone-300 group-focus-within:text-orange-500 transition-colors">
+                        <Search className="w-4 h-4" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Chercher un délice..."
+                        className="w-full h-12 pl-12 pr-6 bg-white border border-stone-50 rounded-xl focus:border-orange-500 focus:bg-white focus:ring-4 focus:ring-orange-50 outline-none transition-all shadow-inner font-bold text-xs uppercase tracking-widest placeholder:text-stone-200"
+                        value={searchQuery}
+                        onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    />
+                </div>
             </div>
 
             {/* Items Grid */}

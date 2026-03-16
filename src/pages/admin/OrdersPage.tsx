@@ -21,6 +21,7 @@ import { NoCashSessionAlert } from '../../components/NoCashSessionAlert';
 import { formatCurrency, cn } from '../../lib/utils';
 import { NewOrderModal } from '../../components/admin/NewOrderModal';
 import { useSubscription } from '../../hooks/useSubscription';
+import { useSearch } from '../../context/SearchContext';
 
 interface MenuItem {
     name: string;
@@ -75,9 +76,9 @@ export default function OrdersPage() {
     const [verifyingOrder, setVerifyingOrder] = useState<Order | null>(null);
     const [verifyCode, setVerifyCode] = useState('');
     const [paymentModalOrder, setPaymentModalOrder] = useState<Order | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState<'all' | 'dine_in' | 'takeout'>('all');
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+    const { searchQuery, setSearchQuery, setShowSearch, setPlaceholder } = useSearch();
     const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [selectedOrderForAssignment, setSelectedOrderForAssignment] = useState<Order | null>(null);
@@ -87,6 +88,13 @@ export default function OrdersPage() {
 
     const { hasActiveSession, loading: sessionLoading } = useCashSession();
     const navigate = useNavigate();
+
+    // Init search context
+    useEffect(() => {
+        setShowSearch(true);
+        setPlaceholder("Rechercher #ID, table...");
+        return () => setShowSearch(false);
+    }, []);
 
     // Auto-refresh
     useEffect(() => {
@@ -266,39 +274,28 @@ export default function OrdersPage() {
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4 relative z-10">
-                    <div className="relative flex-1 sm:w-80">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300" />
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            placeholder="Rechercher #ID, table..."
-                            className="w-full h-12 md:h-14 pl-12 pr-4 rounded-2xl bg-stone-50 border-none focus:ring-4 focus:ring-orange-100/50 text-xs font-black uppercase tracking-widest transition-all placeholder:text-stone-300"
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 sm:flex gap-2 shrink-0">
-                        <button
-                            onClick={() => setIsNewOrderModalOpen(true)}
-                            className="flex-1 sm:flex-none h-12 md:h-14 px-4 sm:px-6 bg-stone-900 hover:bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-xl shadow-stone-200 active:scale-95 transition-all flex items-center justify-center gap-2"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Nouvelle</span>
-                        </button>
-                        <button
-                            onClick={() => setIsPickupModalOpen(true)}
-                            className="flex-1 sm:flex-none h-12 md:h-14 px-4 sm:px-6 bg-white border border-stone-100 text-stone-900 rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-sm hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center gap-2"
-                        >
-                            <ShoppingBag className="w-3.5 h-3.5" />
-                            <span>Retrait</span>
-                        </button>
-                    </div>
+                <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
+                    <button
+                        onClick={() => setIsNewOrderModalOpen(true)}
+                        className="h-12 md:h-14 px-4 sm:px-8 bg-stone-900 hover:bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-xl shadow-stone-200 active:scale-95 transition-all flex items-center justify-center gap-3"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span className="hidden xs:inline">Nouvelle</span>
+                        <span className="xs:hidden">Nouveau</span>
+                    </button>
+                    <button
+                        onClick={() => setIsPickupModalOpen(true)}
+                        className="h-12 md:h-14 px-4 sm:px-8 bg-white border border-stone-100 text-stone-900 rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-sm hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center gap-3"
+                    >
+                        <ShoppingBag className="w-4 h-4 text-orange-500" />
+                        <span>Retrait</span>
+                    </button>
                 </div>
             </div>
 
             {/* Filter Hub */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-                <div className="flex gap-2 overflow-x-auto pb-4 premium-scrollbar w-full sm:w-auto p-1">
+            <div className="flex flex-col lg:flex-row gap-4 justify-between items-stretch lg:items-center bg-white/40 backdrop-blur-md p-3 rounded-[2rem] border border-stone-100 shadow-sm">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 premium-scrollbar p-1">
                     <button
                         onClick={() => setTypeFilter('all')}
                         className={cn(
@@ -328,22 +325,36 @@ export default function OrdersPage() {
                     </button>
                 </div>
 
-                {hasKds && (
-                    <div className="bg-white p-1.5 rounded-2xl border border-stone-100 shadow-sm flex gap-1">
-                        <button
-                            onClick={() => setViewMode('kanban')}
-                            className={cn("p-2.5 rounded-xl transition-all", viewMode === 'kanban' ? "bg-stone-900 text-white shadow-lg" : "text-stone-300 hover:text-stone-500")}
-                        >
-                            <LayoutGrid className="w-5 h-5" />
-                        </button>
-                        <button
-                            onClick={() => setViewMode('list')}
-                            className={cn("p-2.5 rounded-xl transition-all", viewMode === 'list' ? "bg-stone-900 text-white shadow-lg" : "text-stone-300 hover:text-stone-500")}
-                        >
-                            <List className="w-5 h-5" />
-                        </button>
+                <div className="flex items-center gap-3">
+                    {/* Search Bar Integrated into Filter Hub */}
+                    <div className="relative group flex-1 sm:min-w-[300px]">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-300 group-focus-within:text-orange-500 transition-colors" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={e => { setSearchQuery(e.target.value); if (setShowSearch) setShowSearch(false); }}
+                            placeholder="Rechercher #ID, table..."
+                            className="w-full h-12 pl-12 pr-4 rounded-xl bg-white border border-stone-50 focus:ring-4 focus:ring-orange-100/50 text-xs font-black uppercase tracking-widest transition-all placeholder:text-stone-200 shadow-inner"
+                        />
                     </div>
-                )}
+
+                    {hasKds && (
+                        <div className="bg-white p-1 rounded-xl border border-stone-50 shadow-sm flex gap-1 shrink-0">
+                            <button
+                                onClick={() => setViewMode('kanban')}
+                                className={cn("p-2 rounded-lg transition-all", viewMode === 'kanban' ? "bg-stone-900 text-white shadow-lg" : "text-stone-300 hover:text-stone-500")}
+                            >
+                                <LayoutGrid className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? "bg-stone-900 text-white shadow-lg" : "text-stone-300 hover:text-stone-500")}
+                            >
+                                <List className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Views */}

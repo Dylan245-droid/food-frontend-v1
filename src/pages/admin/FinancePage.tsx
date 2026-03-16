@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useState } from 'react';
 import { useFetch } from '../../lib/useFetch';
-import { Loader2, Calendar, TrendingUp, DollarSign, ShoppingBag, Utensils, ArrowUpRight, Clock, CreditCard, PieChart as PieIcon, Calculator, Receipt, FileText, ChevronRight } from 'lucide-react';
+import { Loader2, Calendar, TrendingUp, DollarSign, ShoppingBag, Utensils, ArrowUpRight, Clock, CreditCard, PieChart as PieIcon, Calculator, Receipt, FileText, ChevronRight, LineChart } from 'lucide-react';
 import { useBranding } from '../../context/BrandingContext';
 import { FinancialReportPrintable } from '../../components/FinancialReportPrintable';
 import {

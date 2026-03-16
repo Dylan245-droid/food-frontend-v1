@@ -53,12 +53,14 @@ import FeaturesPage from './pages/saas/FeaturesPage';
 import ContactPage from './pages/saas/ContactPage';
 import GuidePage from './pages/saas/GuidePage';
 import { LegalMentionsPage, PrivacyPage, TermsPage } from './pages/saas/LegalPages';
+import { SearchProvider } from './context/SearchContext';
 
 export default function App() {
   return (
     <BrandingProvider>
-      <NotificationProvider>
-        <Toaster position="top-right" richColors closeButton />
+      <SearchProvider>
+        <NotificationProvider>
+          <Toaster position="top-right" richColors closeButton />
         <Routes>
           {/* SAAS Public Routes */}
           <Route path="/" element={<GoTchopLandingPage />} />
@@ -135,6 +137,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/admin" />} />
         </Routes>
       </NotificationProvider>
-    </BrandingProvider>
+    </SearchProvider>
+  </BrandingProvider>
   );
 }

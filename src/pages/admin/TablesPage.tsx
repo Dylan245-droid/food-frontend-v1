@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { PaymentModal } from '../../components/ui/PaymentModal';
 import api from '../../lib/api';
-import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Armchair, ChevronRight, Loader2, QrCode, Users } from 'lucide-react';
+import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Armchair, ChevronRight, Loader2, QrCode, Users, LayoutDashboard } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder, OrderItem } from '../../components/Receipt';
