@@ -10,11 +10,12 @@ interface FiafioPaymentModalProps {
     amount: number;
     cycle: 'MONTHLY' | 'YEARLY';
     onSuccess: () => void;
+    initialError?: string | null;
 }
 
 type PaymentStep = 'INPUT' | 'CONFIRM' | 'PROCESSING' | 'SUCCESS' | 'ERROR';
 
-export default function FiafioPaymentModal({ open, onClose, planName, amount, cycle, onSuccess }: FiafioPaymentModalProps) {
+export default function FiafioPaymentModal({ open, onClose, planName, amount, cycle, onSuccess, initialError }: FiafioPaymentModalProps) {
     const [step, setStep] = useState<PaymentStep>('INPUT');
     const [fiafioId, setFiafioId] = useState('');
     const [error, setError] = useState('');
@@ -25,7 +26,7 @@ export default function FiafioPaymentModal({ open, onClose, planName, amount, cy
         if (open) {
             setStep('INPUT');
             setFiafioId('');
-            setError('');
+            setError(initialError || '');
             setPollCount(0);
         }
     }, [open]);
@@ -53,6 +54,10 @@ export default function FiafioPaymentModal({ open, onClose, planName, amount, cy
                             onSuccess();
                             onClose();
                         }, 3000);
+                    } else if (res.data.fiafioMandateStatus === 'PAYMENT_FAILED') {
+                        setError("Mandat autorisé, mais le prélèvement initial a échoué (Solde insuffisant). Veuillez recharger votre compte Fiafio.");
+                        setStep('ERROR');
+                        clearInterval(interval);
                     }
                 } catch (e) {
                     console.error("Polling error", e);

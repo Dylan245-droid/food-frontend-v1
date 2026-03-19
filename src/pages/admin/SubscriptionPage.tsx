@@ -16,7 +16,7 @@ export default function SubscriptionPage() {
     // Modal State
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState<{ name: string, amount: number } | null>(null);
-    const [processingPlan, setProcessingPlan] = useState<string | null>(null);
+    const [initialError, setInitialError] = useState<string | null>(null);
 
     // Fetch real subscription data
     const { data: subscription, loading, refetch } = useFetch<any>('/admin/subscription');
@@ -27,34 +27,14 @@ export default function SubscriptionPage() {
             amount = baseAmount * 12 * 0.85; // 15% discount
         }
 
-        // ONE-CLICK OPTIMIZATION: If mandate is active, try to reactivate directly
-        if (subscription?.paymentMethod === 'FIAFIO_MANDATE' && subscription?.fiafioMandateStatus === 'ACTIVE') {
-            setProcessingPlan(planName);
-            try {
-                const res = await api.post('/admin/subscription/subscribe', {
-                    plan: planName.toUpperCase(),
-                    cycle: billingCycle
-                });
-
-                if (res.data.success && !res.data.approvalUrl) {
-                    showToast.success(res.data.message);
-                    refetch();
-                    await refreshUser();
-                    setProcessingPlan(null);
-                    return;
-                }
-            } catch (err: any) {
-                console.error("Optimized reactivation failed, falling back to modal", err);
-                if (err.response?.data?.code === 'DIRECT_DEBIT_FAILED') {
-                    showToast.warning(err.response.data.message);
-                }
-                // Fallback to modal flow below
-            }
-            setProcessingPlan(null);
-        }
 
         setSelectedPlan({ name: planName, amount });
         setShowPaymentModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowPaymentModal(false);
+        setInitialError(null);
     };
 
     const handlePaymentSuccess = async () => {
@@ -70,7 +50,7 @@ export default function SubscriptionPage() {
         }
 
         try {
-            const res = await api.delete('/api/admin/subscription/mandate');
+            const res = await api.delete('/admin/subscription/mandate');
             if (res.data.success) {
                 showToast.success(res.data.message);
                 refetch();
@@ -108,11 +88,12 @@ export default function SubscriptionPage() {
             {selectedPlan && (
                 <FiafioPaymentModal
                     open={showPaymentModal}
-                    onClose={() => setShowPaymentModal(false)}
+                    onClose={handleCloseModal}
                     planName={selectedPlan.name}
                     amount={selectedPlan.amount}
                     cycle={billingCycle}
                     onSuccess={handlePaymentSuccess}
+                    initialError={initialError}
                 />
             )}
 
@@ -266,7 +247,7 @@ export default function SubscriptionPage() {
                     </div>
                     <button
                         onClick={() => handleSubscribeClick('ESSENTIAL', 35000)}
-                        disabled={isCurrent('ESSENTIAL') || !!processingPlan}
+                        disabled={isCurrent('ESSENTIAL')}
                         className={cn(
                             "w-full py-4 rounded-xl border font-bold transition-colors flex items-center justify-center gap-2",
                             isCurrent('ESSENTIAL')
@@ -274,9 +255,7 @@ export default function SubscriptionPage() {
                                 : "border-stone-200 text-stone-900 hover:bg-stone-50"
                         )}
                     >
-                        {processingPlan === 'ESSENTIAL' ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> Réactivation en cours...</>
-                        ) : isCurrent('ESSENTIAL') ? 'Plan Actuel' : isPlanMatchOnly('ESSENTIAL') ? 'Réactiver Essentiel' : 'Choisir Essentiel'}
+                        {isCurrent('ESSENTIAL') ? 'Plan Actuel' : isPlanMatchOnly('ESSENTIAL') ? 'Réactiver Essentiel' : 'Choisir Essentiel'}
                     </button>
                 </div>
 
@@ -323,7 +302,7 @@ export default function SubscriptionPage() {
                     </div>
                     <button
                         onClick={() => handleSubscribeClick('PRO', 65000)}
-                        disabled={isCurrent('PRO') || !!processingPlan}
+                        disabled={isCurrent('PRO')}
                         className={cn(
                             "w-full py-4 rounded-xl font-bold transition-colors shadow-lg flex items-center justify-center gap-2",
                             isCurrent('PRO')
@@ -331,9 +310,7 @@ export default function SubscriptionPage() {
                                 : "bg-orange-600 text-white hover:bg-orange-500 shadow-orange-900/20"
                         )}
                     >
-                        {processingPlan === 'PRO' ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> Réactivation en cours...</>
-                        ) : isCurrent('PRO') ? 'Plan Actuel' : isPlanMatchOnly('PRO') ? 'Réactiver Pro' : 'Choisir Pro'}
+                        {isCurrent('PRO') ? 'Plan Actuel' : isPlanMatchOnly('PRO') ? 'Réactiver Pro' : 'Choisir Pro'}
                     </button>
                 </div>
 
@@ -369,7 +346,7 @@ export default function SubscriptionPage() {
                     </div>
                     <button
                         onClick={() => handleSubscribeClick('ELITE', 150000)}
-                        disabled={isCurrent('ELITE') || !!processingPlan}
+                        disabled={isCurrent('ELITE')}
                         className={cn(
                             "w-full py-4 rounded-xl border font-bold transition-colors flex items-center justify-center gap-2",
                             isCurrent('ELITE')
@@ -377,9 +354,7 @@ export default function SubscriptionPage() {
                                 : "border-stone-200 text-stone-900 hover:bg-stone-50"
                         )}
                     >
-                        {processingPlan === 'ELITE' ? (
-                            <><Loader2 className="w-4 h-4 animate-spin" /> Réactivation en cours...</>
-                        ) : isCurrent('ELITE') ? 'Plan Actuel' : isPlanMatchOnly('ELITE') ? 'Réactiver Élite' : 'Contacter Ventes'}
+                        {isCurrent('ELITE') ? 'Plan Actuel' : isPlanMatchOnly('ELITE') ? 'Réactiver Élite' : 'Contacter Ventes'}
                     </button>
                 </div>
             </div>
