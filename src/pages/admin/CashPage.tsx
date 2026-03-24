@@ -357,22 +357,26 @@ export default function CashPage() {
               <div className="max-h-64 overflow-y-auto">
                 {selectedSession.movements?.length > 0 ? (
                   <div className="divide-y divide-stone-50">
-                    {selectedSession.movements.map((mv: any) => (
-                      <div key={mv.id} className="p-5 flex justify-between items-center hover:bg-stone-50/50 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", mv.type === 'income' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600")}>
-                            {mv.type === 'income' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-black text-stone-900 text-[11px] uppercase tracking-tight truncate max-w-[150px] leading-none mb-1.5">{mv.description || mv.category}</p>
-                            <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">{new Date(mv.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                          </div>
-                        </div>
-                        <span className={cn("font-black text-xs", mv.type === 'income' ? "text-emerald-600" : "text-red-500")}>
-                          {mv.type === 'income' ? '+' : '-'}{formatCurrency(mv.amount)}
-                        </span>
-                      </div>
-                    ))}
+                                    {selectedSession.movements
+                                        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                                        .map((mv: any) => (
+                                            <div key={mv.id} className="p-5 flex justify-between items-center hover:bg-stone-50/50 transition-colors">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-sm", mv.type === 'income' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600")}>
+                                                        {mv.type === 'income' ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="font-black text-stone-900 text-[11px] uppercase tracking-tight truncate max-w-[150px] leading-none mb-1.5">{mv.description || mv.category}</p>
+                                                        <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest">
+                                                            {new Date(mv.createdAt).toLocaleString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <span className={cn("font-black text-xs", mv.type === 'income' ? "text-emerald-600" : "text-red-500")}>
+                                                    {mv.type === 'income' ? '+' : '-'}{formatCurrency(mv.amount)}
+                                                </span>
+                                            </div>
+                                        ))}
                   </div>
                 ) : (
                   <div className="p-12 text-center text-[10px] font-black text-stone-300 uppercase tracking-widest italic">Aucun mouvement enregistré</div>

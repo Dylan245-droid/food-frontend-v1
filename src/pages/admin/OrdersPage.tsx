@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
 import {
-    ChefHat, Check, Clock, Search, Plus, UtensilsCrossed, ShoppingBag, Printer, XCircle, LayoutGrid, List, BellRing, Flame, User, ChevronRight, AlertCircle, MapPin, Phone
+    ChefHat, Check, Clock, Search, Plus, UtensilsCrossed, ShoppingBag, Printer, XCircle, LayoutGrid, List, BellRing, Flame, User, ChevronRight, AlertCircle, MapPin, Phone, Play
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentModal } from '../../components/ui/PaymentModal';
@@ -443,7 +443,6 @@ export default function OrdersPage() {
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-stone-50/50 text-stone-400 sticky top-0 z-10">
                                     <tr>
-                                        <th className="p-6 font-black uppercase tracking-widest text-[10px]">#ID</th>
                                         <th className="p-6 font-black uppercase tracking-widest text-[10px]">Origine</th>
                                         <th className="p-6 font-black uppercase tracking-widest text-[10px]">Client / Table</th>
                                         <th className="p-6 font-black uppercase tracking-widest text-[10px]">Statut</th>
@@ -453,7 +452,6 @@ export default function OrdersPage() {
                                 <tbody className="divide-y divide-stone-50">
                                     {filterOrders(data?.data || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(order => (
                                         <tr key={order.id} className="hover:bg-stone-50/30 transition-colors group">
-                                            <td className="p-6 font-black text-stone-900">#{order.dailyNumber}</td>
                                             <td className="p-6">
                                                 <span className={cn(
                                                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
@@ -464,23 +462,79 @@ export default function OrdersPage() {
                                             </td>
                                             <td className="p-6">
                                                 <p className="font-black text-stone-900 uppercase text-xs">{order.table?.name || order.clientName || '-'}</p>
-                                                {order.pickupCode && <p className="text-[10px] font-bold text-stone-300 mt-1">{order.pickupCode}</p>}
+                                                {order.pickupCode ? (
+                                                    <p className="text-[10px] font-bold text-stone-300 mt-1">{order.pickupCode} • #{order.dailyNumber}</p>
+                                                ) : (
+                                                    <p className="text-[10px] font-bold text-stone-300 mt-1">#{order.dailyNumber}</p>
+                                                )}
                                             </td>
                                             <td className="p-6">
                                                 <span className={cn(
                                                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                    order.status === 'pending' ? "text-yellow-600" : order.status === 'in_progress' ? "text-orange-600" : order.status === 'delivered' ? "text-green-600" : "text-stone-400"
+                                                    order.status === 'pending' ? "text-yellow-600" : 
+                                                    order.status === 'in_progress' ? "text-orange-600" : 
+                                                    order.status === 'delivered' ? "text-green-600" : 
+                                                    order.status === 'paid' ? "text-stone-400" : "text-stone-300"
                                                 )}>
-                                                    {order.status}
+                                                    {order.status === 'pending' ? 'EN ATTENTE' :
+                                                     order.status === 'in_progress' ? 'AU FOURNEAU' :
+                                                     order.status === 'delivered' ? 'PRÊT' :
+                                                     order.status === 'paid' ? 'PAYÉ' :
+                                                     order.status === 'cancelled' ? 'ANNULÉ' : order.status}
                                                 </span>
                                             </td>
                                             <td className="p-6 text-right">
-                                                <button
-                                                    onClick={() => handlePayAndPrint(order)}
-                                                    className="w-10 h-10 rounded-xl bg-stone-50 text-stone-400 hover:bg-stone-900 hover:text-white transition-all inline-flex items-center justify-center p-0"
-                                                >
-                                                    <ChevronRight className="w-5 h-5" />
-                                                </button>
+                                                <div className="flex justify-end gap-2">
+                                                    {order.status === 'pending' && (
+                                                        <button
+                                                            onClick={() => handleStatusChange(order.id, 'in_progress')}
+                                                            title="Lancer la préparation"
+                                                            className="w-10 h-10 rounded-xl bg-stone-900 text-white hover:bg-black transition-all inline-flex items-center justify-center p-0 shadow-lg shadow-stone-200"
+                                                        >
+                                                            <Play className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {order.status === 'in_progress' && (
+                                                        <button
+                                                            onClick={() => handleStatusChange(order.id, 'delivered')}
+                                                            title="Marquer comme prêt"
+                                                            className="w-10 h-10 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition-all inline-flex items-center justify-center p-0 shadow-lg shadow-orange-100"
+                                                        >
+                                                            <ChefHat className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {order.status === 'delivered' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                if (order.type === 'takeout') handlePayAndPrint(order);
+                                                                else if (order.type === 'delivery') handleDeliveryHandover(order);
+                                                            }}
+                                                            title={order.type === 'takeout' ? 'Encaisser et remettre' : 'Confier au livreur'}
+                                                            className="w-10 h-10 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all inline-flex items-center justify-center p-0 shadow-lg shadow-green-100"
+                                                        >
+                                                            <Check className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {order.status === 'paid' && (
+                                                        <button
+                                                            onClick={() => handlePayAndPrint(order)}
+                                                            title="Réimprimer le ticket"
+                                                            className="w-10 h-10 rounded-xl bg-stone-100 text-stone-400 hover:bg-stone-200 transition-all inline-flex items-center justify-center p-0"
+                                                        >
+                                                            <Printer className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {/* Always provide a way to open details if needed, or keep it simple */}
+                                                    {['pending', 'in_progress', 'delivered'].includes(order.status) && (
+                                                        <button
+                                                            onClick={() => handlePayAndPrint(order)}
+                                                            title="Détails / Paiement direct"
+                                                            className="w-10 h-10 rounded-xl bg-stone-50 text-stone-300 hover:text-stone-900 transition-all inline-flex items-center justify-center p-0"
+                                                        >
+                                                            <ChevronRight className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
