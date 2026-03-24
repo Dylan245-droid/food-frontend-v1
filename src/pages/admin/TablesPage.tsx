@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { PaymentModal } from '../../components/ui/PaymentModal';
 import api from '../../lib/api';
-import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Armchair, ChevronRight, Loader2, QrCode, Users, LayoutDashboard } from 'lucide-react';
+import { Plus, RefreshCw, Trash2, UserCheck, MapPin, Download, ExternalLink, Unlock, User, Printer, AlertCircle, Armchair, ChevronRight, Loader2, QrCode, Users, LayoutDashboard, Pencil } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Receipt } from '../../components/Receipt';
 import type { ReceiptOrder, OrderItem } from '../../components/Receipt';
@@ -38,6 +38,7 @@ interface Table {
   deliveredCount: number;
   canBeFreed: boolean;
   assignedServer: AssignedServer | null;
+  number: number;
 }
 
 interface UserData {
@@ -86,12 +87,20 @@ export default function TablesPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/admin/tables', formData);
+      if (selectedTable) {
+        await api.patch(`/admin/tables/${selectedTable.id}`, formData);
+        toast.success("Table mise à jour");
+      } else {
+        await api.post('/admin/tables', formData);
+        toast.success("Table créée");
+      }
       setIsModalOpen(false);
       setFormData({ name: '', zone: 'Intérieur', capacity: 4 });
+      setSelectedTable(null);
       refetch();
-      toast.success("Table créée");
-    } catch { toast.error('Erreur lors de la création'); }
+    } catch { 
+      toast.error(selectedTable ? 'Erreur lors de la mise à jour' : 'Erreur lors de la création'); 
+    }
     finally { setSubmitting(false); }
   };
 
@@ -147,6 +156,27 @@ export default function TablesPage() {
     } catch { toast.error('Erreur client'); }
   };
 
+  const handleDelete = async (tableId: number) => {
+    if (!confirm('Supprimer cette table ?')) return;
+    try {
+      await api.delete(`/admin/tables/${tableId}`);
+      toast.success('Table supprimée');
+      refetch();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Erreur lors de la suppression');
+    }
+  };
+
+  const openEditModal = (table: Table) => {
+    setSelectedTable(table);
+    setFormData({
+      name: table.name,
+      zone: table.zone,
+      capacity: table.capacity
+    });
+    setIsModalOpen(true);
+  };
+
   useEffect(() => {
     if (receiptOrder) {
       setTimeout(() => { window.print(); setReceiptOrder(null); }, 100);
@@ -196,114 +226,139 @@ export default function TablesPage() {
         )}
       </div>
 
-      {/* Tables Grid - Surgery View */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-        {data?.data.map((table, idx) => (
-          <div
-            key={table.id}
-            className={cn(
-              "group rounded-[2.5rem] p-6 border-2 transition-all duration-500 relative flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 shadow-sm",
-              table.isOccupied
-                ? "bg-stone-900 border-stone-900 text-white shadow-2xl shadow-stone-200"
-                : "bg-white border-stone-100 text-stone-900 hover:border-stone-900 hover:-translate-y-1"
-            )}
-            style={{ animationDelay: `${idx * 40}ms` }}
-          >
-            {/* Status Indicator */}
-            <div className={cn(
-              "absolute top-6 right-6 w-3 h-3 rounded-full",
-              table.isOccupied ? "bg-orange-500 animate-pulse shadow-[0_0_12px_rgba(249,115,22,0.8)]" : "bg-emerald-500"
-            )}></div>
-
-            <div className="flex flex-col mb-8 relative z-10">
-              <h3 className="text-3xl font-black font-display uppercase tracking-tight mb-2 leading-none">{table.name}</h3>
-              <div className={cn(
-                "flex items-center gap-3 text-[10px] font-black uppercase tracking-widest",
-                table.isOccupied ? "text-stone-500" : "text-stone-400"
-              )}>
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="w-3 h-3" />
-                  {table.zone}
-                </div>
-                <span>•</span>
-                <div className="flex items-center gap-1.5">
-                  <Users className="w-3 h-3" />
-                  {table.capacity}p
-                </div>
+      {/* Tables Grouped by Zone */}
+      {!loading && data?.data && (
+        <div className="space-y-16">
+          {Object.entries(
+            data.data.reduce((acc, table) => {
+              const zone = table.zone || 'Intérieur';
+              if (!acc[zone]) acc[zone] = [];
+              acc[zone].push(table);
+              return acc;
+            }, {} as Record<string, typeof data.data>)
+          ).map(([zone, tables]) => (
+            <div key={zone} className="space-y-8">
+              <div className="flex items-center gap-4 px-4">
+                <div className="h-px flex-1 bg-stone-100"></div>
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-300">{zone}</h2>
+                <div className="h-px flex-1 bg-stone-100"></div>
               </div>
-            </div>
 
-            <div className="flex-1 mb-8">
-              {table.isOccupied ? (
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: 'ATT', val: table.pendingCount, color: 'text-orange-400' },
-                    { label: 'COURS', val: table.inProgressCount, color: 'text-blue-400' },
-                    { label: 'SERVI', val: table.deliveredCount, color: 'text-emerald-400' }
-                  ].map((stat) => (
-                    <div key={stat.label} className="bg-white/5 rounded-2xl p-3 flex flex-col items-center justify-center border border-white/5">
-                      <span className={cn("text-lg font-black leading-none mb-1", stat.color)}>{stat.val}</span>
-                      <span className="text-[8px] font-black text-stone-500 uppercase tracking-widest">{stat.label}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="h-full flex flex-col justify-center items-center opacity-20 group-hover:opacity-100 transition-all duration-700">
-                  <Armchair className="w-12 h-12 text-stone-200 mb-2 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em]">Disponible</span>
-                </div>
-              )}
-            </div>
-
-            <div className="mt-auto space-y-3">
-              {table.isOccupied && (
-                <div className="flex items-center gap-3 bg-white/5 px-4 py-3 rounded-xl border border-white/5">
-                  <div className="w-6 h-6 rounded-lg bg-orange-500/10 flex items-center justify-center">
-                    <User className="w-3.5 h-3.5 text-orange-500" />
-                  </div>
-                  <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest truncate">
-                    {table.assignedServer?.fullName || 'Non assigné'}
-                  </span>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                {table.isOccupied ? (
-                  <>
-                    <button onClick={() => handlePrintBill(table)} className="flex-1 bg-white/10 hover:bg-white text-white hover:text-stone-900 h-11 rounded-xl flex items-center justify-center transition-all border border-white/10">
-                      <Printer className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleCollectPayment(table)} className="flex-[3] bg-orange-500 hover:bg-orange-600 text-white h-11 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-orange-900/20 active:scale-95 transition-all">
-                      Payer
-                    </button>
-                    <button onClick={() => handleFreeTable(table.id)} className="flex-1 bg-white/5 hover:bg-red-500/20 text-stone-500 hover:text-red-500 h-11 rounded-xl flex items-center justify-center transition-all border border-white/5">
-                      <Unlock className="w-4 h-4" />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => openQrModal(table)} className="flex-[3] bg-stone-900 group-hover:bg-black text-white h-11 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all border border-stone-800">
-                      <QrCode className="w-4 h-4 text-orange-400" />
-                      QR Link
-                    </button>
-                    <button onClick={() => setSelectedTable(table) || setIsAssignModalOpen(true)} className="flex-1 bg-stone-50 text-stone-400 hover:text-stone-900 hover:bg-stone-100 h-11 rounded-xl flex items-center justify-center transition-all">
-                      <UserCheck className="w-4 h-4" />
-                    </button>
-                    {!isMyTables && (
-                      <button onClick={() => handleDelete(table.id)} className="flex-1 bg-stone-50 text-stone-300 hover:text-red-500 hover:bg-red-50 h-11 rounded-xl flex items-center justify-center transition-all">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+                {tables.map((table, idx) => (
+                  <div
+                    key={table.id}
+                    className={cn(
+                      "group rounded-[2.5rem] p-6 border-2 transition-all duration-500 relative flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 shadow-sm",
+                      table.isOccupied
+                        ? "bg-stone-900 border-stone-900 text-white shadow-2xl shadow-stone-200"
+                        : "bg-white border-stone-100 text-stone-900 hover:border-stone-900 hover:-translate-y-1"
                     )}
-                  </>
-                )}
+                    style={{ animationDelay: `${idx * 40}ms` }}
+                  >
+                    {/* Status Indicator */}
+                    <div className={cn(
+                      "absolute top-6 right-6 w-3 h-3 rounded-full",
+                      table.isOccupied ? "bg-orange-500 animate-pulse shadow-[0_0_12px_rgba(249,115,22,0.8)]" : "bg-emerald-500"
+                    )}></div>
+
+                    <div className="flex flex-col mb-8 relative z-10">
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <span className="text-stone-400 font-bold text-xs">#{table.number}</span>
+                        <h3 className="text-3xl font-black font-display uppercase tracking-tight leading-none">{table.name}</h3>
+                      </div>
+                      <div className={cn(
+                        "flex items-center gap-3 text-[10px] font-black uppercase tracking-widest",
+                        table.isOccupied ? "text-stone-500" : "text-stone-400"
+                      )}>
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="w-3 h-3" />
+                          {table.zone}
+                        </div>
+                        <span>•</span>
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-3 h-3" />
+                          {table.capacity}p
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 mb-8">
+                      {table.isOccupied ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { label: 'ATT', val: table.pendingCount, color: 'text-orange-400' },
+                            { label: 'COURS', val: table.inProgressCount, color: 'text-blue-400' },
+                            { label: 'SERVI', val: table.deliveredCount, color: 'text-emerald-400' }
+                          ].map((stat) => (
+                            <div key={stat.label} className="bg-white/5 rounded-2xl p-3 flex flex-col items-center justify-center border border-white/5">
+                              <span className={cn("text-lg font-black leading-none mb-1", stat.color)}>{stat.val}</span>
+                              <span className="text-[8px] font-black text-stone-500 uppercase tracking-widest">{stat.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="h-full flex flex-col justify-center items-center opacity-20 group-hover:opacity-100 transition-all duration-700">
+                          <Armchair className="w-12 h-12 text-stone-200 mb-2 group-hover:scale-110 transition-transform" />
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em]">Disponible</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-auto space-y-3">
+                      <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${table.isOccupied ? 'bg-white/5 border-white/5' : 'bg-stone-50 border-stone-100'}`}>
+                        <div className="w-6 h-6 rounded-lg bg-orange-500/10 flex items-center justify-center">
+                          <User className="w-3.5 h-3.5 text-orange-500" />
+                        </div>
+                        <span className={`text-[10px] font-black uppercase tracking-widest truncate ${table.isOccupied ? 'text-stone-400' : 'text-stone-500'}`}>
+                          {table.assignedServer?.fullName || 'Non assigné'}
+                        </span>
+                      </div>
+
+                      <div className="flex gap-2">
+                        {table.isOccupied ? (
+                          <>
+                            <button onClick={() => handlePrintBill(table)} className="flex-1 bg-white/10 hover:bg-white text-white hover:text-stone-900 h-11 rounded-xl flex items-center justify-center transition-all border border-white/10">
+                              <Printer className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => { setSelectedTable(table); setIsAssignModalOpen(true); }} className="flex-1 bg-white/10 hover:bg-white text-white hover:text-stone-900 h-11 rounded-xl flex items-center justify-center transition-all border border-white/10">
+                              <UserCheck className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleCollectPayment(table)} className="flex-[3] bg-orange-500 hover:bg-orange-600 text-white h-11 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-orange-900/20 active:scale-95 transition-all">
+                              Payer
+                            </button>
+                            <button onClick={() => handleFreeTable(table.id)} className="flex-1 bg-white/5 hover:bg-red-500/20 text-stone-500 hover:text-red-500 h-11 rounded-xl flex items-center justify-center transition-all border border-white/5">
+                              <Unlock className="w-4 h-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={() => openQrModal(table)} className="flex-[3] bg-stone-900 group-hover:bg-black text-white h-11 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all border border-stone-800">
+                              <QrCode className="w-4 h-4 text-orange-400" />
+                              QR Link
+                            </button>
+                            <button onClick={() => openEditModal(table)} className="flex-1 bg-stone-50 text-stone-400 hover:text-stone-900 hover:bg-stone-100 h-11 rounded-xl flex items-center justify-center transition-all">
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            {!isMyTables && (
+                              <button onClick={() => handleDelete(table.id)} className="flex-1 bg-stone-50 text-stone-300 hover:text-red-500 hover:bg-red-50 h-11 rounded-xl flex items-center justify-center transition-all">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Modals - Standard System Styling */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nouvelle Table">
+      <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelectedTable(null); }} title={selectedTable ? 'Modifier Table' : 'Nouvelle Table'}>
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <Input label="NOM DE LA TABLE" placeholder="Ex: Terrasse 1" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required className="h-14 font-black uppercase tracking-widest xs:text-sm" />
           <div className="space-y-2">
@@ -316,8 +371,10 @@ export default function TablesPage() {
           </div>
           <Input label="CAPACITÉ (COUVERTURES)" type="number" min={1} value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })} required className="h-14 font-black uppercase tracking-widest text-xs" />
           <div className="flex gap-4 pt-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 h-16 bg-stone-50 text-stone-400 rounded-2xl font-black uppercase tracking-widest text-[10px]">Annuler</button>
-            <button type="submit" disabled={submitting} className="flex-1 h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">Créer</button>
+            <button type="button" onClick={() => { setIsModalOpen(false); setSelectedTable(null); }} className="flex-1 h-16 bg-stone-50 text-stone-400 rounded-2xl font-black uppercase tracking-widest text-[10px]">Annuler</button>
+            <button type="submit" disabled={submitting} className="flex-1 h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">
+              {selectedTable ? 'Mettre à jour' : 'Créer'}
+            </button>
           </div>
         </form>
       </Modal>
