@@ -23,9 +23,11 @@ export default function SettingsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingHero, setUploadingHero] = useState(false);
   const [locating, setLocating] = useState(false);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const heroFileInputRef = useRef<HTMLInputElement>(null);
 
   const currentYear = new Date().getFullYear();
   const generatedFooterText = `© ${currentYear} ${formData.name || 'Mon Restaurant'}. Tous droits réservés.`;
@@ -85,6 +87,21 @@ export default function SettingsPage() {
       toast.success('Logo mis à jour !');
     } catch { toast.error("Erreur lors de l'upload du logo"); }
     finally { setUploading(false); }
+  };
+
+  const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+    setUploadingHero(true);
+    try {
+      const res = await api.post('/admin/upload-hero', uploadData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const fullUrl = res.data.url.startsWith('http') ? res.data.url : `${BASE_URL}${res.data.url}`;
+      handleChange('heroImage', `${fullUrl}?t=${Date.now()}`);
+      toast.success('Image de fond mise à jour !');
+    } catch { toast.error("Erreur lors de l'upload de l'image"); }
+    finally { setUploadingHero(false); }
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -232,6 +249,35 @@ export default function SettingsPage() {
                 >
                   {uploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
                   Changer Logo
+                </Button>
+              </div>
+            </div>
+
+            {/* Hero Image Upload */}
+            <div className="bg-stone-50 p-6 md:p-8 rounded-3xl border border-stone-100 flex flex-col sm:flex-row gap-8 items-center mt-8">
+              <div
+                className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] bg-white border-2 border-dashed border-stone-200 flex items-center justify-center overflow-hidden shrink-0 group/hero cursor-pointer relative"
+                onClick={() => heroFileInputRef.current?.click()}
+              >
+                {formData.heroImage ? (
+                  <img src={formData.heroImage} alt="Hero" className="w-full h-full object-cover group-hover/hero:scale-110 transition-transform duration-700" />
+                ) : <ImageIcon className="w-10 h-10 text-stone-200" />}
+                <div className="absolute inset-0 bg-stone-900/40 flex items-center justify-center opacity-0 group-hover/hero:opacity-100 transition-opacity backdrop-blur-sm">
+                  <Upload className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h4 className="font-black text-stone-900 uppercase tracking-widest text-xs mb-2">Image de Fond (Background)</h4>
+                <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest leading-relaxed mb-6">Image d'arrière-plan affichée sur votre page d'accueil. Recommandé : 1920×1080px.</p>
+                <input type="file" ref={heroFileInputRef} onChange={handleHeroUpload} accept="image/*" className="hidden" />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => heroFileInputRef.current?.click()}
+                  className="h-12 px-8 rounded-xl bg-white border-stone-200 text-stone-900 font-black uppercase tracking-widest text-[9px] shadow-sm hover:shadow-md transition-all"
+                >
+                  {uploadingHero ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                  Changer Image
                 </Button>
               </div>
             </div>

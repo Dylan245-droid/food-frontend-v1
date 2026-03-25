@@ -408,10 +408,10 @@ export default function OrdersPage() {
                                     key={order.id}
                                     order={order}
                                     onAction={() => {
-                                        if (order.type === 'takeout') handlePayAndPrint(order);
-                                        else if (order.type === 'delivery') handleDeliveryHandover(order);
+                                        if (order.type === 'delivery') handleDeliveryHandover(order);
+                                        else handlePayAndPrint(order); // dine_in & takeout
                                     }}
-                                    actionLabel={order.type === 'takeout' ? 'REMETTRE' : (order.type === 'delivery' && !order.deliveryStatus?.includes('assigned') ? 'CONFIER' : undefined)}
+                                    actionLabel={order.type === 'takeout' ? 'REMETTRE' : order.type === 'dine_in' ? 'ENCAISSER' : (order.type === 'delivery' && !order.deliveryStatus?.includes('assigned') ? 'CONFIER' : undefined)}
                                     onSecondaryAction={order.type === 'delivery' ? () => handlePrintOnly(order) : undefined}
                                     secondaryActionLabel={order.type === 'delivery' ? 'TICKET' : undefined}
                                     variant="delivered"
@@ -506,10 +506,10 @@ export default function OrdersPage() {
                                                     {order.status === 'delivered' && (
                                                         <button
                                                             onClick={() => {
-                                                                if (order.type === 'takeout') handlePayAndPrint(order);
-                                                                else if (order.type === 'delivery') handleDeliveryHandover(order);
+                                                                if (order.type === 'delivery') handleDeliveryHandover(order);
+                                                                else handlePayAndPrint(order);
                                                             }}
-                                                            title={order.type === 'takeout' ? 'Encaisser et remettre' : 'Confier au livreur'}
+                                                            title={order.type === 'takeout' ? 'Remettre la commande' : order.type === 'dine_in' ? 'Encaisser (Sur place)' : 'Confier au livreur'}
                                                             className="w-10 h-10 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-all inline-flex items-center justify-center p-0 shadow-lg shadow-green-100"
                                                         >
                                                             <Check className="w-4 h-4" />

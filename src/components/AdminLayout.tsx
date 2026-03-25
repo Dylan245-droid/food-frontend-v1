@@ -8,7 +8,7 @@ import { useSubscription } from '../hooks/useSubscription';
 import {
   LayoutDashboard, Users, LogOut, Bell, TrendingUp, X, ChefHat, Settings,
   Banknote, ArrowRightLeft, ExternalLink, CreditCard, UtensilsCrossed, Truck,
-  Grid2X2, CalendarCheck, Receipt, Calculator, ScrollText, Coffee, Menu, ChevronLeft, ChevronRight
+  Grid2X2, CalendarCheck, Receipt, Calculator, ScrollText, Coffee, Menu, ChevronLeft, ChevronRight, Package
 } from 'lucide-react';
 import type { FeatureKey } from '../hooks/useSubscription';
 import { cn, getImageUrl } from '../lib/utils';
@@ -98,6 +98,7 @@ export default function AdminLayout() {
     { icon: Grid2X2, label: 'Salles & Tables', path: '/admin/tables', roles: ['super_admin', 'admin', 'salle'], group: 'main' },
     { icon: CalendarCheck, label: 'Réservations', path: '/admin/reservations', roles: ['super_admin', 'admin', 'salle'], feature: 'reservations_enabled', group: 'main' },
     { icon: Users, label: 'Équipe', path: '/admin/users', roles: ['super_admin', 'admin'], group: 'main' },
+    { icon: Package, label: 'Stocks', path: '/admin/stock', roles: ['super_admin', 'admin'], feature: 'stock_enabled', group: 'main' },
   ];
 
   if (user?.role === 'super_admin' || user?.role === 'admin') {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
-import { ShoppingBag, Truck, ArrowRight, ArrowLeft, Plus, Minus, Check, Copy, Loader2 } from 'lucide-react';
+import { ShoppingBag, Truck, UtensilsCrossed, ArrowRight, ArrowLeft, Plus, Minus, Check, Copy, Loader2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 import { formatCurrency, cn } from '../../lib/utils';
@@ -28,14 +28,29 @@ interface CartItem {
   quantity: number;
 }
 
+interface TableOption {
+  id: number;
+  name: string;
+  zone: string;
+  capacity: number;
+  isOccupied: boolean;
+  assignedServer: { id: number; fullName: string } | null;
+}
+
+interface ServerUser {
+  id: number;
+  fullName: string;
+  role: string;
+}
+
 interface NewOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOrderCreated: () => void;
 }
 
-type OrderType = 'takeout' | 'delivery';
-type Step = 'type' | 'client' | 'menu' | 'confirm' | 'success';
+type OrderType = 'takeout' | 'delivery' | 'dine_in';
+type Step = 'type' | 'table' | 'client' | 'menu' | 'confirm' | 'success';
 
 // Image URL helper
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:9015/api';
@@ -58,6 +73,13 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [deliveryCity, setDeliveryCity] = useState('libreville');
 
+  // Table selection (dine-in)
+  const [tables, setTables] = useState<TableOption[]>([]);
+  const [loadingTables, setLoadingTables] = useState(false);
+  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [servers, setServers] = useState<ServerUser[]>([]);
+  const [selectedServerId, setSelectedServerId] = useState<number>(0);
+
   // Menu
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(false);
@@ -77,11 +99,32 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
       setClientPhone('');
       setDeliveryAddress('');
       setDeliveryCity('libreville');
+      setSelectedTableId(null);
+      setSelectedServerId(0);
       setCart([]);
       setNotes('');
       setCreatedOrder(null);
     }
   }, [isOpen]);
+
+  // Load tables for dine-in
+  useEffect(() => {
+    if (step === 'table' && tables.length === 0) {
+      setLoadingTables(true);
+      Promise.all([
+        api.get('/admin/tables'),
+        api.get('/admin/users'),
+      ])
+        .then(([tablesRes, usersRes]) => {
+          const tablesData = tablesRes.data?.data || [];
+          setTables(tablesData);
+          const usersData = usersRes.data?.data || [];
+          setServers(usersData.filter((u: any) => u.role === 'serveur'));
+        })
+        .catch(() => toast.error('Erreur de chargement'))
+        .finally(() => setLoadingTables(false));
+    }
+  }, [step, tables.length]);
 
   // Load menu
   useEffect(() => {
@@ -89,7 +132,6 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
       setLoadingMenu(true);
       api.get('/menu')
         .then(res => {
-          // API returns array directly: [{ id, name, items: [...] }, ...]
           const cats = Array.isArray(res.data) ? res.data : (res.data.data || []);
           setCategories(cats.map((cat: any) => ({
             id: cat.id,
@@ -147,7 +189,14 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
       const items = cart.map(c => ({ menuItemId: c.menuItemId, quantity: c.quantity }));
 
       let response;
-      if (orderType === 'takeout') {
+      if (orderType === 'dine_in') {
+        response = await api.post('/admin/orders/dine-in', {
+          tableId: selectedTableId,
+          items,
+          notes: notes || undefined,
+          assignedTo: selectedServerId || undefined,
+        });
+      } else if (orderType === 'takeout') {
         response = await api.post('/orders/takeout', {
           items,
           clientName,
@@ -188,10 +237,14 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
     setClientName('');
     setClientPhone('');
     setDeliveryAddress('');
+    setSelectedTableId(null);
+    setSelectedServerId(0);
     setCart([]);
     setNotes('');
     setCreatedOrder(null);
   };
+
+  const selectedTable = tables.find(t => t.id === selectedTableId);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={step === 'success' ? '' : 'Nouvelle Commande'}>
@@ -201,7 +254,17 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
         {step === 'type' && (
           <div className="space-y-4">
             <p className="text-stone-600 text-center mb-6">Quel type de commande ?</p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
+              <button
+                onClick={() => { setOrderType('dine_in'); setStep('table'); }}
+                className="p-6 rounded-2xl border-2 border-stone-200 hover:border-orange-500 hover:bg-orange-50 transition-all flex flex-col items-center gap-3 group"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center group-hover:bg-orange-200 transition-colors">
+                  <UtensilsCrossed className="w-8 h-8 text-orange-600" />
+                </div>
+                <span className="font-bold text-stone-900">Sur Place</span>
+                <span className="text-xs text-stone-500">Commande table</span>
+              </button>
               <button
                 onClick={() => { setOrderType('takeout'); setStep('client'); }}
                 className="p-6 rounded-2xl border-2 border-stone-200 hover:border-purple-500 hover:bg-purple-50 transition-all flex flex-col items-center gap-3 group"
@@ -226,7 +289,94 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
           </div>
         )}
 
-        {/* Step 2: Client Info */}
+        {/* Step 2a: Table Selection (dine_in) */}
+        {step === 'table' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-stone-500 mb-4">
+              <span className="px-2 py-1 rounded-full bg-orange-100 text-orange-700">
+                🍽️ Sur Place
+              </span>
+            </div>
+
+            {loadingTables ? (
+              <div className="py-12 text-center text-stone-400">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                Chargement des tables...
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label className="block text-sm font-bold text-stone-700 mb-2">Sélectionner une table *</label>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-[180px] overflow-y-auto">
+                    {tables.map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTableId(t.id);
+                          // Pre-select the server assigned to this table
+                          if (t.assignedServer?.id) {
+                            setSelectedServerId(t.assignedServer.id);
+                          }
+                        }}
+                        className={cn(
+                          "p-3 rounded-xl border-2 text-center transition-all flex flex-col items-center gap-1",
+                          selectedTableId === t.id
+                            ? "border-orange-500 bg-orange-50 text-orange-700"
+                            : t.isOccupied
+                              ? "border-stone-200 bg-stone-50 text-stone-500"
+                              : "border-stone-200 bg-white text-stone-900 hover:border-stone-300"
+                        )}
+                      >
+                        <span className="font-black text-xs uppercase truncate w-full">{t.name}</span>
+                        <span className="text-[9px] text-stone-400">{t.zone} · {t.capacity}p</span>
+                        {t.assignedServer && (
+                          <span className="text-[8px] text-orange-500 font-bold truncate w-full">
+                            <User className="w-2.5 h-2.5 inline mr-0.5" />{t.assignedServer.fullName}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-stone-700 mb-1">Serveur (optionnel)</label>
+                  <select
+                    value={selectedServerId}
+                    onChange={e => setSelectedServerId(Number(e.target.value))}
+                    className="w-full h-12 px-4 rounded-xl border border-stone-200 bg-white text-sm"
+                  >
+                    <option value="0">--- Aucun ---</option>
+                    {servers.map(s => (
+                      <option key={s.id} value={s.id}>{s.fullName}</option>
+                    ))}
+                  </select>
+                  {selectedTable?.assignedServer && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      Serveur actuel : {selectedTable.assignedServer.fullName}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-3 pt-4">
+              <Button variant="outline" onClick={() => setStep('type')} className="flex-1 h-12">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Retour
+              </Button>
+              <Button
+                onClick={() => setStep('menu')}
+                disabled={!selectedTableId}
+                className="flex-1 h-12 bg-stone-900 text-white"
+              >
+                Continuer <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2b: Client Info (takeout / delivery) */}
         {step === 'client' && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-stone-500 mb-4">
@@ -302,7 +452,12 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
         {step === 'menu' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-stone-500">Client: <b>{clientName}</b></span>
+              <span className="text-sm text-stone-500">
+                {orderType === 'dine_in'
+                  ? <>Table: <b>{selectedTable?.name}</b></>
+                  : <>Client: <b>{clientName}</b></>
+                }
+              </span>
               <span className="font-bold text-lg">{formatCurrency(total)}</span>
             </div>
 
@@ -328,7 +483,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
                               "flex-shrink-0 w-36 rounded-[1.5rem] border-2 snap-start transition-all duration-300 overflow-hidden flex flex-col cursor-pointer",
                               qty > 0
                                 ? 'border-stone-900 bg-white shadow-xl shadow-stone-200/50 -translate-y-1'
-                                : 'border-stone-50 bg-white hover:border-stone-200'
+                                : 'border-stone-200 bg-white hover:border-stone-300'
                             )}
                           >
                             {/* Product Image */}
@@ -361,11 +516,8 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
                               </p>
 
                               <div className="flex items-baseline gap-1 mb-3 min-w-0">
-                                <span className="text-sm font-black text-stone-900 font-display truncate">
-                                  {formatCurrency(item.price).split('\u00A0')[0]}
-                                </span>
-                                <span className="text-[9px] font-black text-stone-300 uppercase leading-none">
-                                  XAF
+                                <span className="text-xs font-black text-stone-900 font-display truncate">
+                                  {formatCurrency(item.price)}
                                 </span>
                               </div>
 
@@ -416,7 +568,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button variant="outline" onClick={() => setStep('client')} className="h-12 px-4">
+              <Button variant="outline" onClick={() => setStep(orderType === 'dine_in' ? 'table' : 'client')} className="h-12 px-4">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <Button
@@ -444,26 +596,31 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
             <div>
               <h2 className="text-2xl font-black text-stone-900 mb-2">Commande créée !</h2>
               <p className="text-stone-500">#{createdOrder.dailyNumber}</p>
+              {createdOrder.tableName && (
+                <p className="text-stone-400 text-sm mt-1">Table : {createdOrder.tableName}</p>
+              )}
             </div>
 
-            <div className="bg-stone-100 rounded-2xl p-6">
-              <p className="text-sm text-stone-500 mb-2">Code de retrait</p>
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-4xl font-black tracking-widest text-stone-900">
-                  {createdOrder.pickupCode}
-                </span>
-                <button
-                  onClick={copyCode}
-                  className="p-2 rounded-lg bg-white border border-stone-200 hover:bg-stone-50"
-                  title="Copier"
-                >
-                  <Copy className="w-5 h-5 text-stone-500" />
-                </button>
+            {createdOrder.pickupCode && (
+              <div className="bg-stone-100 rounded-2xl p-6">
+                <p className="text-sm text-stone-500 mb-2">Code de retrait</p>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-4xl font-black tracking-widest text-stone-900">
+                    {createdOrder.pickupCode}
+                  </span>
+                  <button
+                    onClick={copyCode}
+                    className="p-2 rounded-lg bg-white border border-stone-200 hover:bg-stone-50"
+                    title="Copier"
+                  >
+                    <Copy className="w-5 h-5 text-stone-500" />
+                  </button>
+                </div>
+                <p className="text-sm text-orange-600 font-medium mt-3">
+                  📞 Dictez ce code au client
+                </p>
               </div>
-              <p className="text-sm text-orange-600 font-medium mt-3">
-                📞 Dictez ce code au client
-              </p>
-            </div>
+            )}
 
             <div className="flex gap-3">
               <Button variant="outline" onClick={handleNewOrder} className="flex-1 h-12">

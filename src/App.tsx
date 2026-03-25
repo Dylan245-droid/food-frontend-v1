@@ -25,6 +25,7 @@ import DeliveryDashboard from './pages/delivery/DeliveryDashboard';
 import DispatchPage from './pages/admin/DispatchPage';
 import ActivateAccountPage from './pages/ActivateAccountPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import StockPage from './pages/admin/StockPage';
 
 import GoTchopLandingPage from './pages/saas/GoTchopLandingPage';
 import RestaurantRegistrationPage from './pages/saas/RestaurantRegistrationPage';
@@ -123,6 +124,7 @@ export default function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="audit-logs" element={<SubscriptionGuard feature="finance_enabled"><AuditLogsPage /></SubscriptionGuard>} />
             <Route path="subscription" element={<SubscriptionPage />} />
+            <Route path="stock" element={<StockPage />} />
           </Route>
 
           {/* SUPER ADMIN ROUTES */}

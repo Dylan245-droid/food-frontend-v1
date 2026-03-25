@@ -9,7 +9,7 @@ import api from '../../lib/api';
 import {
   Banknote, Plus, Settings, PlayCircle, StopCircle,
   Clock, User, AlertCircle, Loader2,
-  CheckCircle, XCircle, TrendingUp, TrendingDown, Receipt, Info, ShieldCheck, ChevronRight, Eye, Download
+  CheckCircle, XCircle, TrendingUp, TrendingDown, Receipt, Info, ShieldCheck, ChevronRight, Eye, Download, Trash2
 } from 'lucide-react';
 import { formatCurrency, cn } from '../../lib/utils';
 import { useSubscription } from '../../hooks/useSubscription';
@@ -61,7 +61,8 @@ export default function CashPage() {
   const [isCloseSessionModalOpen, setIsCloseSessionModalOpen] = useState(false);
   const [isSessionDetailsModalOpen, setIsSessionDetailsModalOpen] = useState(false);
 
-  const [registerForm, setRegisterForm] = useState({ name: '', location: '', type: 'sales' });
+  const [registerForm, setRegisterForm] = useState({ name: '', location: '', type: 'sales', isActive: true });
+  const [showInactive, setShowInactive] = useState(false);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [declaredBalance, setDeclaredBalance] = useState(0);
   const [closeNotes, setCloseNotes] = useState('');
@@ -151,6 +152,21 @@ export default function CashPage() {
     }
   };
 
+  const handleDeleteRegister = async (register: CashRegister) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer la caisse "${register.name}" ?`)) return;
+    
+    setSubmitting(true);
+    try {
+      await api.delete(`/admin/cash/registers/${register.id}`);
+      toast.success('Caisse supprimée');
+      refetchRegisters();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Suppression impossible (sessions existantes)');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const loadSessionDetails = async (sessionId: number) => {
     try {
       const res = await api.get(`/admin/cash/sessions/${sessionId}`);
@@ -174,9 +190,20 @@ export default function CashPage() {
           </div>
           <div className="min-w-0">
             <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Caisse & Trésorerie</h1>
-            <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">
-              {registers.length} Postes Actifs • Suivi des flux réels
-            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <p className="text-stone-400 text-xs md:text-sm font-bold truncate tracking-wide uppercase">
+                {registers.filter(r => r.isActive).length} Postes Actifs • Suivi des flux réels
+              </p>
+              <button 
+                onClick={() => setShowInactive(!showInactive)}
+                className={cn(
+                  "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest transition-all",
+                  showInactive ? "bg-stone-900 text-white" : "bg-stone-100 text-stone-400 hover:bg-stone-200"
+                )}
+              >
+                {showInactive ? "Masquer Archives" : "Voir Archives"}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -185,7 +212,7 @@ export default function CashPage() {
             onClick={() => {
               if (isRegisterLimitReached(registers.length)) return toast.error(`Limite plan ${planName} atteinte`);
               setSelectedRegister(null);
-              setRegisterForm({ name: '', location: '', type: 'sales' });
+              setRegisterForm({ name: '', location: '', type: 'sales', isActive: true });
               setIsRegisterModalOpen(true);
             }}
             className="h-14 px-8 bg-stone-900 hover:bg-black text-white shadow-xl shadow-stone-100 rounded-2xl font-black uppercase tracking-widest text-[10px] items-center justify-center gap-3 transition-all active:scale-95 flex flex-1 sm:flex-none"
@@ -218,8 +245,14 @@ export default function CashPage() {
 
       {/* Grid - Surgical Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
-        {registers.sort((a, b) => b.hasOpenSession - a.hasOpenSession).map((reg, idx) => (
-          <div key={reg.id} className="bg-white rounded-[2.5rem] border border-stone-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: `${idx * 50}ms` }}>
+        {registers
+          .filter(r => showInactive ? true : r.isActive)
+          .sort((a, b) => b.hasOpenSession - a.hasOpenSession)
+          .map((reg, idx) => (
+          <div key={reg.id} className={cn(
+             "bg-white rounded-[2.5rem] border border-stone-100 shadow-sm hover:shadow-xl transition-all duration-500 group relative overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4",
+             !reg.isActive && "opacity-60 grayscale-[0.5]"
+          )} style={{ animationDelay: `${idx * 50}ms` }}>
 
             {/* Visual Accent */}
             <div className={cn("h-2 w-full", CASH_REGISTER_TYPES[reg.type]?.color)}></div>
@@ -230,13 +263,46 @@ export default function CashPage() {
                   <span className={cn("px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest block w-fit mb-3", CASH_REGISTER_TYPES[reg.type]?.color, "bg-opacity-10 text-stone-900")}>
                     {CASH_REGISTER_TYPES[reg.type]?.label}
                   </span>
-                  <h3 className="text-xl font-black text-stone-900 tracking-tight leading-none uppercase font-display">{reg.name}</h3>
+                  <h3 className="text-xl font-black text-stone-900 tracking-tight leading-none uppercase font-display">{reg.name} {!reg.isActive && "(Archivé)"}</h3>
                   {reg.location && <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mt-2">{reg.location}</p>}
                 </div>
-                <div className={cn(
-                  "w-4 h-4 rounded-full border-4 border-white shadow-sm transition-all duration-1000",
-                  reg.hasOpenSession ? "bg-emerald-500 animate-pulse shadow-emerald-200" : "bg-stone-200"
-                )}></div>
+                <div className="flex gap-2">
+                  <div className={cn(
+                    "w-4 h-4 rounded-full border-4 border-white shadow-sm transition-all duration-1000",
+                    reg.hasOpenSession ? "bg-emerald-500 animate-pulse shadow-emerald-200" : "bg-stone-200"
+                  )}></div>
+                  
+                  {/* Quick Actions (Edit/Delete) */}
+                  {!reg.hasOpenSession && (
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRegister(reg);
+                          setRegisterForm({ 
+                            name: reg.name, 
+                            location: reg.location || '', 
+                            type: reg.type,
+                            isActive: reg.isActive 
+                          });
+                          setIsRegisterModalOpen(true);
+                        }}
+                        className="p-1.5 rounded-lg bg-stone-50 hover:bg-stone-200 text-stone-400 hover:text-stone-900 transition-colors"
+                      >
+                        <Settings className="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteRegister(reg);
+                        }}
+                        className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1 flex flex-col justify-center items-center py-4">
@@ -301,15 +367,17 @@ export default function CashPage() {
                   </>
                 ) : (
                   <button
+                    disabled={!reg.isActive}
                     onClick={() => { setSelectedRegister(reg); setMoneyCount({}); setIsOpenSessionModalOpen(true); }}
                     className={cn(
                       "col-span-2 h-16 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-lg flex items-center justify-center gap-3",
+                      !reg.isActive ? "bg-stone-100 text-stone-400 cursor-not-allowed shadow-none" :
                       reg.type === 'sales' ? "bg-emerald-600 text-white shadow-emerald-100" :
                         reg.type === 'delivery' ? "bg-blue-600 text-white shadow-blue-100" : "bg-orange-600 text-white shadow-orange-100"
                     )}
                   >
-                    <PlayCircle className="w-5 h-5" />
-                    Ouvrir le Poste
+                    {reg.isActive ? <PlayCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                    {reg.isActive ? "Ouvrir le Poste" : "Poste Archivé"}
                   </button>
                 )}
               </div>
@@ -458,6 +526,25 @@ export default function CashPage() {
           <div className="space-y-4">
             <Input label="DESIGNATION DU POSTE" value={registerForm.name} onChange={e => setRegisterForm({ ...registerForm, name: e.target.value })} placeholder="EX: CAISSE PRINCIPALE, BAR, TERRASSE..." className="h-14 font-black uppercase tracking-widest text-[11px]" />
             <Input label="LOCALISATION PHYSIQUE" value={registerForm.location} onChange={e => setRegisterForm({ ...registerForm, location: e.target.value })} placeholder="SITUATION DANS L'ÉTABLISSEMENT" className="h-14 font-black uppercase tracking-widest text-[11px]" />
+            
+            <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100/50">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Poste Actif</span>
+                <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Permettre l'ouverture de sessions</span>
+              </div>
+              <button 
+                onClick={() => setRegisterForm({ ...registerForm, isActive: !registerForm.isActive })}
+                className={cn(
+                  "w-12 h-6 rounded-full transition-all relative",
+                  registerForm.isActive ? "bg-emerald-500" : "bg-stone-200"
+                )}
+              >
+                <div className={cn(
+                  "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
+                  registerForm.isActive ? "left-7" : "left-1"
+                )}></div>
+              </button>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -466,10 +553,12 @@ export default function CashPage() {
               {Object.entries(CASH_REGISTER_TYPES).map(([k, v]) => (
                 <button
                   key={k}
+                  disabled={!!selectedRegister} // CANNOT CHANGE TYPE ON EDIT
                   onClick={() => setRegisterForm({ ...registerForm, type: k })}
                   className={cn(
                     "p-6 rounded-[1.5rem] border text-left transition-all relative overflow-hidden group",
-                    registerForm.type === k ? "bg-stone-900 text-white border-stone-900 shadow-xl" : "bg-white text-stone-600 border-stone-100 hover:border-stone-200"
+                    registerForm.type === k ? "bg-stone-900 text-white border-stone-900 shadow-xl" : "bg-white text-stone-600 border-stone-100 hover:border-stone-200",
+                    selectedRegister && registerForm.type !== k && "opacity-40 grayscale pointer-events-none"
                   )}
                 >
                   <div className="relative z-10 flex items-center justify-between">
@@ -477,9 +566,11 @@ export default function CashPage() {
                       <h5 className="font-black text-sm uppercase tracking-tight leading-none mb-1.5">{v.label}</h5>
                       <p className={cn("text-[9px] font-bold uppercase tracking-widest", registerForm.type === k ? "text-stone-400" : "text-stone-400")}>{v.text}</p>
                     </div>
-                    <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", registerForm.type === k ? "bg-white/10" : "bg-stone-50")}>
-                      <ChevronRight className={cn("w-4 h-4 transition-transform", registerForm.type === k ? "rotate-90" : "")} />
-                    </div>
+                    {(!selectedRegister || registerForm.type === k) && (
+                      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", registerForm.type === k ? "bg-white/10" : "bg-stone-50")}>
+                        <ChevronRight className={cn("w-4 h-4 transition-transform", registerForm.type === k ? "rotate-90" : "")} />
+                      </div>
+                    )}
                   </div>
                 </button>
               ))}

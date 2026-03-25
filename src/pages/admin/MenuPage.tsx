@@ -7,6 +7,7 @@ import { Eye, EyeOff, Plus, Trash2, BookOpen, Utensils, PenTool, Search, ChefHat
 import { Modal } from '../../components/ui/Modal';
 import { cn, formatCurrency } from '../../lib/utils';
 import { useSearch } from '../../context/SearchContext';
+import { RecipeEditor } from '../../components/RecipeEditor';
 
 interface MenuItem {
     id: number;
@@ -18,6 +19,8 @@ interface MenuItem {
     categoryId: number;
     category?: { name: string };
     formattedPrice?: string;
+    recipesCount?: number;
+    meta?: { recipes_count: number };
 }
 
 interface MenuCategory {
@@ -31,6 +34,7 @@ export default function MenuPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ id: 0, name: '', price: 0, categoryId: 0, description: '', imageUrl: '' });
+    const [activeTab, setActiveTab] = useState<'details' | 'recipe'>('details');
 
     // Category Modal State
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
@@ -86,6 +90,7 @@ export default function MenuPage() {
             description: item.description || '',
             imageUrl: item.imageUrl || ''
         });
+        setActiveTab('details');
         setIsModalOpen(true);
     };
 
@@ -317,10 +322,15 @@ export default function MenuPage() {
                             )}
 
                             {/* Glassmorphic Category Badge */}
-                            <div className="absolute top-4 left-4 z-10">
+                            <div className="absolute top-4 left-4 z-10 flex gap-2">
                                 <span className="bg-white/40 backdrop-blur-md text-stone-900 text-[9px] uppercase font-black px-3 py-1.5 rounded-xl tracking-[0.15em] shadow-sm border border-white/40">
                                     {item.category?.name}
                                 </span>
+                                {Number(item.meta?.recipes_count || 0) > 0 && (
+                                    <span className="bg-amber-500/90 backdrop-blur-md text-white text-[9px] uppercase font-black px-3 py-1.5 rounded-xl tracking-[0.15em] shadow-sm flex items-center gap-1.5 animate-in zoom-in duration-500">
+                                        <ChefHat className="w-3 h-3" /> Linked
+                                    </span>
+                                )}
                             </div>
 
                             {/* Status Badge - Floating */}
@@ -429,12 +439,41 @@ export default function MenuPage() {
             )}
 
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={formData.id === 0 ? "Ajouter au Menu" : "Modifier le plat"}>
+                {formData.id !== 0 && (
+                    <div className="flex bg-stone-100/50 p-1.5 rounded-2xl mb-6 gap-1.5">
+                        <button 
+                            onClick={() => setActiveTab('details')}
+                            className={cn(
+                                "flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                activeTab === 'details' ? "bg-white text-stone-900 shadow-sm" : "text-stone-400 hover:text-stone-600"
+                            )}
+                        >
+                            Détails & Prix
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('recipe')}
+                            className={cn(
+                                "flex-1 py-3.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                activeTab === 'recipe' ? "bg-white text-stone-900 shadow-sm" : "text-stone-400 hover:text-stone-600"
+                            )}
+                        >
+                            Compo. / Recette
+                        </button>
+                    </div>
+                )}
+
+                {activeTab === 'details' ? (
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100 text-center mb-4">
                         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm text-orange-500">
                             <PenTool className="w-6 h-6" />
                         </div>
                         <p className="text-stone-500 text-sm font-medium">{formData.id === 0 ? 'Détails du nouveau plat' : 'Modification du plat'}</p>
+                        {Number(items.find(i => i.id === formData.id)?.meta?.recipes_count || 0) > 0 && (
+                             <div className="mt-2 text-[9px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-3 py-1 rounded-full inline-block">
+                                Recette liée à l'inventaire
+                             </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -529,6 +568,9 @@ export default function MenuPage() {
                         <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg">{formData.id === 0 ? 'Créer le plat' : 'Enregistrer'}</Button>
                     </div>
                 </form>
+                ) : (
+                    <RecipeEditor menuItemId={formData.id} menuItemName={formData.name} onClose={() => setIsModalOpen(false)} />
+                )}
             </Modal>
 
             {/* Category Creation/Edit Modal */}

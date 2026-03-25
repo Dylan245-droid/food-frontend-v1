@@ -193,9 +193,10 @@ export default function HomePage() {
                   <button 
                     key={table.id}
                     onClick={() => { setTableCode(table.code); handleGo(table.code); }}
-                    className="py-3 px-2 rounded-lg bg-green-50 border border-green-200 text-green-700 font-bold text-sm hover:bg-green-100 transition-colors"
+                    className="py-2.5 px-2 rounded-lg bg-green-50 border border-green-200 text-green-700 hover:bg-green-100 transition-colors flex flex-col items-center justify-center gap-1"
                   >
-                    {table.name}
+                    <span className="font-bold text-sm leading-none">{table.name}</span>
+                    {table.zone && <span className="text-[9px] font-black uppercase tracking-widest opacity-60 leading-none truncate max-w-full">{table.zone}</span>}
                   </button>
                 ))}
               </div>

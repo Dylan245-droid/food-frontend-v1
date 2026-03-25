@@ -321,7 +321,7 @@ export default function TablesPage() {
                             <button onClick={() => handlePrintBill(table)} className="flex-1 bg-white/10 hover:bg-white text-white hover:text-stone-900 h-11 rounded-xl flex items-center justify-center transition-all border border-white/10">
                               <Printer className="w-4 h-4" />
                             </button>
-                            <button onClick={() => { setSelectedTable(table); setIsAssignModalOpen(true); }} className="flex-1 bg-white/10 hover:bg-white text-white hover:text-stone-900 h-11 rounded-xl flex items-center justify-center transition-all border border-white/10">
+                            <button onClick={() => { setSelectedTable(table); setAssignServerId(table.assignedServer?.id || 0); setIsAssignModalOpen(true); }} className="flex-1 bg-white/10 hover:bg-white text-white hover:text-stone-900 h-11 rounded-xl flex items-center justify-center transition-all border border-white/10">
                               <UserCheck className="w-4 h-4" />
                             </button>
                             <button onClick={() => handleCollectPayment(table)} className="flex-[3] bg-orange-500 hover:bg-orange-600 text-white h-11 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-orange-900/20 active:scale-95 transition-all">
@@ -336,6 +336,9 @@ export default function TablesPage() {
                             <button onClick={() => openQrModal(table)} className="flex-[3] bg-stone-900 group-hover:bg-black text-white h-11 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all border border-stone-800">
                               <QrCode className="w-4 h-4 text-orange-400" />
                               QR Link
+                            </button>
+                            <button onClick={() => { setSelectedTable(table); setAssignServerId(table.assignedServer?.id || 0); setIsAssignModalOpen(true); }} className="flex-1 bg-stone-50 text-stone-400 hover:text-orange-600 hover:bg-orange-50 h-11 rounded-xl flex items-center justify-center transition-all">
+                              <UserCheck className="w-4 h-4" />
                             </button>
                             <button onClick={() => openEditModal(table)} className="flex-1 bg-stone-50 text-stone-400 hover:text-stone-900 hover:bg-stone-100 h-11 rounded-xl flex items-center justify-center transition-all">
                               <Pencil className="w-4 h-4" />
