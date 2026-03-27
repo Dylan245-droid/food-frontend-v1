@@ -190,35 +190,38 @@ export default function StockPage() {
   return (
     <SubscriptionGuard feature="stock_enabled">
       <div className="min-h-screen bg-stone-50/50 p-4 md:p-8 pb-24">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3 md:gap-4">
-          <div className="w-10 h-10 md:w-12 md:h-12 bg-stone-900 rounded-[1.2rem] flex items-center justify-center shadow-xl shadow-stone-200">
-            <Package className="w-5 h-5 md:w-6 md:h-6 text-white" />
+      {/* Premium Header */}
+      <div className="flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4 md:gap-6 bg-white p-4 sm:p-5 md:p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group mb-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-30 pointer-events-none"></div>
+
+        <div className="flex items-center gap-4 md:gap-6 relative z-10">
+          <div className="bg-stone-900 p-3 md:p-4 rounded-2xl text-white shadow-2xl shadow-stone-200 shrink-0">
+            <Package className="w-6 h-6 md:w-8 md:h-8" />
           </div>
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-stone-900 tracking-tight leading-none uppercase font-display">Gestion des Stocks</h1>
-            <p className="text-stone-400 text-[10px] md:text-xs font-bold mt-1 truncate tracking-wide uppercase">
+          <div className="min-w-0">
+            <h1 className="text-base xs:text-xl sm:text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Gestion des Stocks</h1>
+            <p className="text-[10px] md:text-sm font-bold mt-2 truncate tracking-wide uppercase text-stone-400">
               {items.length} Références • Suivi des marchandises & Ingrédients
             </p>
           </div>
         </div>
 
-        <div className="flex gap-2 md:gap-3 w-full md:w-auto">
-          <Button 
-            onClick={() => setIsInventoryOpen(true)}
-            className="flex-1 md:flex-none h-10 md:h-11 px-4 md:px-6 bg-white border-2 border-stone-100 hover:border-stone-200 text-stone-900 shadow-sm rounded-xl font-black uppercase tracking-widest text-[9px] items-center justify-center gap-2 transition-all"
-          >
-            <ClipboardList className="w-3.5 h-3.5" />
-            Inventaires
-          </Button>
-          <Button 
+        <div className="flex items-center gap-2 sm:gap-4 relative z-10 shrink-0">
+          <button 
             onClick={() => handleOpenItemModal()}
-            className="flex-1 md:flex-none h-10 md:h-11 px-4 md:px-6 bg-stone-900 hover:bg-black text-white shadow-lg shadow-stone-200 rounded-xl font-black uppercase tracking-widest text-[9px] items-center justify-center gap-2 transition-all active:scale-95 flex"
+            className="h-12 md:h-14 px-4 sm:px-8 bg-stone-900 hover:bg-black text-white rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-xl shadow-stone-200 active:scale-95 transition-all flex items-center justify-center gap-3"
           >
             <Plus className="w-4 h-4" />
-            Nouvel Article
-          </Button>
+            <span className="hidden xs:inline">Nouveau</span>
+            <span className="xs:hidden">Nouv</span>
+          </button>
+          <button 
+            onClick={() => setIsInventoryOpen(true)}
+            className="h-12 md:h-14 px-4 sm:px-8 bg-white border border-stone-100 text-stone-900 rounded-2xl font-black uppercase tracking-widest text-[9px] sm:text-[10px] shadow-sm hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center gap-3"
+          >
+            <ClipboardList className="w-4 h-4 text-orange-500" />
+            <span>Inventaires</span>
+          </button>
         </div>
       </div>
 

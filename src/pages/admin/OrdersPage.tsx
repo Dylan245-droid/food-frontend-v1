@@ -8,7 +8,7 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import api from '../../lib/api';
 import {
-    ChefHat, Check, Clock, Search, Plus, UtensilsCrossed, ShoppingBag, Printer, XCircle, LayoutGrid, List, BellRing, Flame, User, ChevronRight, AlertCircle, MapPin, Phone, Play
+    ChefHat, Check, Clock, Search, Plus, UtensilsCrossed, ShoppingBag, Printer, XCircle, LayoutGrid, List, BellRing, Flame, User, ChevronRight, AlertCircle, MapPin, Phone, Play, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PaymentModal } from '../../components/ui/PaymentModal';
@@ -60,6 +60,24 @@ interface Order {
     dailyNumber: number;
     notes?: string;
 }
+
+const getStatusDisplay = (order: Order) => {
+    if (order.status === 'pending') return { label: 'En attente', color: 'text-yellow-600', dot: 'bg-yellow-400' };
+    if (order.status === 'in_progress') return { label: 'Au fourneau', color: 'text-orange-600', dot: 'bg-orange-500' };
+    if (order.status === 'paid') return { label: 'Payé', color: 'text-stone-400', dot: 'bg-stone-200' };
+    if (order.status === 'cancelled') return { label: 'Annulé', color: 'text-stone-300', dot: 'bg-stone-300' };
+
+    if (order.status === 'delivered') {
+        if (order.type === 'delivery') {
+            if (order.deliveryStatus === 'assigned') return { label: 'Livreur assigné', color: 'text-blue-600', dot: 'bg-blue-500' };
+            if (order.deliveryStatus === 'picked_up') return { label: 'En livraison', color: 'text-indigo-600', dot: 'bg-indigo-500' };
+            return { label: 'Prêt (Livraison)', color: 'text-green-600', dot: 'bg-green-500' };
+        }
+        return { label: 'Prêt', color: 'text-green-600', dot: 'bg-green-500' };
+    }
+
+    return { label: order.status.toUpperCase(), color: 'text-stone-500', dot: 'bg-stone-400' };
+};
 
 export default function OrdersPage() {
     const { data, loading, refetch } = useFetch<{ data: Order[], meta: any }>('/staff/orders?limit=100&status=pending,in_progress,delivered,paid');
@@ -141,6 +159,15 @@ export default function OrdersPage() {
     }, [hasKds, viewMode]);
 
     const handlePayAndPrint = async (order: Order, skipConfirm = false) => {
+        if (order.type === 'delivery' && order.status !== 'paid') {
+            // Only open assignment if not already assigned
+            if (order.deliveryStatus === 'pending' || !order.deliveryStatus) {
+                handleDeliveryHandover(order);
+            }
+            // If already assigned or picked up, do nothing as payment is handled by driver
+            return;
+        }
+
         if (order.status !== 'paid' && !checkSessionBeforePayment(order.type)) return;
 
         if (order.status === 'paid') {
@@ -471,16 +498,9 @@ export default function OrdersPage() {
                                             <td className="p-6">
                                                 <span className={cn(
                                                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                    order.status === 'pending' ? "text-yellow-600" : 
-                                                    order.status === 'in_progress' ? "text-orange-600" : 
-                                                    order.status === 'delivered' ? "text-green-600" : 
-                                                    order.status === 'paid' ? "text-stone-400" : "text-stone-300"
+                                                    getStatusDisplay(order).color
                                                 )}>
-                                                    {order.status === 'pending' ? 'EN ATTENTE' :
-                                                     order.status === 'in_progress' ? 'AU FOURNEAU' :
-                                                     order.status === 'delivered' ? 'PRÊT' :
-                                                     order.status === 'paid' ? 'PAYÉ' :
-                                                     order.status === 'cancelled' ? 'ANNULÉ' : order.status}
+                                                    {getStatusDisplay(order).label}
                                                 </span>
                                             </td>
                                             <td className="p-6 text-right">
@@ -503,9 +523,19 @@ export default function OrdersPage() {
                                                             <ChefHat className="w-4 h-4" />
                                                         </button>
                                                     )}
-                                                    {order.status === 'delivered' && (
+                                                    {order.status === 'delivered' && order.type === 'delivery' && (
                                                         <button
-                                                            onClick={() => {
+                                                            onClick={(e) => { e.stopPropagation(); handlePrintOnly(order); }}
+                                                            title="Imprimer le ticket"
+                                                            className="w-10 h-10 rounded-xl bg-stone-100 text-stone-600 hover:bg-stone-200 transition-all inline-flex items-center justify-center p-0"
+                                                        >
+                                                            <Printer className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    {order.status === 'delivered' && (order.type !== 'delivery' || order.deliveryStatus === 'pending') && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 if (order.type === 'delivery') handleDeliveryHandover(order);
                                                                 else handlePayAndPrint(order);
                                                             }}
@@ -525,9 +555,9 @@ export default function OrdersPage() {
                                                         </button>
                                                     )}
                                                     {/* Always provide a way to open details if needed, or keep it simple */}
-                                                    {['pending', 'in_progress', 'delivered'].includes(order.status) && (
+                                                    {['pending', 'in_progress', 'delivered'].includes(order.status) && order.type !== 'delivery' && (
                                                         <button
-                                                            onClick={() => handlePayAndPrint(order)}
+                                                            onClick={(e) => { e.stopPropagation(); handlePayAndPrint(order); }}
                                                             title="Détails / Paiement direct"
                                                             className="w-10 h-10 rounded-xl bg-stone-50 text-stone-300 hover:text-stone-900 transition-all inline-flex items-center justify-center p-0"
                                                         >
@@ -545,19 +575,34 @@ export default function OrdersPage() {
                         {/* Mobile Surgery view */}
                         <div className="md:hidden grid grid-cols-1 divide-y divide-stone-50 overflow-y-auto">
                             {filterOrders(data?.data || []).map(order => (
-                                <div key={order.id} className="p-6 flex justify-between items-center group active:bg-stone-50 transition-colors">
+                                <div key={order.id} onClick={() => handlePayAndPrint(order)} className="p-6 flex justify-between items-center group active:bg-stone-50 transition-colors cursor-pointer">
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2 mb-2">
                                             <span className="font-black text-stone-900 text-sm">#{order.dailyNumber}</span>
                                             <span className={cn(
                                                 "w-2 h-2 rounded-full",
-                                                order.status === 'pending' ? "bg-yellow-400 animate-pulse" : order.status === 'in_progress' ? "bg-orange-500" : order.status === 'delivered' ? "bg-green-500" : "bg-stone-200"
+                                                getStatusDisplay(order).dot,
+                                                order.status === 'pending' && "animate-pulse"
                                             )}></span>
+                                            <span className={cn("text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md bg-stone-50", getStatusDisplay(order).color)}>
+                                                {getStatusDisplay(order).label}
+                                            </span>
                                         </div>
                                         <p className="font-black text-stone-900 uppercase text-xs truncate mb-1">{order.table?.name || order.clientName || '---'}</p>
                                         <p className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">{order.items.length} Articles • {formatCurrency(order.totalAmount)}</p>
                                     </div>
-                                    <ChevronRight className="w-5 h-5 text-stone-200" />
+                                    <div className="flex items-center gap-2">
+                                        {/* Mobile Print button for delivery */}
+                                        {order.status === 'delivered' && order.type === 'delivery' && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handlePrintOnly(order); }}
+                                                className="w-12 h-12 bg-stone-100 text-stone-600 rounded-xl flex items-center justify-center"
+                                            >
+                                                <Printer className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                        <ChevronRight className="w-5 h-5 text-stone-200" />
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -765,9 +810,16 @@ function OrderCard({ order, onAction, actionLabel, variant, onSecondaryAction, s
                             )}>{order.type === 'delivery' ? 'LIV' : 'RET'}</span>
                         )}
                     </div>
-                    <p className="font-black text-stone-900 uppercase text-[10px] tracking-widest truncate max-w-[120px]">
-                        {order.table?.name || order.clientName || '---'}
-                    </p>
+                    <div className="flex items-center gap-2">
+                        <p className="font-black text-stone-900 uppercase text-[10px] tracking-widest truncate max-w-[100px]">
+                            {order.table?.name || order.clientName || '---'}
+                        </p>
+                        {variant === 'delivered' && order.type === 'delivery' && (
+                            <span className={cn("text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded bg-stone-50", getStatusDisplay(order).color)}>
+                                {getStatusDisplay(order).label}
+                            </span>
+                        )}
+                    </div>
                 </div>
                 <div className="text-right">
                     <div className="flex items-center gap-1.5 text-stone-300 font-bold mb-1">

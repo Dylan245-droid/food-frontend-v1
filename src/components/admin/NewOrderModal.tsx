@@ -254,7 +254,7 @@ export function NewOrderModal({ isOpen, onClose, onOrderCreated }: NewOrderModal
         {step === 'type' && (
           <div className="space-y-4">
             <p className="text-stone-600 text-center mb-6">Quel type de commande ?</p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <button
                 onClick={() => { setOrderType('dine_in'); setStep('table'); }}
                 className="p-6 rounded-2xl border-2 border-stone-200 hover:border-orange-500 hover:bg-orange-50 transition-all flex flex-col items-center gap-3 group"

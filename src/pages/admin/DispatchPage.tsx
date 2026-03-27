@@ -28,11 +28,12 @@ interface User {
 
 export default function DispatchPage() {
     // 1. Fetch Pending Orders (only ready ones from backend)
-    const { data: orders, loading: loadingOrders, refetch } = useFetch<Order[]>('/delivery/pending');
+    const { data, loading: loadingOrders, refetch } = useFetch<Order[] | { data: Order[] }>('/delivery/pending');
+    const orders = Array.isArray(data) ? data : data?.data || [];
 
     // 2. Fetch Drivers
-    const { data: usersData } = useFetch<{ data: User[] }>('/admin/users');
-    const drivers = usersData?.data.filter(u => u.role === 'livreur') || [];
+    const { data: usersData } = useFetch<{ data: User[] } | User[]>('/admin/users?role=livreur&limit=100');
+    const drivers = Array.isArray(usersData) ? usersData : usersData?.data || [];
 
     // Per-order driver selection state: { [orderId]: driverId }
     const [driverSelections, setDriverSelections] = useState<Record<number, number | ''>>({});
@@ -64,8 +65,8 @@ export default function DispatchPage() {
 
     if (loadingOrders) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin" /></div>;
 
-    // Filter: Only show orders that are "delivered" (Ready for dispatch)
-    const readyOrders = orders?.filter(o => o.status === 'delivered') || [];
+    // Filter: Use all orders from backend (backend already filters for status: 'delivered' and type: 'delivery')
+    const readyOrders = orders;
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
