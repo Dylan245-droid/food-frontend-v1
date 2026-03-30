@@ -32,6 +32,7 @@ import RestaurantRegistrationPage from './pages/saas/RestaurantRegistrationPage'
 import SuperAdminLayout from './pages/super-admin/SuperAdminLayout';
 import TenantsPage from './pages/super-admin/TenantsPage';
 import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard';
+import GodsEyePage from './pages/super-admin/GodsEyePage';
 import SuperAdminInvoicesPage from './pages/super-admin/InvoicesPage';
 import RevenuePage from './pages/super-admin/RevenuePage';
 import SubscriptionPage from './pages/admin/SubscriptionPage';
@@ -131,6 +132,7 @@ export default function App() {
           <Route path="/admin/super" element={<SuperAdminLayout />}>
             <Route index element={<SuperAdminDashboard />} />
             <Route path="tenants" element={<TenantsPage />} />
+            <Route path="gods-eye" element={<GodsEyePage />} />
             <Route path="invoices" element={<SuperAdminInvoicesPage />} />
             <Route path="revenue" element={<RevenuePage />} />
             <Route path="audit-logs" element={<AuditLogsPage />} />

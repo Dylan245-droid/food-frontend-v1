@@ -134,6 +134,23 @@ export default function MenuPage() {
         }
     };
 
+    const handleDeleteCategory = async () => {
+        if (!editingCategory) return;
+        if (!window.confirm(`Supprimer la catégorie "${editingCategory.name}" ?`)) return;
+        
+        try {
+            await api.delete(`/admin/menu/categories/${editingCategory.id}`);
+            await refetchCategories();
+            setIsCategoryModalOpen(false);
+            setEditingCategory(null);
+            setNewCategoryName('');
+            setActiveCategory('all');
+        } catch (err: any) {
+            const msg = err.response?.data?.message || 'Erreur lors de la suppression';
+            alert(msg);
+        }
+    };
+
     const handleToggle = async (item: MenuItem) => {
         try {
             await api.patch(`/admin/menu/items/${item.id}/toggle-availability`);
@@ -153,20 +170,30 @@ export default function MenuPage() {
             };
 
             if (formData.id === 0) {
-                await api.post('/admin/menu/items', payload);
+                const res = await api.post('/admin/menu/items', payload);
+                const newItem = res.data.item || res.data;
+                
+                // Update form with NEW ID and switch to Recipe tab
+                setFormData(prev => ({ 
+                    ...prev, 
+                    id: newItem.id,
+                    name: newItem.name // Ensure name is same for recipe title
+                }));
+                setActiveTab('recipe');
+                refetch();
             } else {
                 await api.patch(`/admin/menu/items/${formData.id}`, payload);
+                setIsModalOpen(false);
+                setFormData({
+                    id: 0,
+                    name: '',
+                    price: 0,
+                    categoryId: categoriesData?.data?.[0]?.id || 0,
+                    description: '',
+                    imageUrl: ''
+                });
+                refetch();
             }
-            setIsModalOpen(false);
-            setFormData({
-                id: 0,
-                name: '',
-                price: 0,
-                categoryId: categoriesData?.data?.[0]?.id || 0,
-                description: '',
-                imageUrl: ''
-            });
-            refetch();
         } catch (e) {
             alert('Erreur lors de l\'enregistrement');
         }
@@ -590,9 +617,20 @@ export default function MenuPage() {
                         required
                         autoFocus
                     />
-                    <div className="pt-2 flex gap-3">
-                        <Button type="button" variant="secondary" onClick={() => { setIsCategoryModalOpen(false); setEditingCategory(null); setNewCategoryName(''); }} className="flex-1 h-12 rounded-xl">Annuler</Button>
-                        <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg">{editingCategory ? "Mettre à jour" : "Créer"}</Button>
+                    <div className="pt-2 flex flex-col gap-3">
+                        <div className="flex gap-3">
+                            <Button type="button" variant="secondary" onClick={() => { setIsCategoryModalOpen(false); setEditingCategory(null); setNewCategoryName(''); }} className="flex-1 h-12 rounded-xl">Annuler</Button>
+                            <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg">{editingCategory ? "Mettre à jour" : "Créer"}</Button>
+                        </div>
+                        {editingCategory && (
+                            <button 
+                                type="button" 
+                                onClick={handleDeleteCategory}
+                                className="w-full py-3 text-red-500 font-bold text-[10px] uppercase tracking-widest hover:bg-red-50 rounded-xl transition-all"
+                            >
+                                <Trash2 className="w-3.5 h-3.5 inline mr-1.5" /> Supprimer la catégorie
+                            </button>
+                        )}
                     </div>
                 </form>
             </Modal>

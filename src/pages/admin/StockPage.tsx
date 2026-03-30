@@ -9,7 +9,8 @@ import {
   History,
   ClipboardList,
   MoreVertical,
-  ChevronDown
+  ChevronDown,
+  ChefHat
 } from 'lucide-react';
 import api from '../../lib/api';
 import { Button } from '../../components/ui/Button';
@@ -18,6 +19,7 @@ import { Input } from '../../components/ui/Input';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { InventoryModal } from '../../components/InventoryModal';
+import { StockMenuLinkModal } from '../../components/StockMenuLinkModal';
 import SubscriptionGuard from '../../components/SubscriptionGuard';
 import { cn } from '../../lib/utils';
 import { toast } from 'sonner';
@@ -46,12 +48,13 @@ export default function StockPage() {
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const [isMenuLinkModalOpen, setIsMenuLinkModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<'IN' | 'OUT'>('IN');
   
   // Form States
-  const [itemForm, setItemForm] = useState({ id: 0, name: '', unit: 'kg', minStock: 0, purchasePrice: 0, currentStock: 0 });
-  const [adjForm, setAdjForm] = useState({ quantity: 0, reason: '', dateStr: '' });
+  const [itemForm, setItemForm] = useState({ id: 0, name: '', unit: 'kg', minStock: 0, purchasePrice: 0, currentStock: 0, multiplier: 1, multiplierType: 'Unité', extraUnits: 0 });
+  const [adjForm, setAdjForm] = useState({ quantity: 0, multiplier: 1, multiplierType: 'Pack', reason: '', dateStr: '', extraUnits: 0 });
 
   const fetchData = async () => {
     try {
@@ -81,10 +84,13 @@ export default function StockPage() {
         unit: item.unit, 
         currentStock: item.currentStock || 0,
         minStock: parseFloat(item.minStock as any) || 0, 
-        purchasePrice: item.purchasePrice ? parseFloat(item.purchasePrice as any) : 0 
+        purchasePrice: item.purchasePrice ? parseFloat(item.purchasePrice as any) : 0,
+        multiplier: 1,
+        multiplierType: 'Unité',
+        extraUnits: 0
       });
     } else {
-      setItemForm({ id: 0, name: '', unit: 'pce', currentStock: 0, minStock: 0, purchasePrice: 0 });
+      setItemForm({ id: 0, name: '', unit: 'pce', currentStock: 0, minStock: 0, purchasePrice: 0, multiplier: 1, multiplierType: 'Unité', extraUnits: 0 });
     }
     setIsItemModalOpen(true);
   };
@@ -98,8 +104,13 @@ export default function StockPage() {
     // Format to YYYY-MM-DDThh:mm (which is what datetime-local expects)
     const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0,16);
 
-    setAdjForm({ quantity: 0, reason: '', dateStr: localDateTime });
+    setAdjForm({ quantity: 0, multiplier: 1, multiplierType: 'Pack', reason: '', dateStr: localDateTime, extraUnits: 0 });
     setIsAdjustmentModalOpen(true);
+  };
+
+  const handleOpenMenuLinkModal = (item: StockItem) => {
+    setSelectedItem(item);
+    setIsMenuLinkModalOpen(true);
   };
 
   const saveItem = async (e: React.FormEvent) => {
@@ -137,6 +148,9 @@ export default function StockPage() {
         stockItemId: selectedItem.id,
         type: adjustmentType,
         quantity: adjForm.quantity,
+        multiplier: adjForm.multiplier,
+        multiplierType: adjForm.multiplierType,
+        extraUnits: adjForm.extraUnits,
         reason: adjForm.reason,
         date: adjForm.dateStr
       });
@@ -379,6 +393,13 @@ export default function StockPage() {
                             <ArrowDownCircle className="w-3.5 h-3.5" />
                             Sortie
                         </button>
+                        <button 
+                            onClick={() => handleOpenMenuLinkModal(item)}
+                            className="flex h-9 w-9 bg-white hover:bg-stone-50 text-stone-300 hover:text-stone-900 rounded-lg font-black uppercase tracking-widest text-[9px] shadow-sm border border-stone-200 items-center justify-center transition-all active:scale-95"
+                            title="Lier à la carte"
+                        >
+                            <ChefHat className="w-4 h-4" />
+                        </button>
                     </div>
                 </div>
               </div>
@@ -424,8 +445,8 @@ export default function StockPage() {
             />
             
             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest pl-1">Unité</label>
+                <div className="space-y-1.5 col-span-2">
+                    <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest pl-1">Unité de mesure principale (Base)</label>
                     <div className="relative">
                         <select 
                             value={itemForm.unit} 
@@ -437,52 +458,99 @@ export default function StockPage() {
                             <option value="bouteille">Bouteille</option>
                             <option value="canette">Canette</option>
                             <option value="portion">Portion</option>
-                            <option value="verre">Verre</option>
                             <option value="kg">Kilogramme (kg)</option>
-                            <option value="g">Gramme (g)</option>
                             <option value="l">Litre (l)</option>
-                            <option value="cl">Centilitre (cl)</option>
-                            <option value="ml">Millilitre (ml)</option>
-                            <option value="carton">Carton</option>
-                            <option value="pack">Pack</option>
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
                     </div>
                 </div>
-                {itemForm.id === 0 ? (
-                    <Input 
-                        label="Stock Initial" 
-                        type="number" 
-                        step="0.01"
-                        value={itemForm.currentStock} 
-                        onChange={e => setItemForm({...itemForm, currentStock: parseFloat(e.target.value) || 0})} 
-                        className="font-bold h-12"
-                    />
-                ) : (
-                    <Input 
-                        label="Stock Minimum" 
-                        type="number" 
-                        step="0.01"
-                        value={itemForm.minStock} 
-                        onChange={e => setItemForm({...itemForm, minStock: parseFloat(e.target.value) || 0})} 
-                        className="font-bold h-12"
-                    />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5 col-span-2">
+                    <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest pl-1">Conditionnement (Optionnel)</label>
+                    <div className="relative">
+                        <select 
+                            value={itemForm.multiplierType} 
+                            onChange={e => {
+                                const val = e.target.value;
+                                setItemForm({
+                                    ...itemForm, 
+                                    multiplierType: val, 
+                                    multiplier: val === 'Unité' ? 1 : itemForm.multiplier
+                                });
+                            }}
+                            className="w-full h-12 px-4 bg-white border border-stone-200 rounded-xl text-xs font-black uppercase tracking-widest text-stone-900 appearance-none focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-stone-900 transition-all cursor-pointer hover:border-stone-300 hover:shadow-sm"
+                        >
+                            <option value="Unité">AUCUN (Vente à l'unité uniquement)</option>
+                            <option value="Pack">Pack</option>
+                            <option value="Casier">Casier</option>
+                            <option value="Carton">Carton</option>
+                            <option value="Sac">Sac / Ballot</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                    </div>
+                </div>
+
+                {itemForm.id === 0 && (
+                    <>
+                        <div className={cn("space-y-1.5", itemForm.multiplierType === 'Unité' ? "col-span-2" : "col-span-1")}>
+                            <Input 
+                                label={itemForm.multiplierType === 'Unité' ? "Stock Initial" : `Nb de ${itemForm.multiplierType}s`} 
+                                type="number" 
+                                step="0.01"
+                                value={itemForm.currentStock} 
+                                onChange={e => setItemForm({...itemForm, currentStock: parseFloat(e.target.value) || 0})} 
+                                className="font-bold h-12"
+                            />
+                        </div>
+                        {itemForm.multiplierType !== 'Unité' && (
+                            <div className="space-y-1.5">
+                                <Input 
+                                    label="Contenance (Unités)"
+                                    type="number" 
+                                    min="1"
+                                    value={itemForm.multiplier} 
+                                    onChange={e => setItemForm({...itemForm, multiplier: parseInt(e.target.value) || 1})} 
+                                    className="font-bold h-12"
+                                />
+                            </div>
+                        )}
+                        {itemForm.multiplierType !== 'Unité' && (
+                            <div className="col-span-2">
+                                <Input 
+                                    label="+ Unités détail (facultatif)" 
+                                    type="number" 
+                                    value={itemForm.extraUnits} 
+                                    onChange={e => setItemForm({...itemForm, extraUnits: parseInt(e.target.value) || 0})} 
+                                    className="font-bold h-12"
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
-            <div className={cn("grid gap-4", itemForm.id === 0 ? "grid-cols-2" : "grid-cols-1")}>
-                {itemForm.id === 0 && (
-                    <Input 
-                        label="Stock Minimum" 
-                        type="number" 
-                        step="0.01"
-                        value={itemForm.minStock} 
-                        onChange={e => setItemForm({...itemForm, minStock: parseFloat(e.target.value) || 0})} 
-                        className="font-bold h-12"
-                    />
-                )}
+            {itemForm.id === 0 && itemForm.multiplierType !== 'Unité' && (
+                <div className="bg-stone-900 rounded-xl p-4 flex justify-between items-center text-white mb-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Total {itemForm.unit}s réels</span>
+                    <span className="text-sm font-black">
+                        {(itemForm.currentStock * itemForm.multiplier) + itemForm.extraUnits}
+                    </span>
+                </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
                 <Input 
-                    label="Prix d'achat unitaire (FCFA)" 
+                    label="Seuil d'alerte (Unités)" 
+                    type="number" 
+                    step="0.01"
+                    value={itemForm.minStock} 
+                    onChange={e => setItemForm({...itemForm, minStock: parseFloat(e.target.value) || 0})} 
+                    className="font-bold h-12"
+                />
+                <Input 
+                    label="Prix d'achat (Unitaire / FCFA)" 
                     type="number" 
                     step="0.01"
                     value={itemForm.purchasePrice} 
@@ -517,19 +585,83 @@ export default function StockPage() {
             </div>
 
             <div className="space-y-4">
-                <div className="relative">
-                    <Input 
-                        label={adjustmentType === 'IN' ? "Quantité à ajouter" : "Quantité à déduire"} 
-                        type="number" 
-                        min="0.01"
-                        step="0.01"
-                        value={adjForm.quantity || ''} 
-                        onChange={e => setAdjForm({...adjForm, quantity: parseFloat(e.target.value) || 0})} 
-                        className="font-bold h-14 text-xl pr-16"
-                        autoFocus
-                    />
-                    <div className="absolute right-4 top-[38px] text-[10px] font-black uppercase text-stone-300 tracking-widest pointer-events-none">{selectedItem?.unit}</div>
+                <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-stone-500 uppercase tracking-widest pl-1">Type de Contenant / Conditionnement</label>
+                        <div className="relative">
+                            <select 
+                                value={adjForm.multiplierType} 
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setAdjForm({
+                                        ...adjForm, 
+                                        multiplierType: val, 
+                                        multiplier: val === 'Unité' ? 1 : adjForm.multiplier
+                                    });
+                                }}
+                                className="w-full h-12 px-4 bg-white border border-stone-200 rounded-xl text-xs font-black uppercase tracking-widest text-stone-900 appearance-none focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-stone-900 transition-all cursor-pointer hover:border-stone-300 hover:shadow-sm"
+                            >
+                                <option value="Unité">Unité (Vente au détail)</option>
+                                <option value="Pack">Pack</option>
+                                <option value="Casier">Casier</option>
+                                <option value="Carton">Carton</option>
+                                <option value="Sac">Sac / Ballot</option>
+                                <option value="Bidon">Bidon / Fût</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                        </div>
+                    </div>
                 </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                    <div className="relative">
+                        <Input 
+                            label={adjForm.multiplierType === 'Unité' ? "Quantité" : adjForm.multiplierType} 
+                            type="number" 
+                            min="0.01"
+                            step="0.01"
+                            value={adjForm.quantity || ''} 
+                            onChange={e => setAdjForm({...adjForm, quantity: parseFloat(e.target.value) || 0})} 
+                            className="font-bold h-14 text-xl"
+                            autoFocus
+                        />
+                    </div>
+                    
+                    <div className="relative">
+                        <Input 
+                            label="Par Cont." 
+                            type="number" 
+                            min="1"
+                            value={adjForm.multiplier} 
+                            onChange={e => setAdjForm({...adjForm, multiplier: parseInt(e.target.value) || 1})} 
+                            className={cn("font-bold h-14 text-xl", adjForm.multiplierType === 'Unité' && "bg-stone-50 border-stone-100 text-stone-300")}
+                            disabled={adjForm.multiplierType === 'Unité'}
+                        />
+                         <div className="absolute right-3 top-[38px] text-[10px] font-black uppercase text-stone-300 tracking-widest pointer-events-none">x</div>
+                    </div>
+
+                    <div className="relative">
+                        <Input 
+                            label="+ Unités" 
+                            type="number" 
+                            min="0"
+                            value={adjForm.extraUnits || ''} 
+                            onChange={e => setAdjForm({...adjForm, extraUnits: parseInt(e.target.value) || 0})} 
+                            className={cn("font-bold h-14 text-xl", adjForm.multiplierType === 'Unité' && "bg-stone-50 border-stone-100 text-stone-300")}
+                            disabled={adjForm.multiplierType === 'Unité'}
+                        />
+                        <div className="absolute right-3 top-[38px] text-[10px] font-black uppercase text-stone-300 tracking-widest pointer-events-none">+</div>
+                    </div>
+                </div>
+
+                {(adjForm.multiplier > 1 || adjForm.extraUnits > 0) && adjForm.multiplierType !== 'Unité' && (
+                    <div className="bg-stone-900 rounded-xl p-4 flex justify-between items-center text-white">
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Total {selectedItem?.unit} à {adjustmentType === 'IN' ? 'ajouter' : 'déduire'}</span>
+                        <span className="text-xl font-black">
+                            {((adjForm.quantity * adjForm.multiplier) + adjForm.extraUnits).toLocaleString()} {selectedItem?.unit}
+                        </span>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 gap-4">
                     <Input 
@@ -571,6 +703,24 @@ export default function StockPage() {
         onClose={() => setIsInventoryOpen(false)} 
         onComplete={fetchData}
       />
+
+      <Modal
+        isOpen={isMenuLinkModalOpen}
+        onClose={() => setIsMenuLinkModalOpen(false)}
+        title="Liaisons Menu & Recettes"
+      >
+        {selectedItem && (
+            <StockMenuLinkModal 
+                stockItemId={selectedItem.id}
+                stockItemName={selectedItem.name}
+                stockItemUnit={selectedItem.unit}
+                onClose={() => {
+                    setIsMenuLinkModalOpen(false);
+                    fetchData();
+                }}
+            />
+        )}
+      </Modal>
     </div>
     </SubscriptionGuard>
   );

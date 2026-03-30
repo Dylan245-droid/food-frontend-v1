@@ -39,7 +39,19 @@ export function RecipeEditor({ menuItemId, menuItemName, onClose }: RecipeEditor
   
   // Quick Create State
   const [showQuickCreate, setShowQuickCreate] = useState(false);
-  const [quickData, setQuickData] = useState({ unit: 'pce', currentStock: 0, minStock: 0, purchasePrice: 0 });
+  const [quickData, setQuickData] = useState({ unit: 'pce', currentStock: 0, minStock: 0, purchasePrice: 0, multiplier: 1, multiplierType: 'Unité', extraUnits: 0 });
+
+  // Calculation Helper State
+  const [helperActiveFor, setHelperActiveFor] = useState<number | null>(null);
+  const [helperData, setHelperData] = useState({ type: 'Casier', value: 24 });
+
+  const MULTIPLIERS = [
+    { label: 'Unité (Détail)', type: 'Unité', value: 1 },
+    { label: 'Pack', type: 'Pack', value: 6 },
+    { label: 'Casier', type: 'Casier', value: 24 },
+    { label: 'Carton', type: 'Carton', value: 12 },
+    { label: 'Sac / Ballot', type: 'Sac', value: 50 },
+  ];
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,28 +151,89 @@ export function RecipeEditor({ menuItemId, menuItemName, onClose }: RecipeEditor
             </div>
             
             <div className="space-y-4">
-                <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest pl-1">Unité de mesure</label>
-                    <div className="relative">
-                        <select 
-                            value={quickData.unit} 
-                            onChange={e => setQuickData({...quickData, unit: e.target.value})}
-                            className="w-full h-12 px-4 bg-white border-2 border-stone-100 rounded-xl text-xs font-black uppercase tracking-widest text-stone-900 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all cursor-pointer hover:border-stone-200"
-                        >
-                            <option value="pce">Pièce (Unité)</option>
-                            <option value="bouteille">Bouteille</option>
-                            <option value="canette">Canette</option>
-                            <option value="portion">Portion</option>
-                            <option value="verre">Verre</option>
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5 col-span-2">
+                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest pl-1">Unité de mesure de base</label>
+                        <div className="relative">
+                            <select 
+                                value={quickData.unit} 
+                                onChange={e => setQuickData({...quickData, unit: e.target.value})}
+                                className="w-full h-12 px-4 bg-white border-2 border-stone-100 rounded-xl text-xs font-black uppercase tracking-widest text-stone-900 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all cursor-pointer hover:border-stone-200"
+                            >
+                                <option value="pce">Pièce (Unité)</option>
+                                <option value="bouteille">Bouteille</option>
+                                <option value="canette">Canette</option>
+                                <option value="portion">Portion</option>
+                                <option value="kg">Kilogramme (kg)</option>
+                                <option value="l">Litre (l)</option>
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                        </div>
                     </div>
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
-                    <Input label="Stock initial" type="number" value={quickData.currentStock} onChange={e => setQuickData({...quickData, currentStock: parseInt(e.target.value) || 0})} />
-                    <Input label="Alerte stock bas" type="number" value={quickData.minStock} onChange={e => setQuickData({...quickData, minStock: parseInt(e.target.value) || 0})} />
+                    <div className="space-y-1.5 col-span-2">
+                        <label className="text-[10px] font-black text-stone-400 uppercase tracking-widest pl-1">Conditionnement (Optionnel)</label>
+                        <div className="relative">
+                            <select 
+                                value={quickData.multiplierType} 
+                                onChange={e => {
+                                    const m = MULTIPLIERS.find(mt => mt.type === e.target.value);
+                                    setQuickData({...quickData, multiplierType: e.target.value, multiplier: m?.value || 1});
+                                }}
+                                className="w-full h-12 px-4 bg-white border-2 border-stone-100 rounded-xl text-xs font-black uppercase tracking-widest text-stone-900 appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all cursor-pointer hover:border-stone-200"
+                            >
+                                {MULTIPLIERS.map(m => (
+                                    <option key={m.type} value={m.type}>{m.label}</option>
+                                ))}
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                        </div>
+                    </div>
+
+                    {quickData.multiplierType !== 'Unité' && (
+                        <>
+                             <div className="space-y-1.5">
+                                <Input 
+                                    label={quickData.multiplierType === 'Unité' ? "Stock initial" : `Nb de ${quickData.multiplierType}s`} 
+                                    type="number" 
+                                    value={quickData.currentStock} 
+                                    onChange={e => setQuickData({...quickData, currentStock: parseInt(e.target.value) || 0})} 
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Input 
+                                    label="Contenance (Unités)" 
+                                    type="number" 
+                                    value={quickData.multiplier} 
+                                    onChange={e => setQuickData({...quickData, multiplier: parseInt(e.target.value) || 1})}
+                                />
+                            </div>
+                            <div className="col-span-2">
+                                <Input label="+ Unités détails (facultatif)" type="number" value={quickData.extraUnits} onChange={e => setQuickData({...quickData, extraUnits: parseInt(e.target.value) || 0})} />
+                            </div>
+                        </>
+                    )}
+
+                    {quickData.multiplierType === 'Unité' && (
+                        <div className="col-span-2">
+                            <Input label="Stock initial" type="number" value={quickData.currentStock} onChange={e => setQuickData({...quickData, currentStock: parseInt(e.target.value) || 0})} />
+                        </div>
+                    )}
                 </div>
-                <Input label="Prix d'achat unitaire (FCFA)" type="number" value={quickData.purchasePrice} onChange={e => setQuickData({...quickData, purchasePrice: parseInt(e.target.value) || 0})} placeholder="Optionnel" />
+
+                <div className="grid grid-cols-2 gap-4">
+                    <Input label="Seuil d'alerte (Unités)" type="number" value={quickData.minStock} onChange={e => setQuickData({...quickData, minStock: parseInt(e.target.value) || 0})} />
+                    <Input label="Prix d'achat (Unitaire / FCFA)" type="number" value={quickData.purchasePrice} onChange={e => setQuickData({...quickData, purchasePrice: parseInt(e.target.value) || 0})} />
+                </div>
+                
+                {(quickData.multiplier > 1 || quickData.extraUnits > 0) && quickData.multiplierType !== 'Unité' && (
+                    <div className="p-3 bg-stone-900 rounded-xl flex justify-between items-center text-white">
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Total {quickData.unit}s réels</span>
+                        <span className="text-sm font-black">{(quickData.currentStock * quickData.multiplier) + quickData.extraUnits}</span>
+                    </div>
+                )}
                 <p className="text-[10px] uppercase font-bold text-stone-400 mt-2">*Les modifications futures de la quantité se feront depuis la page Stocks.</p>
             </div>
 
@@ -215,6 +288,44 @@ export function RecipeEditor({ menuItemId, menuItemName, onClose }: RecipeEditor
                                 <p className="text-[9px] font-bold text-stone-400 uppercase">Unité: {item.unit}</p>
                             </div>
                             <div className="flex items-center gap-2">
+                                {helperActiveFor === ing.stockItemId ? (
+                                    <div className="flex bg-stone-900 p-1 rounded-xl gap-1 animate-in zoom-in duration-300">
+                                        <select 
+                                            value={helperData.type}
+                                            onChange={e => setHelperData({...helperData, type: e.target.value})}
+                                            className="bg-transparent text-white text-[10px] font-black uppercase tracking-wider outline-none border-b border-white/20 px-1"
+                                        >
+                                            {MULTIPLIERS.filter(m => m.type !== 'Unité').map(m => (
+                                                <option key={m.type} value={m.type} className="text-black">{m.type}</option>
+                                            ))}
+                                        </select>
+                                        <input 
+                                            type="number"
+                                            className="w-8 bg-transparent text-white text-[10px] font-black outline-none border-b border-white/20 text-center"
+                                            value={helperData.value}
+                                            onChange={e => setHelperData({...helperData, value: parseInt(e.target.value) || 1})}
+                                        />
+                                        <button 
+                                            onClick={() => {
+                                                const finalQty = 1 / helperData.value;
+                                                handleUpdateQuantity(ing.stockItemId, parseFloat(finalQty.toFixed(4)));
+                                                setHelperActiveFor(null);
+                                            }}
+                                            className="bg-white text-stone-900 px-2 py-1 rounded-lg text-[9px] font-black uppercase hover:bg-emerald-500 hover:text-white transition-colors"
+                                        >
+                                            OK
+                                        </button>
+                                        <button onClick={() => setHelperActiveFor(null)} className="text-white opacity-40 hover:opacity-100 px-1">×</button>
+                                    </div>
+                                ) : (
+                                    <button 
+                                        onClick={() => setHelperActiveFor(ing.stockItemId)}
+                                        className="p-2 text-stone-400 hover:bg-stone-50 rounded-lg transition-all"
+                                        title="Utiliser un contenant (Pack, Casier...)"
+                                    >
+                                        <Scale className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
                                 <div className="relative">
                                     <input 
                                         type="number"

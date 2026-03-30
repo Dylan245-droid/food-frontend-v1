@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard, Users, LogOut, Activity,
   CreditCard, TrendingUp, Menu, X as CloseIcon,
-  ShieldCheck, Globe, ChevronRight, Calculator
+  ShieldCheck, Globe, ChevronRight, Calculator, Eye
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -32,6 +32,7 @@ const SuperAdminLayout = () => {
   const navigation = [
     { name: 'Vue d\'ensemble', href: '/admin/super', icon: LayoutDashboard },
     { name: 'Restaurants', href: '/admin/super/tenants', icon: Users },
+    { name: 'Oeil de Dieu', href: '/admin/super/gods-eye', icon: Eye },
     { name: 'Facturation', href: '/admin/super/invoices', icon: CreditCard },
     { name: 'Revenus', href: '/admin/super/revenue', icon: TrendingUp },
     { name: 'Audit Logs', href: '/admin/super/audit-logs', icon: Activity },

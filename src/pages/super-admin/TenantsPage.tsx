@@ -21,7 +21,7 @@ export default function TenantsPage() {
     // Modal state for Manual Subscription
     const [subModalOpen, setSubModalOpen] = useState(false);
     const [selectedTenant, setSelectedTenant] = useState<any>(null);
-    const [subForm, setSubForm] = useState({ plan: 'ESSENTIAL', months: 1, amountTtc: 35000 });
+    const [subForm, setSubForm] = useState({ plan: 'ESSENTIAL', months: 1, amountTtc: 85000, isPromo: false });
     const [subLoading, setSubLoading] = useState(false);
 
 
@@ -67,14 +67,35 @@ export default function TenantsPage() {
     };
 
     const updatePlan = (plan: string) => {
-        const base = plan === 'ESSENTIAL' ? 35000 : plan === 'PRO' ? 65000 : plan === 'ELITE' ? 150000 : 0;
+        const isPromo = subForm.isPromo;
+        const base = isPromo 
+            ? (plan === 'ESSENTIAL' ? 55000 : 75000) 
+            : (plan === 'ESSENTIAL' ? 85000 : 115000);
         setSubForm(prev => ({ ...prev, plan, amountTtc: base * prev.months }));
     };
 
     const updateMonths = (months: number) => {
         const m = Math.max(1, months);
-        const base = subForm.plan === 'ESSENTIAL' ? 35000 : subForm.plan === 'PRO' ? 65000 : subForm.plan === 'ELITE' ? 150000 : 0;
+        const isPromo = subForm.isPromo;
+        const base = isPromo 
+            ? (subForm.plan === 'ESSENTIAL' ? 55000 : 75000) 
+            : (subForm.plan === 'ESSENTIAL' ? 85000 : 115000);
         setSubForm(prev => ({ ...prev, months: m, amountTtc: base * m }));
+    };
+
+    const togglePromo = (checked: boolean) => {
+        const base = checked 
+            ? (subForm.plan === 'ESSENTIAL' ? 55000 : 75000) 
+            : (subForm.plan === 'ESSENTIAL' ? 85000 : 115000);
+        
+        // If enabling promo, cap months at remaining promo months (max 6)
+        let months = subForm.months;
+        const remaining = 6 - (selectedTenant?.promoMonthsCount || 0);
+        if (checked && months > remaining) {
+            months = Math.max(1, remaining);
+        }
+
+        setSubForm(prev => ({ ...prev, isPromo: checked, months, amountTtc: base * months }));
     };
 
 
@@ -242,7 +263,13 @@ export default function TenantsPage() {
                                             <td className="p-6">
                                                 <div className="flex items-center gap-4">
                                                     <div className="min-w-[100px]">
-                                                        <p className="font-black text-stone-900 text-xs tracking-tight">{formatCurrency(t.subscription.plan === 'ESSENTIAL' ? 35000 : t.subscription.plan === 'PRO' ? 65000 : t.subscription.plan === 'ELITE' ? 150000 : 0)}</p>
+                                                        <p className="font-black text-stone-900 text-xs tracking-tight">
+                                                            {formatCurrency(
+                                                                (t.promoMonthsCount || 0) < 6
+                                                                    ? (t.subscription.plan === 'ESSENTIAL' ? 55000 : t.subscription.plan === 'PRO' ? 75000 : 0)
+                                                                    : (t.subscription.plan === 'ESSENTIAL' ? 85000 : t.subscription.plan === 'PRO' ? 115000 : 0)
+                                                            )}
+                                                        </p>
                                                         <p className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-0.5">Renouvellement</p>
                                                     </div>
                                                     <div className="h-10 w-[1px] bg-stone-100"></div>
@@ -282,9 +309,12 @@ export default function TenantsPage() {
                                                     <button
                                                         onClick={() => {
                                                             setSelectedTenant(t);
-                                                            const p = t.subscription.plan === 'TRIAL' ? 'ESSENTIAL' : t.subscription.plan;
-                                                            const base = p === 'ESSENTIAL' ? 35000 : p === 'PRO' ? 65000 : p === 'ELITE' ? 150000 : 0;
-                                                            setSubForm({ plan: p, months: 1, amountTtc: base });
+                                                            const p = t.subscription.plan === 'TRIAL' || t.subscription.plan === 'ELITE' ? 'ESSENTIAL' : t.subscription.plan;
+                                                            const isEligible = (t.promoMonthsCount || 0) < 6;
+                                                            const base = isEligible 
+                                                                ? (p === 'ESSENTIAL' ? 55000 : 75000) 
+                                                                : (p === 'ESSENTIAL' ? 85000 : 115000);
+                                                            setSubForm({ plan: p, months: 1, amountTtc: base, isPromo: isEligible });
                                                             setSubModalOpen(true);
                                                         }}
                                                         className="h-10 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 border bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white"
@@ -334,8 +364,8 @@ export default function TenantsPage() {
                         <div className="p-6 space-y-5">
                             <div>
                                 <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Plan d'abonnement</label>
-                                <div className="grid grid-cols-3 gap-2.5">
-                                    {['ESSENTIAL', 'PRO', 'ELITE'].map((p) => (
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    {['ESSENTIAL', 'PRO'].map((p) => (
                                         <button
                                             key={p}
                                             onClick={() => updatePlan(p)}
@@ -352,12 +382,50 @@ export default function TenantsPage() {
                                 </div>
                             </div>
 
+                            {/* Promo Launch Section */}
+                            <div className="bg-indigo-50 border border-indigo-100/50 rounded-3xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-indigo-600 shadow-sm">
+                                            <Zap className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-stone-900 uppercase tracking-widest">Offre Lancement (6 mois)</p>
+                                            <p className="text-[8px] font-bold text-indigo-400 uppercase tracking-widest">
+                                                Usage : {selectedTenant.promoMonthsCount || 0} / 6 mois payés
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        type="button"
+                                        onClick={() => togglePromo(!subForm.isPromo)}
+                                        disabled={(selectedTenant.promoMonthsCount || 0) >= 6}
+                                        className={cn(
+                                            "w-12 h-6 rounded-full relative transition-all duration-300",
+                                            subForm.isPromo ? "bg-indigo-600" : "bg-stone-200",
+                                            (selectedTenant.promoMonthsCount || 0) >= 6 && "opacity-50 cursor-not-allowed"
+                                        )}
+                                    >
+                                        <div className={cn(
+                                            "absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm",
+                                            subForm.isPromo ? "left-7" : "left-1"
+                                        )}></div>
+                                    </button>
+                                </div>
+                                {subForm.isPromo && (
+                                    <p className="text-[9px] font-bold text-indigo-600 uppercase tracking-widest animate-pulse pl-1">
+                                        ✨ Prix promo appliqué : {subForm.plan === 'ESSENTIAL' ? '55.000' : '75.000'} FCFA / mois
+                                    </p>
+                                )}
+                            </div>
+
                             <div className="flex gap-4">
                                 <div className="flex-1">
                                     <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-2.5">Durée (Mois)</label>
                                     <input
                                         type="number"
                                         min="1"
+                                        max={subForm.isPromo ? (6 - (selectedTenant.promoMonthsCount || 0)) : 99}
                                         value={subForm.months}
                                         onChange={(e) => updateMonths(parseInt(e.target.value) || 1)}
                                         className="w-full h-12 bg-stone-50 border border-stone-100 rounded-2xl px-4 text-sm font-black text-stone-900 focus:outline-none focus:ring-4 focus:ring-indigo-50"

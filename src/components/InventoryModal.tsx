@@ -17,6 +17,11 @@ interface InventoryItem {
     name: string;
     unit: string;
   };
+  // Local counting helpers
+  multiplierType?: string;
+  multiplier?: number;
+  qtyContainers?: number;
+  qtyExtra?: number;
 }
 
 interface Inventory {
@@ -79,18 +84,37 @@ export function InventoryModal({ isOpen, onClose, onComplete }: Props) {
     }
   };
 
-  const updatePhysicalCount = (itemId: number, value: string) => {
+  const updatePhysicalCount = (itemId: number, field: string, value: any) => {
     if (!activeInventory) return;
-    const physicalStock = value === '' ? null : parseFloat(value);
     
     setActiveInventory({
       ...activeInventory,
       items: activeInventory.items.map(item => {
         if (item.id === itemId) {
+          let newItem = { ...item, [field]: value };
+          
+          // initialization if switching mode
+          if (field === 'multiplierType' && value !== 'Unité' && !newItem.multiplier) {
+              newItem.multiplier = 1; // Default to 1, but user must enter
+              newItem.qtyContainers = 0;
+              newItem.qtyExtra = 0;
+          }
+
+          // Calculate total physical stock
+          let total = newItem.physicalStock || 0;
+          if (newItem.multiplierType && newItem.multiplierType !== 'Unité') {
+              const m = newItem.multiplier || 1;
+              const qc = newItem.qtyContainers || 0;
+              const qe = newItem.qtyExtra || 0;
+              total = (qc * m) + qe;
+          } else if (field === 'physicalStock') {
+              total = value;
+          }
+
           return {
-            ...item,
-            physicalStock,
-            discrepancy: physicalStock !== null ? physicalStock - item.theoreticalStock : null
+            ...newItem,
+            physicalStock: total,
+            discrepancy: total - item.theoreticalStock
           };
         }
         return item;
@@ -178,20 +202,68 @@ export function InventoryModal({ isOpen, onClose, onComplete }: Props) {
                     {activeInventory.items.map(item => (
                         <tr key={item.id} className="group hover:bg-stone-50/50 transition-colors">
                             <td className="px-4 py-4 bg-white border-y border-l border-stone-100 rounded-l-2xl">
-                                <span className="font-bold text-stone-900 uppercase text-xs">{item.stockItem.name}</span>
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-stone-900 uppercase text-xs">{item.stockItem.name}</span>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <select 
+                                            className="text-[9px] font-black uppercase text-stone-400 bg-transparent border-0 focus:ring-0 p-0 cursor-pointer"
+                                            value={item.multiplierType || 'Unité'}
+                                            onChange={(e) => updatePhysicalCount(item.id, 'multiplierType', e.target.value)}
+                                        >
+                                            <option value="Unité">Unité</option>
+                                            <option value="Pack">Pack</option>
+                                            <option value="Casier">Casier</option>
+                                            <option value="Carton">Carton</option>
+                                            <option value="Sac">Sac</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </td>
                             <td className="px-4 py-4 bg-white border-y border-stone-100 text-right">
                                 <span className="font-mono font-bold text-stone-400 text-xs">{formatQuantity(item.theoreticalStock)} {item.stockItem.unit}</span>
                             </td>
                             <td className="px-4 py-4 bg-white border-y border-stone-100">
-                                <input 
-                                    type="number"
-                                    step="0.01"
-                                    className="w-full h-10 bg-stone-50 border-0 rounded-xl px-3 font-black text-center text-xs focus:ring-2 focus:ring-stone-900 transition-all"
-                                    value={item.physicalStock === null ? '' : item.physicalStock}
-                                    onChange={(e) => updatePhysicalCount(item.id, e.target.value)}
-                                    placeholder="?"
-                                />
+                                {(!item.multiplierType || item.multiplierType === 'Unité') ? (
+                                    <input 
+                                        type="number"
+                                        step="0.01"
+                                        className="w-full h-10 bg-stone-50 border-0 rounded-xl px-3 font-black text-center text-xs focus:ring-2 focus:ring-stone-900 transition-all"
+                                        value={item.physicalStock === null ? '' : item.physicalStock}
+                                        onChange={(e) => updatePhysicalCount(item.id, 'physicalStock', parseFloat(e.target.value) || 0)}
+                                        placeholder="?"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col gap-1 min-w-[200px]">
+                                        <div className="flex items-center gap-1">
+                                            <input 
+                                                type="number"
+                                                className="w-12 h-8 bg-stone-50 border-0 rounded-lg px-2 font-black text-center text-[10px] focus:ring-1 focus:ring-stone-900"
+                                                value={item.qtyContainers || ''}
+                                                onChange={(e) => updatePhysicalCount(item.id, 'qtyContainers', parseInt(e.target.value) || 0)}
+                                                placeholder="Nb"
+                                            />
+                                            <span className="text-[10px] font-bold text-stone-300">x</span>
+                                            <input 
+                                                type="number"
+                                                className="w-12 h-8 bg-stone-50 border-0 rounded-lg px-2 font-black text-center text-[10px] focus:ring-1 focus:ring-stone-900"
+                                                value={item.multiplier || ''}
+                                                onChange={(e) => updatePhysicalCount(item.id, 'multiplier', parseInt(e.target.value) || 1)}
+                                                placeholder="Cont."
+                                            />
+                                            <span className="text-[10px] font-bold text-stone-300">+</span>
+                                            <input 
+                                                type="number"
+                                                className="w-12 h-8 bg-stone-50 border-0 rounded-lg px-2 font-black text-center text-[10px] focus:ring-1 focus:ring-stone-900"
+                                                value={item.qtyExtra || ''}
+                                                onChange={(e) => updatePhysicalCount(item.id, 'qtyExtra', parseInt(e.target.value) || 0)}
+                                                placeholder="Dét."
+                                            />
+                                        </div>
+                                        <div className="text-[9px] font-black text-right text-stone-400 uppercase">
+                                            = {item.physicalStock} {item.stockItem.unit}
+                                        </div>
+                                    </div>
+                                )}
                             </td>
                             <td className={cn(
                                 "px-4 py-4 bg-white border-y border-r border-stone-100 rounded-r-2xl text-right font-black text-xs",

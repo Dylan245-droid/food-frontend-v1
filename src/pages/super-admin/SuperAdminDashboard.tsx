@@ -10,6 +10,8 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../lib/api';
 import { toast } from 'sonner';
 import { formatCurrency, cn } from '../../lib/utils';
+import { formatDistanceToNow, isAfter, differenceInDays } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 // Recharts for graphs
 import {
@@ -86,7 +88,7 @@ export default function SuperAdminDashboard() {
                     <div className="min-w-0">
                         <h1 className="text-2xl md:text-3xl font-black text-stone-900 tracking-tight leading-none uppercase">Vue d'ensemble</h1>
                         <p className="text-stone-400 text-xs md:text-sm font-bold mt-2 truncate tracking-wide uppercase">
-                            Pilotage Global • {tenants.length} Restaurants • {stats?.users} Utilisateurs
+                            Pilotage Global • {tenants.length} Établissements
                         </p>
                     </div>
                 </div>
@@ -113,23 +115,29 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* KPI Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                {/* MRR Card */}
                 <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
                         <DollarSign className="w-24 h-24 text-stone-900" />
                     </div>
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-300 mb-2">Revenu Mensuel (MRR)</p>
-                    <h3 className="text-3xl font-black text-stone-900 font-display tracking-tighter">
-                        {formatCurrency(stats?.financials.mrr || 0)}
-                    </h3>
+                    <div className="flex items-baseline gap-3">
+                        <h3 className="text-3xl font-black text-stone-900 font-display tracking-tighter">
+                            {formatCurrency(stats?.financials.mrr || 0)}
+                        </h3>
+                        {stats?.financials.growth > 0 && (
+                            <span className="text-[10px] font-black text-emerald-500 flex items-center gap-1">
+                                <TrendingUp className="w-3 h-3" />
+                                +{stats.financials.growth}%
+                            </span>
+                        )}
+                    </div>
                     <div className="mt-6 flex items-center gap-2">
                         <div className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" />
-                            Actif
+                             Calculé au Réel
                         </div>
-                        <span className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">Abonnements Récurrents</span>
+                        <span className="text-[10px] font-bold text-stone-300 uppercase tracking-widest italic tracking-tight">Flux Facturé</span>
                     </div>
                 </div>
 
@@ -165,22 +173,6 @@ export default function SuperAdminDashboard() {
                     </div>
                 </div>
 
-                {/* Total Users */}
-                <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100 shadow-sm relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500">
-                        <Users className="w-24 h-24 text-stone-900" />
-                    </div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-stone-300 mb-2">Population Totale</p>
-                    <h3 className="text-3xl font-black text-stone-900 font-display tracking-tighter">
-                        {stats?.users} <span className="text-sm font-bold text-stone-200">Staffs</span>
-                    </h3>
-                    <div className="mt-6 flex items-center gap-2">
-                        <div className="px-2.5 py-1 bg-stone-50 text-stone-500 rounded-lg text-[9px] font-black uppercase tracking-wider">
-                            Multi-tenants
-                        </div>
-                        <span className="text-[10px] font-bold text-stone-300 uppercase tracking-widest">Comptes validés</span>
-                    </div>
-                </div>
 
             </div>
 
@@ -250,11 +242,11 @@ export default function SuperAdminDashboard() {
                         <table className="w-full text-left min-w-[700px]">
                             <thead>
                                 <tr className="text-[10px] font-black text-stone-300 uppercase tracking-[0.2em]">
-                                    <th className="pb-6 pl-4">Identité Restaurant</th>
-                                    <th className="pb-6">Administration</th>
-                                    <th className="pb-6 text-center">Plan Actif</th>
-                                    <th className="pb-6 text-center">Status</th>
-                                    <th className="pb-6 text-right pr-4">Actions</th>
+                                    <th className="pb-6 pl-4 font-black">Restaurant & Santé</th>
+                                    <th className="pb-6 text-center">Activité</th>
+                                    <th className="pb-6 text-center">Abonnement</th>
+                                    <th className="pb-6 text-center">Échéance</th>
+                                    <th className="pb-6 text-right pr-4 font-black">Gestion</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-stone-50">
@@ -265,39 +257,54 @@ export default function SuperAdminDashboard() {
                                         <td className="py-6 pl-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-[1.25rem] bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400 group-hover:bg-stone-900 group-hover:text-white group-hover:border-stone-900 transition-all">
-                                                    <Store className="w-6 h-6" />
+                                                    {t.lastOrderAt && differenceInDays(new Date(), new Date(t.lastOrderAt)) < 3 ? (
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                    ) : t.lastOrderAt && differenceInDays(new Date(), new Date(t.lastOrderAt)) < 7 ? (
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse"></div>
+                                                    ) : (
+                                                        <div className="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse"></div>
+                                                    )}
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className="font-black text-stone-900 text-sm uppercase tracking-tight group-hover:text-stone-900 transition-colors uppercase truncate max-w-[180px]">{t.name}</div>
-                                                    <div className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mt-1">/r/{t.slug}</div>
+                                                    <div className="text-[9px] text-stone-400 font-bold uppercase tracking-widest mt-1">
+                                                        {t.isActive ? 'Opérationnel' : 'Suspendu'} • {t.ordersCount} Ventes
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-6">
-                                            <div className="flex flex-col">
-                                                <span className="font-black text-stone-800 text-[11px] uppercase truncate max-w-[150px] leading-tight mb-1">{t.owner?.fullName || 'N/A'}</span>
-                                                <span className="text-[9px] text-stone-400 font-bold uppercase tracking-tight truncate max-w-[150px]">{t.owner?.email}</span>
+                                        <td className="py-6 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <span className="font-black text-stone-800 text-[10px] uppercase truncate max-w-[120px] leading-tight mb-1">
+                                                    {t.lastOrderAt ? formatDistanceToNow(new Date(t.lastOrderAt), { addSuffix: true, locale: fr }) : 'Aucune'}
+                                                </span>
+                                                <span className="text-[9px] text-stone-300 font-bold uppercase tracking-tight">Dernière vente</span>
                                             </div>
                                         </td>
                                         <td className="py-6 text-center">
-                                            <span className="inline-flex px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-stone-100 text-stone-600 border border-stone-200/50 shadow-sm">
-                                                {t.subscriptionPlan || 'STANDARD'}
+                                            <span className={cn(
+                                                "inline-flex px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border border-stone-200/50 shadow-sm",
+                                                t.subscription?.plan === 'PRO' ? "bg-orange-50 text-orange-600 border-orange-100" : 
+                                                t.subscription?.plan === 'ESSENTIAL' ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                                "bg-stone-100 text-stone-600"
+                                            )}>
+                                                {t.subscription?.plan === 'PRO' ? 'PRO' : 
+                                                 t.subscription?.plan === 'ESSENTIAL' ? 'ESSENTIEL' : 
+                                                 'ESSAI'}
                                             </span>
                                         </td>
                                         <td className="py-6 text-center">
-                                            {t.isActive ? (
-                                                <div className="flex flex-col items-center gap-1.5">
-                                                    <div className="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm border border-emerald-100/50">
-                                                        <ShieldCheck className="w-3 h-3" />
-                                                        Actif
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="px-2.5 py-1 bg-red-50 text-red-600 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm border border-red-100/50">
-                                                    <ShieldAlert className="w-3 h-3" />
-                                                    Suspendu
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col items-center">
+                                                <span className={cn(
+                                                    "font-black text-[11px] uppercase tracking-tighter",
+                                                    t.subscription.daysLeft < 5 ? "text-red-600" : "text-stone-900"
+                                                )}>
+                                                    {t.subscription.daysLeft} jours
+                                                </span>
+                                                <span className="text-[9px] text-stone-300 font-bold uppercase tracking-tight">
+                                                    {t.subscription.subscriptionEndsAt ? new Date(t.subscription.subscriptionEndsAt).toLocaleDateString('fr-FR') : 'Essai'}
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="py-6 text-right pr-4">
                                             <button
@@ -305,15 +312,16 @@ export default function SuperAdminDashboard() {
                                                 className={cn(
                                                     "h-10 px-5 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all active:scale-95 flex items-center gap-2 ml-auto shadow-sm",
                                                     t.isActive
-                                                        ? "bg-stone-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white hover:border-red-600"
+                                                        ? "bg-white text-stone-400 border border-stone-100 hover:text-red-600 hover:border-red-100"
                                                         : "bg-emerald-600 text-white shadow-emerald-100 border border-emerald-600 hover:bg-emerald-700"
                                                 )}
                                             >
                                                 {t.isActive ? (
-                                                    <>Désactiver</>
+                                                    <Activity className="w-3.5 h-3.5" />
                                                 ) : (
-                                                    <>Activer le Restaurant</>
+                                                    <Zap className="w-3.5 h-3.5" />
                                                 )}
+                                                {t.isActive ? "Pause" : "Activer"}
                                             </button>
                                         </td>
                                     </tr>
