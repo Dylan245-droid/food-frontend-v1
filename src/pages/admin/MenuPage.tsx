@@ -239,7 +239,7 @@ export default function MenuPage() {
                 {/* Categories Tabs - Swipable */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-2 lg:pb-0 premium-scrollbar flex-1">
                     <button
-                        onClick={() => { setActiveCategory('all'); setCurrentPage(1); }}
+                        onClick={() => { setActiveCategory('all'); setCurrentPage(1); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100); }}
                         className={`whitespace-nowrap px-6 py-3.5 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest transition-all ${activeCategory === 'all'
                             ? 'bg-stone-900 text-white shadow-lg shadow-stone-200 -translate-y-0.5'
                             : 'bg-white text-stone-400 hover:text-stone-600 border border-stone-50'
@@ -250,7 +250,7 @@ export default function MenuPage() {
                     {categoriesData?.data.map((cat) => (
                         <button
                             key={cat.id}
-                            onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); }}
+                            onClick={() => { setActiveCategory(cat.id); setCurrentPage(1); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100); }}
                             className={`whitespace-nowrap px-6 py-3.5 rounded-[1.2rem] text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-3 group/cat ${activeCategory === cat.id
                                 ? 'bg-orange-500 text-white shadow-lg shadow-orange-100 -translate-y-0.5'
                                 : 'bg-white text-stone-400 hover:text-orange-500 border border-stone-50 hover:bg-orange-50/30'
@@ -419,7 +419,7 @@ export default function MenuPage() {
             {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-8">
                     <button
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100); }}
                         disabled={currentPage === 1}
                         className="px-4 py-2 rounded-xl border border-stone-200 bg-white font-bold text-stone-600 disabled:opacity-50 hover:bg-stone-50 transition-colors"
                     >
@@ -429,7 +429,7 @@ export default function MenuPage() {
                         Page {currentPage} / {totalPages}
                     </span>
                     <button
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100); }}
                         disabled={currentPage === totalPages}
                         className="px-4 py-2 rounded-xl border border-stone-200 bg-white font-bold text-stone-600 disabled:opacity-50 hover:bg-stone-50 transition-colors"
                     >

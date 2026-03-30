@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Bell, Check, Info, CreditCard, ShoppingBag, Utensils } from 'lucide-react';
+import { Bell, Check, Info, CreditCard, ShoppingBag, Utensils, MessageCircle, AlertCircle } from 'lucide-react';
 import api from '../lib/api';
 import { Button } from './ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { useNotifications } from '../context/NotificationContext';
 
 interface ServerCall {
     id: number;
@@ -35,8 +36,17 @@ export function ServerCallsNotification() {
     const [pendingOrders, setPendingOrders] = useState<Order[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState<'calls' | 'orders'>('calls');
+    const [activeTab, setActiveTab] = useState<'calls' | 'orders' | 'notifs'>('calls');
     const navigate = useNavigate();
+
+    const { 
+        notifications, 
+        unreadCount, 
+        markAsRead, 
+        isPushSupported, 
+        isSubscribed, 
+        requestPermission 
+    } = useNotifications();
 
     const fetchData = async () => {
         try {
@@ -70,7 +80,7 @@ export function ServerCallsNotification() {
         }
     };
 
-    const totalNotifications = calls.length + pendingOrders.length;
+    const totalNotifications = calls.length + pendingOrders.length + unreadCount;
 
     if (totalNotifications === 0) {
         return (
@@ -113,6 +123,19 @@ export function ServerCallsNotification() {
                             className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === 'orders' ? 'bg-white text-blue-600 border-t-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
                         >
                             Cuisine ({pendingOrders.length})
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab('notifs')}
+                            className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab === 'notifs' ? 'bg-white text-purple-600 border-t-2 border-purple-600' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            <span className="relative inline-block">
+                                Notifs 
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-4 w-4 h-4 rounded-full bg-purple-500 text-white text-[10px] flex items-center justify-center animate-pulse">
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </span>
                         </button>
                     </div>
 
@@ -213,6 +236,71 @@ export function ServerCallsNotification() {
                                             Voir toutes les commandes
                                         </Button>
                                     </>
+                                )}
+                            </>
+                        )}
+
+                        {/* NOTIFICATIONS LIST */}
+                        {activeTab === 'notifs' && (
+                            <>
+                                {isPushSupported && !isSubscribed && (
+                                    <div className="p-3 bg-purple-50 border border-purple-100 rounded-lg text-sm text-purple-700 flex justify-between items-center mb-2">
+                                        <div className="flex gap-2 items-center">
+                                            <AlertCircle className="w-4 h-4 text-purple-600" />
+                                            <span>Activer les alertes Push</span>
+                                        </div>
+                                        <Button size="sm" variant="secondary" className="h-7 text-xs bg-purple-600 text-white hover:bg-purple-700 hover:text-white border-none" onClick={requestPermission}>
+                                            Activer
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {notifications.length === 0 ? (
+                                    <div className="text-center py-8 text-gray-400">
+                                        <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                                        <p>Aucune notification</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1">
+                                        <div className="flex justify-end mb-2">
+                                            {unreadCount > 0 && (
+                                                <Button size="sm" variant="ghost" className="h-6 text-[10px] text-gray-500 p-0 hover:bg-transparent hover:text-purple-600" onClick={() => markAsRead('all')}>
+                                                    Tout marquer comme lu
+                                                </Button>
+                                            )}
+                                        </div>
+                                        {notifications.map(notif => (
+                                            <div 
+                                                key={notif.id} 
+                                                className={`p-3 rounded-lg border flex flex-col gap-1 hover:bg-gray-50 transition-colors cursor-pointer ${!notif.readAt ? 'bg-purple-50/10 border-purple-100' : 'bg-white border-gray-100'}`}
+                                                onClick={() => {
+                                                    if (!notif.readAt) markAsRead([notif.id]);
+                                                    
+                                                    // Parse data if string
+                                                    let urlData = null;
+                                                    try {
+                                                        const parsedData = typeof notif.data === 'string' ? JSON.parse(notif.data) : notif.data;
+                                                        urlData = parsedData?.url;
+                                                    } catch(e){}
+
+                                                    if (urlData) {
+                                                        setIsOpen(false);
+                                                        navigate(urlData);
+                                                    }
+                                                }}
+                                            >
+                                                <div className="flex justify-between items-start">
+                                                    <p className={`text-sm ${!notif.readAt ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
+                                                        {notif.title}
+                                                    </p>
+                                                    <span className="text-[10px] text-gray-400 whitespace-nowrap ml-2 mt-1">
+                                                        {new Date(notif.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                                                    </span>
+                                                </div>
+                                                <p className={`text-xs ${!notif.readAt ? 'text-gray-700' : 'text-gray-500'} mt-1`} dangerouslySetInnerHTML={{ __html: notif.body?.replace(/\n/g, '<br/>') || '' }} />
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
                             </>
                         )}

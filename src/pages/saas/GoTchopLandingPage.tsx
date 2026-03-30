@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import {
-    ChevronRight, ArrowRight, ShieldCheck,
+    ChevronRight, ArrowRight,
     UtensilsCrossed, Smartphone, Heart, Users, Star, Check, LayoutDashboard
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -449,12 +449,12 @@ const Pricing = () => {
                 <div className="text-center mb-12 md:mb-20">
                     <h2 className="text-3xl md:text-4xl font-black text-white mb-4">Tarifs Transparents.</h2>
                     <p className="text-gray-400 text-lg">
-                        <span className="text-orange-500 font-bold">14 jours d'essai gratuits</span> avec toutes les fonctionnalités <span className="text-white font-bold">Élite</span> débloquées. <br />
+                        <span className="text-orange-500 font-bold">1 mois d'essai gratuit</span> avec toutes les fonctionnalités débloquées. <br />
                         Aucune carte bancaire requise. Annulez à tout moment.
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-8 items-start">
+                <div className="grid md:grid-cols-2 gap-8 items-start max-w-4xl mx-auto">
                     {/* ESSENTIEL */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
@@ -463,17 +463,22 @@ const Pricing = () => {
                         transition={{ duration: 0.5 }}
                         className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col hover:border-orange-500/30 transition-colors"
                     >
-                        <div className="mb-6">
-                            <h3 className="text-xl font-bold text-white">Essentiel</h3>
-                            <p className="text-gray-500 text-sm">Maquis, Fast-Food, Boulangerie, Dark Kitchen</p>
+                        <div className="mb-6 lowercase">
+                            <h3 className="text-xl font-bold text-white uppercase">Essentiel</h3>
                         </div>
-                        <div className="mb-6">
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">35 000</span>
+                        <div className="mb-6 relative">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">55 000</span>
                                 <span className="text-xs font-black uppercase tracking-widest text-gray-500">FCFA</span>
                             </div>
-                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Par mois</div>
-
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm font-bold text-gray-500 line-through decoration-orange-500/50">85 000 FCFA</span>
+                                <span className="text-[10px] bg-green-500 text-black px-1.5 py-0.5 rounded font-black uppercase">Économisez 30 000 !</span>
+                            </div>
+                            <div className="mt-4 flex flex-col gap-1">
+                                <div className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em]">Offre de Lancement</div>
+                                <div className="text-xs text-gray-400 font-medium italic">Valable pour vos 6 premiers mois</div>
+                            </div>
                         </div>
 
                         <div className="space-y-4 mb-8 flex-1">
@@ -483,7 +488,14 @@ const Pricing = () => {
                                 </div>
                             ))}
                         </div>
-                        <button className="w-full py-4 rounded-xl border border-white/20 text-white font-bold hover:bg-white hover:text-black transition-colors">Choisir Essentiel</button>
+                        <a 
+                            href="https://wa.me/24174170748?text=Bonjour%20GoTchop%2C%20je%20souhaiterais%20digitaliser%20ma%20structure%20avec%20l%27offre%20ESSENTIEL.%20Pouvez-vous%20m%27aider%20%C3%A0%20d%C3%A9marrer%20%3F"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-4 rounded-xl border border-white/20 text-white font-bold hover:bg-white hover:text-black transition-colors text-center"
+                        >
+                            Choisir Essentiel
+                        </a>
                     </motion.div>
 
                     {/* PRO */}
@@ -495,18 +507,24 @@ const Pricing = () => {
                         className="bg-gradient-to-b from-orange-900/40 to-black/60 border border-orange-500 rounded-3xl p-8 flex flex-col relative transform md:scale-110 shadow-[0_0_60px_rgba(234,88,12,0.2)] z-10"
                     >
                         <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-600 text-white text-[10px] font-bold px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">Recommandé</div>
-                        <div className="mb-6">
-                            <h3 className="text-xl font-bold text-orange-500 flex items-center gap-2">
+                        <div className="mb-6 lowercase">
+                            <h3 className="text-xl font-bold text-orange-500 flex items-center gap-2 uppercase">
                                 <Star className="w-4 h-4 fill-orange-500" /> Pro
                             </h3>
-                            <p className="text-gray-400 text-sm">Restaurants, Pizzerias, Lounges, Glaciers</p>
                         </div>
-                        <div className="mb-6">
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">65 000</span>
-                                <span className="text-xs font-black uppercase tracking-widest text-orange-500/80">FCFA</span>
+                        <div className="mb-6 relative">
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">75 000</span>
+                                <span className="text-xs font-black uppercase tracking-widest text-orange-500">FCFA</span>
                             </div>
-                            <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Par mois</div>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="text-sm font-bold text-gray-400/60 line-through decoration-orange-500/50">115 000 FCFA</span>
+                                <span className="text-[10px] bg-white text-orange-600 px-1.5 py-0.5 rounded font-black uppercase shadow-sm">Économisez 40 000 !</span>
+                            </div>
+                            <div className="mt-4 flex flex-col gap-1">
+                                <div className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em]">Offre de Lancement Pro</div>
+                                <div className="text-xs text-gray-300 font-medium italic">Valable pour vos 6 premiers mois</div>
+                            </div>
                         </div>
 
                         <div className="space-y-4 mb-8 flex-1">
@@ -519,38 +537,17 @@ const Pricing = () => {
                                 </div>
                             ))}
                         </div>
-                        <button className="w-full py-4 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-500 transition-colors shadow-lg hover:shadow-orange-500/25">Prendre le Pro</button>
+                        <a 
+                            href="https://wa.me/24174170748?text=Bonjour%20GoTchop%2C%20je%20souhaiterais%20digitaliser%20ma%20structure%20avec%20l%27offre%20PRO.%20Pouvez-vous%20m%27aider%20%C3%A0%20d%C3%A9marrer%20%3F"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-4 rounded-xl bg-orange-600 text-white font-bold hover:bg-orange-500 transition-colors shadow-lg hover:shadow-orange-500/25 text-center"
+                        >
+                            Prendre le Pro
+                        </a>
                     </motion.div>
 
-                    {/* ÉLITE */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                        className="bg-white/5 backdrop-blur-md border border-white/10 rounded-3xl p-8 flex flex-col hover:border-orange-500/30 transition-colors"
-                    >
-                        <div className="mb-6">
-                            <h3 className="text-xl font-bold text-white">Élite</h3>
-                            <p className="text-gray-500 text-sm">Hôtels, Chaînes, Franchises, Food Courts</p>
-                        </div>
-                        <div className="mb-6">
-                            <div className="flex items-baseline gap-1.5">
-                                <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">150 000</span>
-                                <span className="text-xs font-black uppercase tracking-widest text-gray-500">FCFA</span>
-                            </div>
-                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Par mois</div>
-                        </div>
 
-                        <div className="space-y-4 mb-8 flex-1">
-                            {PRICING_FEATURES.ELITE.map(f => (
-                                <div key={f} className="flex items-center gap-3 text-sm text-gray-300">
-                                    <ShieldCheck className="w-4 h-4 text-white shrink-0" /> {f}
-                                </div>
-                            ))}
-                        </div>
-                        <button className="w-full py-4 rounded-xl border border-white/20 text-white font-bold hover:bg-white hover:text-black transition-colors">Contacter Ventes</button>
-                    </motion.div>
                 </div>
             </div>
         </Section>

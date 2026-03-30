@@ -1,4 +1,4 @@
-import { type InputHTMLAttributes, forwardRef } from 'react';
+import { type InputHTMLAttributes, forwardRef, useEffect, useRef } from 'react';
 import { cn } from '../../lib/utils';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -6,12 +6,30 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(({ className, label, error, ...props }, ref) => {
+const Input = forwardRef<HTMLInputElement, InputProps>(({ className, label, error, autoFocus, ...props }, ref) => {
+  const internalRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autoFocus && internalRef.current) {
+      // Small delay allows modal transitions to settle to avoid layout jump
+      const timer = setTimeout(() => {
+        internalRef.current?.focus({ preventScroll: true });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [autoFocus]);
+
+  const handleRef = (node: HTMLInputElement) => {
+    internalRef.current = node;
+    if (typeof ref === 'function') ref(node);
+    else if (ref) (ref as React.MutableRefObject<HTMLInputElement | null>).current = node;
+  };
+
   return (
     <div className="w-full">
       {label && <label className="block text-sm font-semibold text-stone-700 mb-1.5">{label}</label>}
       <input
-        ref={ref}
+        ref={handleRef}
         className={cn(
           'w-full px-4 py-2.5 border rounded-xl transition-all duration-200',
           'focus:outline-none focus:ring-2 focus:ring-offset-1',

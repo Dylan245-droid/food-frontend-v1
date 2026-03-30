@@ -1,24 +1,16 @@
 export const PRICING_FEATURES = {
     ESSENTIAL: [
         'Menu QR Code Illimité',
-        'Interface Caisse Tablette',
-        'Jusqu\'à 5 Serveurs',
-        'Jusqu\'à 3 Caisses',
-        'Rapports Email Journaliers'
+        'Interface Caisse complète',
+        'Gestion des Tables (Vue Grille)',
+        'Livraisons & App Livreur',
+        'Jusqu\'à 5 Comptes Staff'
     ],
     PRO: [
         'Tout Essentiel +',
-        'Écran Cuisine (KDS)',
+        'Gestion des Stocks & Inventaires',
+        'Écran Cuisine (KDS) tactile',
         'Finance & Compta Avancée',
-        'Comptes Staff Illimités',
-        'Plan de Salle 3D'
-    ],
-    ELITE: [
-        'Tout Pro +',
-        'Gestion Multi-Sites Centralisée',
-        'API & Intégrations ERP',
-        'Option Marque Blanche',
-        'Account Manager Dédié',
-        'Export Comptabilité'
+        'Comptes Staff Illimités'
     ]
 };

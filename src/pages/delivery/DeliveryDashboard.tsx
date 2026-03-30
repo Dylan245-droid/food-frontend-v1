@@ -62,6 +62,17 @@ export default function DeliveryDashboard() {
     const [codeInput, setCodeInput] = useState('');
     const [codeError, setCodeError] = useState('');
     
+    const codeInputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        if (showCodeModal && codeInputRef.current) {
+            const timer = setTimeout(() => {
+                codeInputRef.current?.focus({ preventScroll: true });
+            }, 50);
+            return () => clearTimeout(timer);
+        }
+    }, [showCodeModal]);
+    
     // Map refs
     const mapContainer = useRef<HTMLDivElement>(null);
     const map = useRef<mapboxgl.Map | null>(null);
@@ -587,6 +598,7 @@ export default function DeliveryDashboard() {
                         </p>
                         
                         <input
+                            ref={codeInputRef}
                             type="text"
                             value={codeInput}
                             onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); setCodeError(''); }}
@@ -594,7 +606,6 @@ export default function DeliveryDashboard() {
                             className={`w-full text-center text-2xl font-mono font-bold tracking-widest p-4 border-2 rounded-xl mb-2 uppercase ${
                                 codeError ? 'border-red-400 bg-red-50' : 'border-gray-200 focus:border-green-500'
                             }`}
-                            autoFocus
                             maxLength={10}
                         />
                         

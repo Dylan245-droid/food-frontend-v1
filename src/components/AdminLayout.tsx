@@ -44,7 +44,7 @@ export default function AdminLayout() {
   useEffect(() => {
     setIsSidebarOpen(false);
     if (activeLinkRef.current) {
-      activeLinkRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      activeLinkRef.current.scrollIntoView({ block: 'nearest' });
     }
   }, [location.pathname]);
 
@@ -339,7 +339,7 @@ export default function AdminLayout() {
             <ServerCallsNotification />
           </div>
         )}
-        <div className="relative z-10 max-w-[1600px] mx-auto p-4 lg:p-8 xl:p-10">
+        <div className="relative z-10 max-w-[1600px] mx-auto p-4 pb-24 lg:p-8 lg:pb-12 xl:p-10 xl:pb-12">
           <Outlet />
         </div>
       </main>

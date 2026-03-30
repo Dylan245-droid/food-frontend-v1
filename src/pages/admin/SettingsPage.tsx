@@ -517,6 +517,15 @@ export default function SettingsPage() {
                   className="h-14 font-black uppercase tracking-widest text-xs"
                 />
               </div>
+              <div className="md:col-span-2">
+                <Input
+                  label="HORAIRES D'OUVERTURE"
+                  value={formData.openingHours}
+                  onChange={(e) => handleChange('openingHours', e.target.value)}
+                  placeholder="Ex: Lun-Sam: 11h-23h, Dim: Fermé"
+                  className="h-14 font-black uppercase tracking-widest text-xs"
+                />
+              </div>
               <Input
                 label="LIGNE DIRECTE"
                 value={formData.phone}

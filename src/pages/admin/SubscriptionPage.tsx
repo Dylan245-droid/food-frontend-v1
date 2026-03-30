@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
-import { Check, ShieldCheck, Star, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import { Check, Star, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { showToast } from '../../utils/toast';
 import api from '../../lib/api';
@@ -214,7 +214,7 @@ export default function SubscriptionPage() {
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 {/* ESSENTIEL */}
                 <div className={cn(
                     "bg-white rounded-3xl p-8 border flex flex-col transition-all shadow-sm relative overflow-hidden",
@@ -222,19 +222,25 @@ export default function SubscriptionPage() {
                 )}>
                     {isCurrent('ESSENTIAL') && <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">ACTUEL</div>}
                     <div className="mb-4 md:mb-6">
-                        <h3 className="text-lg md:text-xl font-bold text-stone-900">Essentiel</h3>
-                        <p className="text-[10px] md:text-sm text-stone-500">Maquis, Dark Kitchen...</p>
+                        <h3 className="text-lg md:text-xl font-bold text-stone-900 uppercase">Essentiel</h3>
                     </div>
                     <div className="mb-4 md:mb-6">
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-2xl md:text-3xl font-bold text-stone-900 tracking-tight">
-                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 35000 * 12 * 0.85 : 35000).replace(/\u202f/g, ' ')}
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 55000 * 12 * 0.85 : 55000).replace(/\u202f/g, ' ')}
+                            </span>
+                            <span className="text-sm font-bold text-stone-400 line-through decoration-orange-500/50">
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 85000 * 12 * 0.85 : 85000).replace(/\u202f/g, ' ')}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">FCFA</span>
                         </div>
-                        <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
-                            Par {billingCycle === 'YEARLY' ? 'an' : 'mois'}
+                        <div className="mt-2">
+                            <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-black uppercase">
+                                {billingCycle === 'YEARLY' ? 'Économisez 306 000 !' : 'Économisez 30 000 !'}
+                            </span>
                         </div>
+                        <div className="mt-4 text-[10px] font-black text-orange-600 uppercase tracking-widest">Offre de Lancement</div>
+                        <div className="text-[10px] text-stone-500 font-medium italic">Valable les 6 premiers mois après l'essai</div>
                     </div>
 
 
@@ -246,7 +252,7 @@ export default function SubscriptionPage() {
                         ))}
                     </div>
                     <button
-                        onClick={() => handleSubscribeClick('ESSENTIAL', 35000)}
+                        onClick={() => handleSubscribeClick('ESSENTIAL', 55000)}
                         disabled={isCurrent('ESSENTIAL')}
                         className={cn(
                             "w-full py-4 rounded-xl border font-bold transition-colors flex items-center justify-center gap-2",
@@ -272,21 +278,27 @@ export default function SubscriptionPage() {
                     {isCurrent('PRO') && <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">ACTUEL</div>}
 
                     <div className="mb-6">
-                        <h3 className="text-xl font-bold text-orange-500 flex items-center gap-2">
+                        <h3 className="text-xl font-bold text-orange-500 flex items-center gap-2 uppercase">
                             <Star className="w-4 h-4 fill-orange-500" /> Pro
                         </h3>
-                        <p className="text-stone-400 text-sm">Restaurants, Pizzerias, Lounges, Glaciers</p>
                     </div>
                     <div className="mb-6">
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-3xl md:text-3xl font-bold text-white tracking-tight">
-                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 65000 * 12 * 0.85 : 65000).replace(/\u202f/g, ' ')}
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 75000 * 12 * 0.85 : 75000).replace(/\u202f/g, ' ')}
+                            </span>
+                            <span className="text-sm font-bold text-stone-500 line-through decoration-orange-500/50">
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 115000 * 12 * 0.85 : 115000).replace(/\u202f/g, ' ')}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-orange-500/80">FCFA</span>
                         </div>
-                        <div className="text-[10px] font-bold text-stone-500 uppercase tracking-widest mt-1">
-                            Par {billingCycle === 'YEARLY' ? 'an' : 'mois'}
+                        <div className="mt-2">
+                            <span className="text-[10px] bg-white text-orange-600 px-1.5 py-0.5 rounded font-black uppercase shadow-sm">
+                                {billingCycle === 'YEARLY' ? 'Économisez 408 000 !' : 'Économisez 40 000 !'}
+                            </span>
                         </div>
+                        <div className="mt-4 text-[10px] font-black text-orange-400 uppercase tracking-widest">Offre de Lancement Pro</div>
+                        <div className="text-[10px] text-stone-400 font-medium italic">Valable les 6 premiers mois après l'essai</div>
                     </div>
 
 
@@ -301,7 +313,7 @@ export default function SubscriptionPage() {
                         ))}
                     </div>
                     <button
-                        onClick={() => handleSubscribeClick('PRO', 65000)}
+                        onClick={() => handleSubscribeClick('PRO', 75000)}
                         disabled={isCurrent('PRO')}
                         className={cn(
                             "w-full py-4 rounded-xl font-bold transition-colors shadow-lg flex items-center justify-center gap-2",
@@ -314,49 +326,7 @@ export default function SubscriptionPage() {
                     </button>
                 </div>
 
-                {/* ÉLITE */}
-                <div className={cn(
-                    "bg-white rounded-3xl p-8 border flex flex-col transition-all shadow-sm relative overflow-hidden",
-                    isCurrent('ELITE') ? "border-green-500 ring-2 ring-green-500/20" : "border-stone-200 hover:border-orange-200"
-                )}>
-                    {isCurrent('ELITE') && <div className="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">ACTUEL</div>}
-                    <div className="mb-6">
-                        <h3 className="text-xl font-bold text-stone-900">Élite</h3>
-                        <p className="text-stone-500 text-sm">Hôtels, Chaînes, Franchises, Food Courts</p>
-                    </div>
-                    <div className="mb-6">
-                        <div className="flex items-baseline gap-1">
-                            <span className="text-3xl md:text-3xl font-bold text-stone-900 tracking-tight">
-                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 150000 * 12 * 0.85 : 150000).replace(/\u202f/g, ' ')}
-                            </span>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">FCFA</span>
-                        </div>
-                        <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mt-1">
-                            Par {billingCycle === 'YEARLY' ? 'an' : 'mois'}
-                        </div>
-                    </div>
 
-
-                    <div className="space-y-4 mb-8 flex-1">
-                        {PRICING_FEATURES.ELITE.map(f => (
-                            <div key={f} className="flex items-center gap-3 text-sm text-stone-600">
-                                <ShieldCheck className="w-4 h-4 text-stone-900 shrink-0" /> {f}
-                            </div>
-                        ))}
-                    </div>
-                    <button
-                        onClick={() => handleSubscribeClick('ELITE', 150000)}
-                        disabled={isCurrent('ELITE')}
-                        className={cn(
-                            "w-full py-4 rounded-xl border font-bold transition-colors flex items-center justify-center gap-2",
-                            isCurrent('ELITE')
-                                ? "bg-green-50 text-green-700 border-green-200 cursor-default"
-                                : "border-stone-200 text-stone-900 hover:bg-stone-50"
-                        )}
-                    >
-                        {isCurrent('ELITE') ? 'Plan Actuel' : isPlanMatchOnly('ELITE') ? 'Réactiver Élite' : 'Contacter Ventes'}
-                    </button>
-                </div>
             </div>
 
             {/* Payment Methods */}
