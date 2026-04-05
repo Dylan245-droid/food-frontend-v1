@@ -323,23 +323,13 @@ export default function UsersPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 relative z-10">
-          <div className="h-10 sm:h-12 px-4 bg-stone-50 border border-stone-100 rounded-2xl flex items-center gap-3">
-            <Users className="w-3.5 h-3.5 text-stone-400" />
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-stone-900">{usersData?.data.length || 0} Total</span>
-          </div>
-          <Button onClick={() => openModal()} className="h-10 sm:h-12 px-4 sm:px-6 bg-stone-900 hover:bg-black text-white rounded-2xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl shadow-stone-200 active:scale-95 transition-all">
-            <UserPlus className="w-3.5 h-3.5 mr-2" /> <span className="hidden xs:inline">Ajouter</span>
-          </Button>
-        </div>
           <div className="flex gap-4 pt-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 h-16 bg-stone-50 text-stone-400 rounded-2xl font-black uppercase tracking-widest text-[10px]">
+            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 h-14 rounded-2xl" disabled={submitting}>
               Annuler
-            </button>
-            <button type="submit" disabled={submitting} className="flex-1 h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200 flex items-center justify-center gap-3">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
+            <Button type="submit" isLoading={submitting} className="flex-1 h-14 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">
               Enregistrer
-            </button>
+            </Button>
           </div>
         </form>
       </Modal>

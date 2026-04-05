@@ -51,6 +51,9 @@ export default function StockPage() {
   const [isMenuLinkModalOpen, setIsMenuLinkModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<StockItem | null>(null);
   const [adjustmentType, setAdjustmentType] = useState<'IN' | 'OUT'>('IN');
+  const [isSubmittingItem, setIsSubmittingItem] = useState(false);
+  const [isSubmittingAdj, setIsSubmittingAdj] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Form States
   const [itemForm, setItemForm] = useState({ id: 0, name: '', unit: 'kg', minStock: 0, purchasePrice: 0, currentStock: 0, multiplier: 1, multiplierType: 'Unité', extraUnits: 0 });
@@ -115,6 +118,9 @@ export default function StockPage() {
 
   const saveItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingItem) return;
+
+    setIsSubmittingItem(true);
     try {
       if (itemForm.id === 0) {
         await api.post('/admin/stock/items', itemForm);
@@ -127,6 +133,8 @@ export default function StockPage() {
       fetchData();
     } catch (err) {
       toast.error("Erreur d'enregistrement");
+    } finally {
+      setIsSubmittingItem(false);
     }
   };
 
@@ -135,6 +143,7 @@ export default function StockPage() {
         return;
     }
 
+    setIsDeleting(true);
     try {
         await api.delete(`/admin/stock/items/${id}`);
         toast.success("Article supprimé");
@@ -142,12 +151,15 @@ export default function StockPage() {
         fetchData();
     } catch (err: any) {
         toast.error(err.response?.data?.message || "Impossible de supprimer cet article.");
+    } finally {
+        setIsDeleting(false);
     }
   };
 
   const saveAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
-   const handleAdjustment = async () => {
+    if (isSubmittingAdj) return;
+
     if (!selectedItem || adjForm.quantity <= 0) {
         toast.error("Veuillez entrer une quantité valide.");
         return;
@@ -157,7 +169,7 @@ export default function StockPage() {
         return;
     }
 
-    setLoading(true);
+    setIsSubmittingAdj(true);
     try {
       await api.post('/admin/stock/movement', {
         stockItemId: selectedItem.id,
@@ -175,10 +187,8 @@ export default function StockPage() {
     } catch (err) {
       toast.error("Erreur lors de l'ajustement");
     } finally {
-        setLoading(false);
+        setIsSubmittingAdj(false);
     }
-   };
-   handleAdjustment();
   };
 
   const uniqueUnits = Array.from(new Set(items.map(i => i.unit.toLowerCase()))).sort();
@@ -584,16 +594,17 @@ export default function StockPage() {
 
             <div className="pt-4 flex flex-col gap-3">
                 <div className="flex gap-3">
-                    <Button type="button" variant="secondary" onClick={() => setIsItemModalOpen(false)} className="flex-1 h-14 rounded-2xl">Annuler</Button>
-                    <Button type="submit" className="flex-1 bg-stone-900 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white">Enregistrer</Button>
+                    <Button type="button" variant="secondary" onClick={() => setIsItemModalOpen(false)} className="flex-1 h-14 rounded-2xl" disabled={isSubmittingItem}>Annuler</Button>
+                    <Button type="submit" className="flex-1 bg-stone-900 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white" isLoading={isSubmittingItem}>Enregistrer</Button>
                 </div>
                 {itemForm.id !== 0 && (
                     <button 
                         type="button"
                         onClick={() => handleDeleteItem(itemForm.id)}
-                        className="text-red-500 font-black uppercase tracking-widest text-[9px] py-2 hover:bg-red-50 rounded-xl transition-all"
+                        disabled={isDeleting}
+                        className="text-red-500 font-black uppercase tracking-widest text-[9px] py-2 hover:bg-red-50 rounded-xl transition-all disabled:opacity-50"
                     >
-                        Supprimer cet article définitivement
+                        {isDeleting ? "Suppression..." : "Supprimer cet article définitivement"}
                     </button>
                 )}
             </div>
@@ -718,9 +729,10 @@ export default function StockPage() {
             </div>
 
             <div className="pt-4 flex gap-3">
-                <Button type="button" variant="secondary" onClick={() => setIsAdjustmentModalOpen(false)} className="flex-1 h-14 rounded-2xl">Annuler</Button>
+                <Button type="button" variant="secondary" onClick={() => setIsAdjustmentModalOpen(false)} className="flex-1 h-14 rounded-2xl" disabled={isSubmittingAdj}>Annuler</Button>
                 <Button 
                     type="submit" 
+                    isLoading={isSubmittingAdj}
                     className={cn(
                         "flex-1 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white",
                         adjustmentType === 'IN' ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"

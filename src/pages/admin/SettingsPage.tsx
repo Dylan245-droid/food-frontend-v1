@@ -141,14 +141,14 @@ export default function SettingsPage() {
         </div>
 
         <div className="flex gap-2 relative z-10 shrink-0">
-          <button
+          <Button
             onClick={() => handleSubmit()}
-            disabled={saving}
+            isLoading={saving}
             className="flex-1 sm:flex-none h-14 px-10 bg-stone-900 hover:bg-black text-white shadow-xl shadow-stone-100 rounded-2xl font-black uppercase tracking-widest text-[10px] active:scale-95 transition-all flex items-center justify-center gap-3"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{saving ? 'Envoi...' : 'Enregistrer'}</span>
-          </button>
+            <Save className="w-4 h-4" />
+            <span>Enregistrer</span>
+          </Button>
         </div>
       </div>
 
@@ -245,9 +245,10 @@ export default function SettingsPage() {
                   type="button"
                   variant="secondary"
                   onClick={() => fileInputRef.current?.click()}
+                  isLoading={uploading}
                   className="h-12 px-8 rounded-xl bg-white border-stone-200 text-stone-900 font-black uppercase tracking-widest text-[9px] shadow-sm hover:shadow-md transition-all"
                 >
-                  {uploading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                  <Upload className="w-4 h-4 mr-2" />
                   Changer Logo
                 </Button>
               </div>
@@ -274,9 +275,10 @@ export default function SettingsPage() {
                   type="button"
                   variant="secondary"
                   onClick={() => heroFileInputRef.current?.click()}
+                  isLoading={uploadingHero}
                   className="h-12 px-8 rounded-xl bg-white border-stone-200 text-stone-900 font-black uppercase tracking-widest text-[9px] shadow-sm hover:shadow-md transition-all"
                 >
-                  {uploadingHero ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                  <Upload className="w-4 h-4 mr-2" />
                   Changer Image
                 </Button>
               </div>
@@ -603,14 +605,14 @@ export default function SettingsPage() {
       {/* Sticky Mobile Bar - Surgery Feature */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-stone-100 lg:hidden z-50 animate-in slide-in-from-bottom-full duration-500">
         <div className="max-w-md mx-auto">
-          <button
+          <Button
             onClick={() => handleSubmit()}
-            disabled={saving}
+            isLoading={saving}
             className="w-full h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-2xl shadow-stone-200 flex items-center justify-center gap-4 active:scale-95 transition-all"
           >
-            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 text-orange-400" />}
+            <Save className="w-5 h-5 text-orange-400" />
             SAUVEGARDER MA CONFIG
-          </button>
+          </Button>
         </div>
       </div>
 

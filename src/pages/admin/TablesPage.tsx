@@ -63,6 +63,9 @@ export default function TablesPage() {
   const [formData, setFormData] = useState({ name: '', zone: 'Intérieur', capacity: 4 });
   const [assignServerId, setAssignServerId] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [isFreeing, setIsFreeing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [receiptOrder, setReceiptOrder] = useState<ReceiptOrder | null>(null);
   const { branding } = useBranding();
@@ -106,22 +109,26 @@ export default function TablesPage() {
 
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedTable || !assignServerId) return;
+    if (!selectedTable || !assignServerId || isAssigning) return;
+    setIsAssigning(true);
     try {
       await api.post(`/admin/tables/${selectedTable.id}/assign`, { userId: assignServerId });
       setIsAssignModalOpen(false);
       refetch();
       toast.success('Serveur assigné !');
     } catch { toast.error('Erreur d\'assignation'); }
+    finally { setIsAssigning(false); }
   };
 
   const handleFreeTable = async (tableId: number) => {
-    if (!confirm('Libérer cette table ?')) return;
+    if (!confirm('Libérer cette table ?') || isFreeing) return;
+    setIsFreeing(true);
     try {
       await api.post(`/admin/tables/${tableId}/free`);
       refetch();
       toast.success('Table libérée');
     } catch { toast.error('Erreur de libération'); }
+    finally { setIsFreeing(false); }
   };
 
   const handlePrintBill = async (table: Table) => {
@@ -157,13 +164,16 @@ export default function TablesPage() {
   };
 
   const handleDelete = async (tableId: number) => {
-    if (!confirm('Supprimer cette table ?')) return;
+    if (!confirm('Supprimer cette table ?') || isDeleting) return;
+    setIsDeleting(true);
     try {
       await api.delete(`/admin/tables/${tableId}`);
       toast.success('Table supprimée');
       refetch();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Erreur lors de la suppression');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -374,10 +384,10 @@ export default function TablesPage() {
           </div>
           <Input label="CAPACITÉ (COUVERTURES)" type="number" min={1} value={formData.capacity} onChange={e => setFormData({ ...formData, capacity: parseInt(e.target.value) || 1 })} required className="h-14 font-black uppercase tracking-widest text-xs" />
           <div className="flex gap-4 pt-4">
-            <button type="button" onClick={() => { setIsModalOpen(false); setSelectedTable(null); }} className="flex-1 h-16 bg-stone-50 text-stone-400 rounded-2xl font-black uppercase tracking-widest text-[10px]">Annuler</button>
-            <button type="submit" disabled={submitting} className="flex-1 h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">
+            <Button type="button" variant="secondary" onClick={() => { setIsModalOpen(false); setSelectedTable(null); }} className="flex-1 h-14 rounded-2xl" disabled={submitting}>Annuler</Button>
+            <Button type="submit" isLoading={submitting} className="flex-1 h-14 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">
               {selectedTable ? 'Mettre à jour' : 'Créer'}
-            </button>
+            </Button>
           </div>
         </form>
       </Modal>
@@ -419,9 +429,9 @@ export default function TablesPage() {
               ))}
             </select>
           </div>
-          <button type="submit" className="w-full h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">
+          <Button type="submit" isLoading={isAssigning} className="w-full h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">
             Valider
-          </button>
+          </Button>
         </form>
       </Modal>
 

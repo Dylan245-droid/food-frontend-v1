@@ -40,6 +40,8 @@ export default function MenuPage() {
     const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
+    const [isSubmittingItem, setIsSubmittingItem] = useState(false);
+    const [isSubmittingCategory, setIsSubmittingCategory] = useState(false);
 
     const [activeCategory, setActiveCategory] = useState<number | 'all'>('all');
     const { searchQuery, setSearchQuery, setShowSearch, setPlaceholder } = useSearch();
@@ -162,6 +164,9 @@ export default function MenuPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isSubmittingItem) return;
+        
+        setIsSubmittingItem(true);
         try {
             const payload = {
                 ...formData,
@@ -196,12 +201,16 @@ export default function MenuPage() {
             }
         } catch (e) {
             alert('Erreur lors de l\'enregistrement');
+        } finally {
+            setIsSubmittingItem(false);
         }
     };
 
     const handleCategorySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newCategoryName.trim()) return;
+        if (!newCategoryName.trim() || isSubmittingCategory) return;
+        
+        setIsSubmittingCategory(true);
         try {
             if (editingCategory) {
                 await api.patch(`/admin/menu/categories/${editingCategory.id}`, { name: newCategoryName });
@@ -214,8 +223,10 @@ export default function MenuPage() {
             setIsCategoryModalOpen(false);
             setNewCategoryName('');
             setEditingCategory(null);
-        } catch (e) {
-            alert('Erreur lors de l\'opération');
+        } catch (err: any) {
+            alert(err.response?.data?.message || 'Erreur lors de l\'opération');
+        } finally {
+            setIsSubmittingCategory(false);
         }
     };
 
@@ -612,8 +623,8 @@ export default function MenuPage() {
                     </div>
 
                     <div className="pt-4 flex gap-3">
-                        <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 h-12 rounded-xl">Annuler</Button>
-                        <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg">{formData.id === 0 ? 'Créer le plat' : 'Enregistrer'}</Button>
+                        <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 h-12 rounded-xl" disabled={isSubmittingItem}>Annuler</Button>
+                        <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg" isLoading={isSubmittingItem}>{formData.id === 0 ? 'Créer le plat' : 'Enregistrer'}</Button>
                     </div>
                 </form>
                 ) : (
@@ -640,8 +651,8 @@ export default function MenuPage() {
                     />
                     <div className="pt-2 flex flex-col gap-3">
                         <div className="flex gap-3">
-                            <Button type="button" variant="secondary" onClick={() => { setIsCategoryModalOpen(false); setEditingCategory(null); setNewCategoryName(''); }} className="flex-1 h-12 rounded-xl">Annuler</Button>
-                            <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg">{editingCategory ? "Mettre à jour" : "Créer"}</Button>
+                            <Button type="button" variant="secondary" onClick={() => { setIsCategoryModalOpen(false); setEditingCategory(null); setNewCategoryName(''); }} className="flex-1 h-12 rounded-xl" disabled={isSubmittingCategory}>Annuler</Button>
+                            <Button type="submit" className="flex-1 bg-stone-900 h-12 rounded-xl font-bold shadow-lg" isLoading={isSubmittingCategory}>{editingCategory ? "Mettre à jour" : "Créer"}</Button>
                         </div>
                         {editingCategory && (
                             <button 

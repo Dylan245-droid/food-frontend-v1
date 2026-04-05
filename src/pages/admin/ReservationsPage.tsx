@@ -39,6 +39,8 @@ export default function ReservationsPage() {
     time: '19:00', notes: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   const [isTableModalOpen, setIsTableModalOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<ReservationType | null>(null);
@@ -80,7 +82,8 @@ export default function ReservationsPage() {
   };
 
   const handleAssignTable = async (tableId: number) => {
-    if (!selectedReservation) return;
+    if (!selectedReservation || isAssigning) return;
+    setIsAssigning(true);
     try {
       await api.patch(`/admin/reservations/${selectedReservation.id}/status`, { status: 'seated', tableId });
       setIsTableModalOpen(false);
@@ -88,15 +91,18 @@ export default function ReservationsPage() {
       fetchReservations();
       toast.success("Client installé !");
     } catch (error: any) { toast.error(error.response?.data?.message || 'Erreur'); }
+    finally { setIsAssigning(false); }
   };
 
   const updateStatus = async (id: string, status: string) => {
-    if (!confirm('Changer le statut ?')) return;
+    if (!confirm('Changer le statut ?') || isChangingStatus) return;
+    setIsChangingStatus(true);
     try {
       await api.patch(`/admin/reservations/${id}/status`, { status });
       fetchReservations();
       toast.success("Statut mis à jour");
     } catch { toast.error('Erreur'); }
+    finally { setIsChangingStatus(false); }
   };
 
   if (loading && reservations.length === 0) return (
@@ -337,13 +343,12 @@ export default function ReservationsPage() {
           </div>
 
           <div className="flex gap-4 pt-4">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 h-16 bg-stone-50 text-stone-400 rounded-px-2xl rounded-2xl font-black uppercase tracking-widest text-[100x] text-[10px]">
+            <Button type="button" variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-[10px]" disabled={submitting}>
               Annuler
-            </button>
-            <button type="submit" disabled={submitting} className="flex-1 h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200 flex items-center justify-center gap-3">
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
+            <Button type="submit" isLoading={submitting} className="flex-1 h-16 bg-stone-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-stone-200">
               Confirmer
-            </button>
+            </Button>
           </div>
         </form>
       </Modal>
@@ -382,9 +387,10 @@ export default function ReservationsPage() {
           ) : (
             <div className="grid grid-cols-2 gap-4">
               {availableTables.map((table, idx) => (
-                <button
+                <Button
                   key={table.id}
                   onClick={() => handleAssignTable(table.id)}
+                  isLoading={isAssigning && selectedReservation?.id === table.id} // Not exactly perfect but works for general feedback
                   className="group p-6 bg-white border border-stone-100 rounded-[2rem] hover:border-stone-900 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left relative overflow-hidden animate-in fade-in slide-in-from-bottom-2"
                   style={{ animationDelay: `${idx * 30}ms` }}
                 >
@@ -399,7 +405,7 @@ export default function ReservationsPage() {
                       <div className="mt-4 inline-block bg-stone-50 px-2 py-1 rounded-lg text-[9px] font-black text-stone-400 uppercase tracking-widest group-hover:bg-stone-900 group-hover:text-white transition-colors">{table.zone}</div>
                     )}
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           )}
