@@ -44,7 +44,7 @@ export default function MenuPage() {
     const [activeCategory, setActiveCategory] = useState<number | 'all'>('all');
     const { searchQuery, setSearchQuery, setShowSearch, setPlaceholder } = useSearch();
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 8;
+    const itemsPerPage = 16;
 
     // Init search context
     useEffect(() => {
@@ -444,21 +444,42 @@ export default function MenuPage() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-8">
+                <div className="flex flex-wrap justify-center items-center gap-2 mt-12 pb-10">
                     <button
                         onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100); }}
                         disabled={currentPage === 1}
-                        className="px-4 py-2 rounded-xl border border-stone-200 bg-white font-bold text-stone-600 disabled:opacity-50 hover:bg-stone-50 transition-colors"
+                        className="px-4 py-2.5 rounded-xl border border-stone-100 bg-white text-[10px] font-black uppercase tracking-widest text-stone-400 disabled:opacity-30 hover:bg-stone-50 hover:text-stone-900 transition-all active:scale-95 shadow-sm"
                     >
                         Précédent
                     </button>
-                    <span className="font-mono font-bold text-stone-400 px-4">
-                        Page {currentPage} / {totalPages}
-                    </span>
+                    
+                    <div className="flex items-center gap-1.5 px-2">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                            // Logic to show a limited number of pages with ellipses could be added here
+                            // For now, let's show all if it's reasonable, or a simple window
+                            const isActive = currentPage === pageNum;
+                            
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => { setCurrentPage(pageNum); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100); }}
+                                    className={cn(
+                                        "w-10 h-10 rounded-xl text-[11px] font-black transition-all active:scale-90 flex items-center justify-center border shadow-sm",
+                                        isActive 
+                                            ? "bg-orange-500 border-orange-400 text-white shadow-orange-100 shadow-lg scale-110" 
+                                            : "bg-white border-stone-50 text-stone-400 hover:text-stone-900 hover:border-stone-200"
+                                    )}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
+                    </div>
+
                     <button
                         onClick={() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100); }}
                         disabled={currentPage === totalPages}
-                        className="px-4 py-2 rounded-xl border border-stone-200 bg-white font-bold text-stone-600 disabled:opacity-50 hover:bg-stone-50 transition-colors"
+                        className="px-4 py-2.5 rounded-xl border border-stone-100 bg-white text-[10px] font-black uppercase tracking-widest text-stone-400 disabled:opacity-30 hover:bg-stone-50 hover:text-stone-900 transition-all active:scale-95 shadow-sm"
                     >
                         Suivant
                     </button>

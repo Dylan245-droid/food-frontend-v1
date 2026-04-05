@@ -41,13 +41,6 @@ export const PLAN_FEATURES: Record<string, Plan> = {
         max_tables: 50,
         max_registers: 10,
         features: ['kds_enabled', 'stock_enabled', 'fidelity_enabled', 'table_map_enabled', 'multi_site_enabled', 'accounting_export', 'reservations_enabled', 'finance_enabled']
-    },
-    'ELITE': {
-        name: 'Élite',
-        max_staff: 999,
-        max_tables: 999,
-        max_registers: 999,
-        features: ['kds_enabled', 'stock_enabled', 'fidelity_enabled', 'table_map_enabled', 'multi_site_enabled', 'accounting_export', 'white_label', 'reservations_enabled', 'finance_enabled']
     }
 };
 

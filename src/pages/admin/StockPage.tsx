@@ -130,6 +130,21 @@ export default function StockPage() {
     }
   };
 
+  const handleDeleteItem = async (id: number) => {
+    if (!window.confirm("Supprimer définitivement cet article ? Cette action est possible uniquement s'il n'y a pas d'historique de consommation.")) {
+        return;
+    }
+
+    try {
+        await api.delete(`/admin/stock/items/${id}`);
+        toast.success("Article supprimé");
+        setIsItemModalOpen(false);
+        fetchData();
+    } catch (err: any) {
+        toast.error(err.response?.data?.message || "Impossible de supprimer cet article.");
+    }
+  };
+
   const saveAdjustment = async (e: React.FormEvent) => {
     e.preventDefault();
    const handleAdjustment = async () => {
@@ -319,12 +334,15 @@ export default function StockPage() {
                   <Badge className={cn("rounded-lg px-2.5 py-1 text-[8px] font-black uppercase tracking-widest border-0", status.color)}>
                     {status.label}
                   </Badge>
-                  <button 
-                    onClick={() => handleOpenItemModal(item)}
-                    className="text-stone-300 hover:text-stone-900 transition-colors p-1 -mt-1 -mr-1"
-                  >
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
+                  <div className="flex gap-1 -mt-1 -mr-1">
+                    <button 
+                        onClick={() => handleOpenItemModal(item)}
+                        className="text-stone-300 hover:text-stone-900 transition-colors p-1"
+                        title="Modifier"
+                    >
+                        <MoreVertical className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 mb-4 border-b border-stone-50 pb-3">
@@ -362,10 +380,15 @@ export default function StockPage() {
                         </div>
                         <div className="text-right">
                            {item.purchasePrice !== null && (
-                            <>
-                                <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">Prix Achat</span>
-                                <span className="text-xs font-black text-stone-900 uppercase">{item.purchasePrice} FCFA</span>
-                            </>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-black text-stone-400 uppercase tracking-widest block">Valeur Stock</span>
+                                <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg mb-1">
+                                    {(Number(item.currentStock) * Number(item.purchasePrice)).toLocaleString()} FCFA
+                                </span>
+                                <span className="text-[8px] font-bold text-stone-300 uppercase">
+                                    ({item.purchasePrice} / {item.unit})
+                                </span>
+                            </div>
                            )}
                         </div>
                     </div>
@@ -559,9 +582,20 @@ export default function StockPage() {
                 />
             </div>
 
-            <div className="pt-4 flex gap-3">
-                <Button type="button" variant="secondary" onClick={() => setIsItemModalOpen(false)} className="flex-1 h-14 rounded-2xl">Annuler</Button>
-                <Button type="submit" className="flex-1 bg-stone-900 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white">Enregistrer</Button>
+            <div className="pt-4 flex flex-col gap-3">
+                <div className="flex gap-3">
+                    <Button type="button" variant="secondary" onClick={() => setIsItemModalOpen(false)} className="flex-1 h-14 rounded-2xl">Annuler</Button>
+                    <Button type="submit" className="flex-1 bg-stone-900 h-14 rounded-2xl font-black uppercase tracking-widest text-[10px] text-white">Enregistrer</Button>
+                </div>
+                {itemForm.id !== 0 && (
+                    <button 
+                        type="button"
+                        onClick={() => handleDeleteItem(itemForm.id)}
+                        className="text-red-500 font-black uppercase tracking-widest text-[9px] py-2 hover:bg-red-50 rounded-xl transition-all"
+                    >
+                        Supprimer cet article définitivement
+                    </button>
+                )}
             </div>
         </form>
       </Modal>

@@ -65,8 +65,7 @@ export default function SuperAdminDashboard() {
     const planData = stats ? [
         { name: 'Essai', value: stats.subscriptions.TRIAL, color: '#a8a29e' },
         { name: 'Essentiel', value: stats.subscriptions.ESSENTIAL, color: '#3b82f6' },
-        { name: 'Pro', value: stats.subscriptions.PRO, color: '#f97316' },
-        { name: 'Élite', value: stats.subscriptions.ELITE, color: '#8b5cf6' }
+        { name: 'Pro', value: stats.subscriptions.PRO, color: '#f97316' }
     ] : [];
 
     const filteredTenants = tenants.filter(t =>

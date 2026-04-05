@@ -108,7 +108,6 @@ export default function TenantsPage() {
     const getPlanStyles = (plan: string) => {
         const p = plan?.toUpperCase();
         switch (p) {
-            case 'ELITE': return 'bg-purple-500 text-white';
             case 'PRO': return 'bg-orange-500 text-white';
             case 'ESSENTIAL': return 'bg-blue-500 text-white';
             default: return 'bg-stone-100 text-stone-600';
@@ -290,7 +289,7 @@ export default function TenantsPage() {
                                                         </div>
                                                         <div>
                                                             <p className={cn("font-black text-xs tracking-tight uppercase", isExpired ? "text-red-500" : "text-stone-900")}>
-                                                                {format(new Date(expiryDate), 'dd MMM yyyy', { locale: fr })}
+                                                                {expiryDate ? format(new Date(expiryDate), 'dd MMM yyyy', { locale: fr }) : 'N/A'}
                                                             </p>
                                                             {t.subscription.pastDueSince && (
                                                                 <p className="text-[8px] font-black text-orange-500 uppercase tracking-widest animate-pulse">Relance en cours</p>
@@ -309,12 +308,12 @@ export default function TenantsPage() {
                                                     <button
                                                         onClick={() => {
                                                             setSelectedTenant(t);
-                                                            const p = t.subscription.plan === 'TRIAL' || t.subscription.plan === 'ELITE' ? 'ESSENTIAL' : t.subscription.plan;
+                                                            const p = t.subscription.plan === 'TRIAL' ? 'ESSENTIAL' : t.subscription.plan;
                                                             const isEligible = (t.promoMonthsCount || 0) < 6;
                                                             const base = isEligible 
-                                                                ? (p === 'ESSENTIAL' ? 55000 : 75000) 
-                                                                : (p === 'ESSENTIAL' ? 85000 : 115000);
-                                                            setSubForm({ plan: p, months: 1, amountTtc: base, isPromo: isEligible });
+                                                                ? (p === 'PRO' ? 75000 : 55000) 
+                                                                : (p === 'PRO' ? 85000 : 115000);
+                                                            setSubForm({ plan: p === 'PRO' ? 'PRO' : 'ESSENTIAL', months: 1, amountTtc: base, isPromo: isEligible });
                                                             setSubModalOpen(true);
                                                         }}
                                                         className="h-10 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-1.5 border bg-indigo-50 text-indigo-600 border-indigo-100 hover:bg-indigo-600 hover:text-white"

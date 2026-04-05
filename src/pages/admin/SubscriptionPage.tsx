@@ -24,7 +24,7 @@ export default function SubscriptionPage() {
     const handleSubscribeClick = async (planName: string, baseAmount: number) => {
         let amount = baseAmount;
         if (billingCycle === 'YEARLY') {
-            amount = baseAmount * 12 * 0.85; // 15% discount
+            amount = baseAmount * 12 * 0.90; // 10% discount (must match backend)
         }
 
 
@@ -66,8 +66,7 @@ export default function SubscriptionPage() {
     const PLAN_DISPLAY_NAMES: Record<string, string> = {
         'TRIAL': 'Essai Gratuit',
         'ESSENTIAL': 'Essentiel',
-        'PRO': 'Pro',
-        'ELITE': 'Élite'
+        'PRO': 'Pro'
     };
 
     const getPlanDisplayName = (plan: string) => PLAN_DISPLAY_NAMES[plan?.toUpperCase()] || plan;
@@ -208,7 +207,7 @@ export default function SubscriptionPage() {
                         )}
                     >
                         Annuel
-                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200">-15%</span>
+                        <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200">-10%</span>
                     </button>
                 </div>
             </div>
@@ -227,16 +226,16 @@ export default function SubscriptionPage() {
                     <div className="mb-4 md:mb-6">
                         <div className="flex items-baseline gap-2">
                             <span className="text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">
-                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 55000 * 12 * 0.85 : 55000).replace(/\u202f/g, ' ')}
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 55000 * 12 * 0.90 : 55000).replace(/\u202f/g, ' ')}
                             </span>
                             <span className="text-sm font-bold text-stone-400 line-through decoration-orange-500/50">
-                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 85000 * 12 * 0.85 : 85000).replace(/\u202f/g, ' ')}
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 85000 * 12 * 0.90 : 85000).replace(/\u202f/g, ' ')}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">FCFA</span>
                         </div>
                         <div className="mt-2">
                             <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-black uppercase">
-                                {billingCycle === 'YEARLY' ? 'Économisez 306 000 !' : 'Économisez 30 000 !'}
+                                {billingCycle === 'YEARLY' ? 'Économisez 324 000 !' : 'Économisez 30 000 !'}
                             </span>
                         </div>
                         <div className="mt-4 text-[10px] font-black text-orange-600 uppercase tracking-widest">Offre de Lancement</div>
@@ -285,16 +284,16 @@ export default function SubscriptionPage() {
                     <div className="mb-6">
                         <div className="flex items-baseline gap-2">
                             <span className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 75000 * 12 * 0.85 : 75000).replace(/\u202f/g, ' ')}
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 75000 * 12 * 0.90 : 75000).replace(/\u202f/g, ' ')}
                             </span>
                             <span className="text-sm font-bold text-stone-500 line-through decoration-orange-500/50">
-                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 115000 * 12 * 0.85 : 115000).replace(/\u202f/g, ' ')}
+                                {new Intl.NumberFormat('fr-FR').format(billingCycle === 'YEARLY' ? 115000 * 12 * 0.90 : 115000).replace(/\u202f/g, ' ')}
                             </span>
                             <span className="text-[10px] font-black uppercase tracking-widest text-orange-500/80">FCFA</span>
                         </div>
                         <div className="mt-2">
                             <span className="text-[10px] bg-white text-orange-600 px-1.5 py-0.5 rounded font-black uppercase shadow-sm">
-                                {billingCycle === 'YEARLY' ? 'Économisez 408 000 !' : 'Économisez 40 000 !'}
+                                {billingCycle === 'YEARLY' ? 'Économisez 432 000 !' : 'Économisez 40 000 !'}
                             </span>
                         </div>
                         <div className="mt-4 text-[10px] font-black text-orange-400 uppercase tracking-widest">Offre de Lancement Pro</div>
