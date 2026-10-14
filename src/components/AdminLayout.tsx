@@ -13,6 +13,7 @@ import {
 import type { FeatureKey } from '../hooks/useSubscription';
 import { cn, getImageUrl } from '../lib/utils';
 import UpgradeModal from './UpgradeModal';
+import SyncStatusBadge from './SyncStatusBadge';
 
 // --- Sidebar Section Divider ---
 const SidebarDivider = ({ label }: { label: string }) => (
@@ -225,12 +226,15 @@ export default function AdminLayout() {
           </div>
           <span className="text-base font-bold text-stone-900 tracking-tight">{branding.name}</span>
         </div>
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="p-2 rounded-xl text-stone-500 hover:bg-stone-100 transition-colors cursor-pointer"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <SyncStatusBadge />
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 rounded-xl text-stone-500 hover:bg-stone-100 transition-colors cursor-pointer"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -340,6 +344,9 @@ export default function AdminLayout() {
           </div>
         )}
         <div className="relative z-10 max-w-[1600px] mx-auto p-4 pb-24 lg:p-8 lg:pb-12 xl:p-10 xl:pb-12">
+          <div className="hidden lg:flex justify-end mb-4 -mt-2">
+            <SyncStatusBadge />
+          </div>
           <Outlet />
         </div>
       </main>

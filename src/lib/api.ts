@@ -1,7 +1,21 @@
 import axios from 'axios';
 
+const getBaseUrl = () => {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl && !envUrl.includes('localhost') && !envUrl.includes('127.0.0.1')) {
+        return envUrl;
+    }
+    // If opened on a LAN IP from another device (tablet/smartphone in restaurant)
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // If served on Vite dev port 5173, backend is on 3333, otherwise use same port/host
+        const port = window.location.port === '5173' ? '3333' : (window.location.port || '3333');
+        return `${window.location.protocol}//${window.location.hostname}:${port}/api`;
+    }
+    return envUrl || 'http://localhost:9015/api';
+};
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:9015/api',
+    baseURL: getBaseUrl(),
     headers: {
         'Content-Type': 'application/json',
     },
